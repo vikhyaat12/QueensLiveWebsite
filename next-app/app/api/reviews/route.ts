@@ -8,10 +8,26 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const u = await requireUser();
-  if (!u) return json({ error: "Unauthorized" }, 401);
-  const b = await request.json().catch(() => null), rating = Number(b?.rating), productId = String(b?.productId || "");
-  const productsAll = await store.products.all();
-  if (!productsAll.some((p) => p.id === productId) || !Number.isInteger(rating) || rating < 1 || rating > 5) return json({ error: "Invalid review." }, 422);
-  return json({ review: await store.reviews.create({ userId: u.id, productId, rating, title: safeText(b?.title, 120), body: safeText(b?.body, 1000) }) }, 201);
-}
+  const b = await request.json().catch(() => null);
+  const rating = Number(b?.rating);
+  const productId = String(b?.productId || "");
 
+  const productsAll = await store.products.all();
+  const matchedProd = productsAll.find((p) => p.id === productId || p.slug === productId);
+  if (!matchedProd || !Number.isInteger(rating) || rating < 1 || rating > 5) {
+    return json({ error: "Invalid product or rating (1-5 required)." }, 422);
+  }
+
+  const review = await store.reviews.create({
+    userId: u?.id,
+    customerEmail: u?.email,
+    customerName: safeText(b?.customerName || u?.name || "Customer", 80),
+    productId: matchedProd.id,
+    productSlug: matchedProd.slug,
+    rating,
+    title: safeText(b?.title || "", 120),
+    body: safeText(b?.body || "", 1000),
+  });
+
+  return json({ review }, 201);
+}

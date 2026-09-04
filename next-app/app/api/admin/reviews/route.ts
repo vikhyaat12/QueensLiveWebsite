@@ -23,11 +23,12 @@ export async function POST(request: Request) {
     productId,
     customerName: body.customerName || body.author || body.name || "Customer",
     rating,
-    title: safeText(body.title || "Review", 120),
+    title: safeText(body.title || "", 120),
     body: safeText(body.body || body.text || "", 2000),
-    verified: body.verified !== false,
+    verified: Boolean(body.verified),
     visible: body.visible !== false,
     image: body.image || "",
+    response: safeText(body.response || body.pharmacistResponse || "", 2000),
   });
 
   return json({ review }, 201);
@@ -37,10 +38,20 @@ export async function PATCH(request: Request) {
   const user = await requireUser(["admin"]);
   if (!user) return json({ error: "Unauthorized" }, 401);
   const body = await request.json().catch(() => ({}));
-  if (!body.reviewId && !body.id) return json({ error: "reviewId or id required" }, 422);
   const id = body.reviewId || body.id;
-  const visible = body.visible !== undefined ? Boolean(body.visible) : true;
-  const review = await store.reviews.updateVisibility(id, visible);
+  if (!id) return json({ error: "reviewId or id required" }, 422);
+
+  const updates: Record<string, unknown> = {};
+  if (body.visible !== undefined) updates.visible = Boolean(body.visible);
+  if (body.verified !== undefined) updates.verified = Boolean(body.verified);
+  if (body.response !== undefined || body.pharmacistResponse !== undefined) {
+    updates.response = safeText(body.response ?? body.pharmacistResponse, 2000);
+  }
+  if (body.rating !== undefined) updates.rating = Number(body.rating);
+  if (body.title !== undefined) updates.title = safeText(body.title, 120);
+  if (body.body !== undefined) updates.body = safeText(body.body, 2000);
+
+  const review = await store.reviews.update(id, updates);
   return json({ review });
 }
 
