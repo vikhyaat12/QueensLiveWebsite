@@ -1680,6 +1680,10 @@ export const doctorStore = {
     }
     return fileDb.findMany("doctors");
   },
+  listPublic: async () => {
+    const all = await doctorStore.list();
+    return (all as Record<string, unknown>[]).filter(d => d.visible !== false && d.status === "approved");
+  },
   byId: async (id: string) => {
     if (usePrisma) {
       try { return await prisma.doctor.findUnique({ where: { id } }); } catch {}
@@ -1687,14 +1691,35 @@ export const doctorStore = {
     return fileDb.findOne("doctors", d => d.id === id);
   },
   create: async (data: Record<string, unknown>) => {
+    const id = (data.id as string) || `doc-${Date.now().toString(36)}`;
+    const docData = {
+      id,
+      status: data.status || "approved",
+      visible: data.visible !== false,
+      verified: Boolean(data.verified || data.regNumber),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      ...data,
+    };
     if (usePrisma) {
       try {
-        const doc = await prisma.doctor.create({ data: data as never });
+        const doc = await prisma.doctor.create({ data: docData as never });
         fileDb.insert("doctors", doc as unknown as Record<string, unknown>);
         return doc;
       } catch {}
     }
-    return fileDb.insert("doctors", { ...data, status: "pending" });
+    return fileDb.insert("doctors", docData);
+  },
+  update: async (id: string, data: Record<string, unknown>) => {
+    const updatedData = { ...data, updatedAt: new Date().toISOString() };
+    if (usePrisma) {
+      try {
+        const doc = await prisma.doctor.update({ where: { id }, data: updatedData as never });
+        fileDb.update("doctors", id, updatedData);
+        return doc;
+      } catch {}
+    }
+    return fileDb.update("doctors", id, updatedData);
   },
   updateStatus: async (id: string, status: string) => {
     if (usePrisma) {
@@ -1705,6 +1730,16 @@ export const doctorStore = {
       } catch {}
     }
     return fileDb.update("doctors", id, { status });
+  },
+  delete: async (id: string) => {
+    if (usePrisma) {
+      try {
+        await prisma.doctor.delete({ where: { id } });
+        fileDb.remove("doctors", id);
+        return true;
+      } catch {}
+    }
+    return Boolean(fileDb.remove("doctors", id));
   },
 };
 
