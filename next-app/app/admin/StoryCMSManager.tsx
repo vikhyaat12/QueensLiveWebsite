@@ -21,8 +21,8 @@ export default function StoryCMSManager({ onBack }: { onBack?: () => void }) {
     originText: "In 2023, our founding team of pharmaceutical formulation chemists and clinical investigators observed an alarming divergence: wellness products were flooded with marketing claims but under-dosed actives, while traditional pharmaceuticals felt clinical, impersonal, and distant.\n\nWe set out to unite both worlds — therapeutic purity, precision concentration, and considered daily ritual.",
     stat1Number: "100%",
     stat1Label: "Batch Verified Purity",
-    stat2Number: "GMP / ISO",
-    stat2Label: "Certified Laboratory",
+    stat2Number: "100%",
+    stat2Label: "Full INCI Disclosure",
     stat3Number: "0.0%",
     stat3Label: "Synthetic Diluents",
     sections: [
@@ -32,9 +32,9 @@ export default function StoryCMSManager({ onBack }: { onBack?: () => void }) {
     ],
     milestones: [
       { year: "2023", title: "Laboratory Inception", description: "Established advanced formulation R&D cleanroom in New Delhi." },
-      { year: "2024", title: "Clinical Partner Network", description: "Onboarded 250+ dermatologists and physicians across India." },
+      { year: "2024", title: "Clinical Partner Network", description: "Established collaboration network with certified dermatologists and clinic practitioners." },
       { year: "2025", title: "Therapeutic Portfolio Expansion", description: "Formulated LUMINE-C™, LIKO-Q™, and cellular antioxidant suspensions." },
-      { year: "2026", title: "National Distribution", description: "Serving 12,000+ member rituals across Tier 1 & 2 cities." }
+      { year: "2026", title: "Cold-Chain Direct Distribution", description: "Direct-to-consumer and clinic distribution across major Indian metro networks." }
     ],
     ctaHeading: "Experience pharmaceutical-grade personal care.",
     ctaText: "Explore Our Formulations",
