@@ -136,7 +136,7 @@
       "createdAt": "2026-08-30T19:00:00.000Z",
       "updatedAt": "2026-08-31T18:17:19.962Z",
       "thumbnail": "/uploads/liko-q-suspension.png",
-      "video": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "video": "",
       "videos": [
         {
           "id": "vid-direct-mp4",
@@ -146,7 +146,7 @@
         },
         {
           "id": "vid-yt-embed",
-          "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          "url": "",
           "title": "Expert Dermatologist Protocol",
           "posterUrl": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=85"
         }
@@ -168,7 +168,7 @@
           "type": "video_text",
           "heading": "Application & Absorption Protocol",
           "text": "Demonstration of topical bioavailability.",
-          "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          "videoUrl": "",
           "videoPoster": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=85",
           "published": true
         }
@@ -204,7 +204,7 @@
       "createdAt": "2026-08-29T08:41:59.367Z",
       "updatedAt": "2026-09-04T16:55:50.160Z",
       "thumbnail": "",
-      "video": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "video": "",
       "aplusContent": [
         {
           "type": "hero",
@@ -217,7 +217,7 @@
           "type": "video_text",
           "heading": "Application & Absorption Protocol",
           "text": "Demonstration of topical bioavailability.",
-          "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          "videoUrl": "",
           "videoPoster": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=85",
           "published": true
         }
@@ -308,7 +308,7 @@
         },
         {
           "id": "vid-yt-embed",
-          "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          "url": "",
           "title": "Expert Dermatologist Protocol",
           "posterUrl": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=85"
         }
@@ -650,7 +650,7 @@
       "category": "Science",
       "author": "Dr. Vikram Singhania",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1200&q=85",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "featured": false,
       "published": true,
       "visible": true
@@ -667,7 +667,7 @@
       "category": "Science",
       "author": "Dr. Vikram Singhania",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1200&q=85",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "featured": false,
       "published": true,
       "visible": true
@@ -684,7 +684,7 @@
       "category": "Science",
       "author": "Dr. Vikram Singhania",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1200&q=85",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "featured": false,
       "published": true,
       "visible": true
@@ -701,7 +701,7 @@
       "category": "Science",
       "author": "Dr. Vikram Singhania",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1200&q=85",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "featured": false,
       "published": true,
       "visible": true
@@ -718,7 +718,7 @@
       "category": "Science",
       "author": "Dr. Vikram Singhania",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1200&q=85",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "featured": false,
       "published": true,
       "visible": true
@@ -735,7 +735,7 @@
       "category": "Science",
       "author": "Dr. Vikram Singhania",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1200&q=85",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "featured": false,
       "published": true,
       "visible": true
@@ -752,7 +752,7 @@
       "category": "Science",
       "author": "Dr. Vikram Singhania",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1200&q=85",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "featured": false,
       "published": true,
       "visible": true
@@ -769,7 +769,7 @@
       "category": "Science",
       "author": "Dr. Vikram Singhania",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1200&q=85",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "featured": false,
       "published": true,
       "visible": true
@@ -786,7 +786,7 @@
       "category": "Science",
       "author": "Dr. Vikram Singhania",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1200&q=85",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "featured": false,
       "published": true,
       "visible": true
@@ -803,7 +803,7 @@
       "category": "Science",
       "author": "Dr. Vikram Singhania",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1200&q=85",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "featured": false,
       "published": true,
       "visible": true
@@ -820,7 +820,7 @@
       "category": "Science",
       "author": "Dr. Vikram Singhania",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1200&q=85",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "featured": false,
       "published": true,
       "visible": true
@@ -837,7 +837,7 @@
       "category": "Science",
       "author": "Dr. Vikram Singhania",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1200&q=85",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "featured": false,
       "published": true,
       "visible": true
@@ -854,7 +854,7 @@
       "category": "Science",
       "author": "Dr. Vikram Singhania",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1200&q=85",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "featured": false,
       "published": true,
       "visible": true
@@ -966,7 +966,7 @@
       "videos": [
         {
           "id": "emp-vid-1",
-          "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          "url": "",
           "title": "Keynote Address: Dermal Penetration of Micro-Encapsulated Ascorbic Acid",
           "posterUrl": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=85"
         },
@@ -1020,7 +1020,7 @@
       "videos": [
         {
           "id": "emp-vid-1",
-          "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          "url": "",
           "title": "Keynote Address: Dermal Penetration of Micro-Encapsulated Ascorbic Acid",
           "posterUrl": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=85"
         },
@@ -1074,7 +1074,7 @@
       "videos": [
         {
           "id": "emp-vid-1",
-          "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          "url": "",
           "title": "Keynote Address: Dermal Penetration of Micro-Encapsulated Ascorbic Acid",
           "posterUrl": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=85"
         },
@@ -1128,7 +1128,7 @@
       "videos": [
         {
           "id": "emp-vid-1",
-          "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          "url": "",
           "title": "Keynote Address: Dermal Penetration of Micro-Encapsulated Ascorbic Acid",
           "posterUrl": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=85"
         },
@@ -1182,7 +1182,7 @@
       "videos": [
         {
           "id": "emp-vid-1",
-          "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          "url": "",
           "title": "Keynote Address: Dermal Penetration of Micro-Encapsulated Ascorbic Acid",
           "posterUrl": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=85"
         },
@@ -2273,7 +2273,7 @@
       "title": "The Autumn Health & Dermal Ritual",
       "subtitle": "Clinically formulated botanical essentials for restorative care.",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1600&q=85",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "mobileImage": "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=800&q=85",
       "link": "/shop",
       "position": "hero",
@@ -2288,7 +2288,7 @@
       "title": "The Autumn Health & Dermal Ritual",
       "subtitle": "Clinically formulated botanical essentials for restorative care.",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1600&q=85",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "mobileImage": "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=800&q=85",
       "link": "/shop",
       "position": "hero",
@@ -2303,7 +2303,7 @@
       "title": "Spring Scientific Care Edition",
       "subtitle": "Clinically formulated botanical essentials for restorative care.",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1600&q=85",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "mobileImage": "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=800&q=85",
       "link": "/shop",
       "position": "hero",
@@ -2318,7 +2318,7 @@
       "title": "Spring Scientific Care Edition",
       "subtitle": "Clinically formulated botanical essentials for restorative care.",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1600&q=85",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "mobileImage": "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=800&q=85",
       "link": "/shop",
       "position": "hero",
@@ -2344,7 +2344,7 @@
       "updatedAt": "2026-08-30T07:33:59.998Z",
       "title": "Interactive Clinical Laboratory Video Banner",
       "subtitle": "Take a tour of our cleanroom research facility.",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1600&q=85",
       "link": "/about",
       "position": "hero",
@@ -2369,7 +2369,7 @@
       "updatedAt": "2026-08-30T07:42:43.975Z",
       "title": "Scientific Synthesis Video Banner",
       "subtitle": "Experience cleanroom formulation precision.",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1600&q=85",
       "link": "/about",
       "position": "hero",
@@ -2394,7 +2394,7 @@
       "updatedAt": "2026-08-30T07:44:12.281Z",
       "title": "Scientific Synthesis Video Banner",
       "subtitle": "Experience cleanroom formulation precision.",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1600&q=85",
       "link": "/about",
       "position": "hero",
@@ -2419,7 +2419,7 @@
       "updatedAt": "2026-08-30T07:49:21.535Z",
       "title": "Scientific Synthesis Video Banner",
       "subtitle": "Experience cleanroom formulation precision.",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1600&q=85",
       "link": "/about",
       "position": "hero",
@@ -2444,7 +2444,7 @@
       "updatedAt": "2026-08-30T08:33:47.971Z",
       "title": "Scientific Synthesis Video Banner",
       "subtitle": "Experience cleanroom formulation precision.",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1600&q=85",
       "link": "/about",
       "position": "hero",
@@ -2469,7 +2469,7 @@
       "updatedAt": "2026-08-30T18:12:48.496Z",
       "title": "Scientific Synthesis Video Banner",
       "subtitle": "Experience cleanroom formulation precision.",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1600&q=85",
       "link": "/about",
       "position": "hero",
@@ -2494,7 +2494,7 @@
       "updatedAt": "2026-08-30T18:39:49.079Z",
       "title": "Scientific Synthesis Video Banner",
       "subtitle": "Experience cleanroom formulation precision.",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1600&q=85",
       "link": "/about",
       "position": "hero",
@@ -2519,7 +2519,7 @@
       "updatedAt": "2026-08-30T18:55:47.802Z",
       "title": "Scientific Synthesis Video Banner",
       "subtitle": "Experience cleanroom formulation precision.",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1600&q=85",
       "link": "/about",
       "position": "hero",
@@ -2544,7 +2544,7 @@
       "updatedAt": "2026-08-30T19:04:49.404Z",
       "title": "Scientific Synthesis Video Banner",
       "subtitle": "Experience cleanroom formulation precision.",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1600&q=85",
       "link": "/about",
       "position": "hero",
@@ -2569,7 +2569,7 @@
       "updatedAt": "2026-08-30T19:13:53.779Z",
       "title": "Scientific Synthesis Video Banner",
       "subtitle": "Experience cleanroom formulation precision.",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1600&q=85",
       "link": "/about",
       "position": "hero",
@@ -2594,7 +2594,7 @@
       "updatedAt": "2026-08-31T16:19:25.846Z",
       "title": "Scientific Synthesis Video Banner",
       "subtitle": "Experience cleanroom formulation precision.",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1600&q=85",
       "link": "/about",
       "position": "hero",
@@ -2619,7 +2619,7 @@
       "updatedAt": "2026-08-31T17:16:39.627Z",
       "title": "Scientific Synthesis Video Banner",
       "subtitle": "Experience cleanroom formulation precision.",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1600&q=85",
       "link": "/about",
       "position": "hero",
@@ -2644,7 +2644,7 @@
       "updatedAt": "2026-08-31T17:40:15.496Z",
       "title": "Scientific Synthesis Video Banner",
       "subtitle": "Experience cleanroom formulation precision.",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1600&q=85",
       "link": "/about",
       "position": "hero",
@@ -2669,7 +2669,7 @@
       "updatedAt": "2026-08-31T18:10:17.141Z",
       "title": "Scientific Synthesis Video Banner",
       "subtitle": "Experience cleanroom formulation precision.",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1600&q=85",
       "link": "/about",
       "position": "hero",
@@ -2694,7 +2694,7 @@
       "updatedAt": "2026-08-31T18:17:19.776Z",
       "title": "Scientific Synthesis Video Banner",
       "subtitle": "Experience cleanroom formulation precision.",
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "videoUrl": "",
       "image": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1600&q=85",
       "link": "/about",
       "position": "hero",
@@ -2778,423 +2778,6 @@
       "sort": 2,
       "createdAt": "2026-08-29T07:59:01.686Z",
       "updatedAt": "2026-08-29T07:59:01.686Z"
-    },
-    {
-      "id": "rec-mtffafgw-w6w07",
-      "createdAt": "2026-08-30T06:22:51.344Z",
-      "updatedAt": "2026-08-30T06:22:51.344Z",
-      "name": "Dr. Ananya Sharma",
-      "title": "Consultant Dermatologist, AIIMS",
-      "body": "Lumine-C provides exceptional antioxidant shielding without triggering trans-epidermal moisture loss.",
-      "rating": 5,
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      "image": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mtffasxq-5t264",
-      "createdAt": "2026-08-30T06:23:08.798Z",
-      "updatedAt": "2026-08-30T06:23:08.798Z",
-      "name": "Dr. Ananya Sharma",
-      "title": "Consultant Dermatologist, AIIMS",
-      "body": "Lumine-C provides exceptional antioxidant shielding without triggering trans-epidermal moisture loss.",
-      "rating": 5,
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      "image": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mtffcjdp-ziz7u",
-      "createdAt": "2026-08-30T06:24:29.725Z",
-      "updatedAt": "2026-08-30T06:24:29.725Z",
-      "name": "Dr. Ananya Sharma",
-      "title": "Consultant Dermatologist, AIIMS",
-      "body": "Lumine-C provides exceptional antioxidant shielding without triggering trans-epidermal moisture loss.",
-      "rating": 5,
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      "image": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mtffe1y1-7oe28",
-      "createdAt": "2026-08-30T06:25:40.441Z",
-      "updatedAt": "2026-08-30T06:25:40.441Z",
-      "name": "Dr. Ananya Sharma",
-      "title": "Consultant Dermatologist, AIIMS",
-      "body": "Lumine-C provides exceptional antioxidant shielding without triggering trans-epidermal moisture loss.",
-      "rating": 5,
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      "image": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mtfh6rnt-npggi",
-      "createdAt": "2026-08-30T07:15:59.753Z",
-      "updatedAt": "2026-08-30T07:15:59.753Z",
-      "name": "Dr. Vikram Sethi",
-      "title": "Lead Biochemist, BioCare Laboratories",
-      "body": "Queens Care formulas represent the gold standard in pharmaceutical precision and patient tolerability.",
-      "rating": 5,
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      "image": "https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mtfh9ulu-tgq36",
-      "createdAt": "2026-08-30T07:18:23.538Z",
-      "updatedAt": "2026-08-30T07:18:23.538Z",
-      "name": "Dr. Vikram Sethi",
-      "title": "Lead Biochemist, BioCare Laboratories",
-      "body": "Queens Care formulas represent the gold standard in pharmaceutical precision and patient tolerability.",
-      "rating": 5,
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      "image": "https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mtfhtx7i-yvtli",
-      "createdAt": "2026-08-30T07:34:00.030Z",
-      "updatedAt": "2026-08-30T07:34:00.030Z",
-      "name": "Dr. Alisha Kapoor",
-      "title": "Associate Professor, Department of Dermatology",
-      "body": "Remarkable efficacy in treating barrier-compromised skin.",
-      "rating": 5,
-      "image": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mtfhtx8b-q69re",
-      "createdAt": "2026-08-30T07:34:00.059Z",
-      "updatedAt": "2026-08-30T07:34:00.059Z",
-      "name": "Dr. Rajeshwar Sen",
-      "title": "Senior Consultant Dermatologist",
-      "body": "The patient satisfaction metrics with Lumine-C are consistently exceptional.",
-      "rating": 5,
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      "image": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mtfi55i3-dzk8f",
-      "createdAt": "2026-08-30T07:42:43.995Z",
-      "updatedAt": "2026-08-30T07:42:43.995Z",
-      "name": "Dr. Aarti Subramanian",
-      "title": "Senior Dermatologist, Apollo Clinics",
-      "body": "Lumine-C sets a benchmark for antioxidant stability in medical aesthetic practice.",
-      "rating": 5,
-      "image": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mtfi55ir-pardq",
-      "createdAt": "2026-08-30T07:42:44.019Z",
-      "updatedAt": "2026-08-30T07:42:44.019Z",
-      "name": "Dr. Kabir Malhotra",
-      "title": "Lead Cosmetic Surgeon, Mumbai",
-      "body": "Exceptional clinical outcomes with post-procedural recovery.",
-      "rating": 5,
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      "image": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mtfi71n5-ulng0",
-      "createdAt": "2026-08-30T07:44:12.305Z",
-      "updatedAt": "2026-08-30T07:44:12.305Z",
-      "name": "Dr. Aarti Subramanian",
-      "title": "Senior Dermatologist, Apollo Clinics",
-      "body": "Lumine-C sets a benchmark for antioxidant stability in medical aesthetic practice.",
-      "rating": 5,
-      "image": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mtfi71nw-jtrh6",
-      "createdAt": "2026-08-30T07:44:12.332Z",
-      "updatedAt": "2026-08-30T07:44:12.332Z",
-      "name": "Dr. Kabir Malhotra",
-      "title": "Lead Cosmetic Surgeon, Mumbai",
-      "body": "Exceptional clinical outcomes with post-procedural recovery.",
-      "rating": 5,
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      "image": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mtfido9e-haza4",
-      "createdAt": "2026-08-30T07:49:21.554Z",
-      "updatedAt": "2026-08-30T07:49:21.554Z",
-      "name": "Dr. Aarti Subramanian",
-      "title": "Senior Dermatologist, Apollo Clinics",
-      "body": "Lumine-C sets a benchmark for antioxidant stability in medical aesthetic practice.",
-      "rating": 5,
-      "image": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mtfidoa5-htufk",
-      "createdAt": "2026-08-30T07:49:21.581Z",
-      "updatedAt": "2026-08-30T07:49:21.581Z",
-      "name": "Dr. Kabir Malhotra",
-      "title": "Lead Cosmetic Surgeon, Mumbai",
-      "body": "Exceptional clinical outcomes with post-procedural recovery.",
-      "rating": 5,
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      "image": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mtfjytph-rnnyo",
-      "createdAt": "2026-08-30T08:33:48.005Z",
-      "updatedAt": "2026-08-30T08:33:48.005Z",
-      "name": "Dr. Aarti Subramanian",
-      "title": "Senior Dermatologist, Apollo Clinics",
-      "body": "Lumine-C sets a benchmark for antioxidant stability in medical aesthetic practice.",
-      "rating": 5,
-      "image": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mtfjytq8-v2nqc",
-      "createdAt": "2026-08-30T08:33:48.032Z",
-      "updatedAt": "2026-08-30T08:33:48.032Z",
-      "name": "Dr. Kabir Malhotra",
-      "title": "Lead Cosmetic Surgeon, Mumbai",
-      "body": "Exceptional clinical outcomes with post-procedural recovery.",
-      "rating": 5,
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      "image": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mtg4nfo1-b2679",
-      "createdAt": "2026-08-30T18:12:48.529Z",
-      "updatedAt": "2026-08-30T18:12:48.529Z",
-      "name": "Dr. Aarti Subramanian",
-      "title": "Senior Dermatologist, Apollo Clinics",
-      "body": "Lumine-C sets a benchmark for antioxidant stability in medical aesthetic practice.",
-      "rating": 5,
-      "image": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mtg4nfou-8t9k7",
-      "createdAt": "2026-08-30T18:12:48.558Z",
-      "updatedAt": "2026-08-30T18:12:48.558Z",
-      "name": "Dr. Kabir Malhotra",
-      "title": "Lead Cosmetic Surgeon, Mumbai",
-      "body": "Exceptional clinical outcomes with post-procedural recovery.",
-      "rating": 5,
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      "image": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mtg5m649-2pghx",
-      "createdAt": "2026-08-30T18:39:49.113Z",
-      "updatedAt": "2026-08-30T18:39:49.113Z",
-      "name": "Dr. Aarti Subramanian",
-      "title": "Senior Dermatologist, Apollo Clinics",
-      "body": "Lumine-C sets a benchmark for antioxidant stability in medical aesthetic practice.",
-      "rating": 5,
-      "image": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mtg5m650-ogfog",
-      "createdAt": "2026-08-30T18:39:49.140Z",
-      "updatedAt": "2026-08-30T18:39:49.140Z",
-      "name": "Dr. Kabir Malhotra",
-      "title": "Lead Cosmetic Surgeon, Mumbai",
-      "body": "Exceptional clinical outcomes with post-procedural recovery.",
-      "rating": 5,
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      "image": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mtg66pvp-5lxrq",
-      "createdAt": "2026-08-30T18:55:47.845Z",
-      "updatedAt": "2026-08-30T18:55:47.845Z",
-      "name": "Dr. Aarti Subramanian",
-      "title": "Senior Dermatologist, Apollo Clinics",
-      "body": "Lumine-C sets a benchmark for antioxidant stability in medical aesthetic practice.",
-      "rating": 5,
-      "image": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mtg66pwe-cdjju",
-      "createdAt": "2026-08-30T18:55:47.870Z",
-      "updatedAt": "2026-08-30T18:55:47.870Z",
-      "name": "Dr. Kabir Malhotra",
-      "title": "Lead Cosmetic Surgeon, Mumbai",
-      "body": "Exceptional clinical outcomes with post-procedural recovery.",
-      "rating": 5,
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      "image": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mtg6ibrk-wlbpv",
-      "createdAt": "2026-08-30T19:04:49.424Z",
-      "updatedAt": "2026-08-30T19:04:49.424Z",
-      "name": "Dr. Aarti Subramanian",
-      "title": "Senior Dermatologist, Apollo Clinics",
-      "body": "Lumine-C sets a benchmark for antioxidant stability in medical aesthetic practice.",
-      "rating": 5,
-      "image": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mtg6ibs9-v5bjv",
-      "createdAt": "2026-08-30T19:04:49.449Z",
-      "updatedAt": "2026-08-30T19:04:49.449Z",
-      "name": "Dr. Kabir Malhotra",
-      "title": "Lead Cosmetic Surgeon, Mumbai",
-      "body": "Exceptional clinical outcomes with post-procedural recovery.",
-      "rating": 5,
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      "image": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mtg6tztg-d9xap",
-      "createdAt": "2026-08-30T19:13:53.812Z",
-      "updatedAt": "2026-08-30T19:13:53.812Z",
-      "name": "Dr. Aarti Subramanian",
-      "title": "Senior Dermatologist, Apollo Clinics",
-      "body": "Lumine-C sets a benchmark for antioxidant stability in medical aesthetic practice.",
-      "rating": 5,
-      "image": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mtg6tzu9-kg8xv",
-      "createdAt": "2026-08-30T19:13:53.841Z",
-      "updatedAt": "2026-08-30T19:13:53.841Z",
-      "name": "Dr. Kabir Malhotra",
-      "title": "Lead Cosmetic Surgeon, Mumbai",
-      "body": "Exceptional clinical outcomes with post-procedural recovery.",
-      "rating": 5,
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      "image": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mthg1hdj-3r96z",
-      "createdAt": "2026-08-31T16:19:25.879Z",
-      "updatedAt": "2026-08-31T16:19:25.879Z",
-      "name": "Dr. Aarti Subramanian",
-      "title": "Senior Dermatologist, Apollo Clinics",
-      "body": "Lumine-C sets a benchmark for antioxidant stability in medical aesthetic practice.",
-      "rating": 5,
-      "image": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mthg1hec-grj91",
-      "createdAt": "2026-08-31T16:19:25.908Z",
-      "updatedAt": "2026-08-31T16:19:25.908Z",
-      "name": "Dr. Kabir Malhotra",
-      "title": "Lead Cosmetic Surgeon, Mumbai",
-      "body": "Exceptional clinical outcomes with post-procedural recovery.",
-      "rating": 5,
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      "image": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mthi32we-3qqcz",
-      "createdAt": "2026-08-31T17:16:39.662Z",
-      "updatedAt": "2026-08-31T17:16:39.662Z",
-      "name": "Dr. Aarti Subramanian",
-      "title": "Senior Dermatologist, Apollo Clinics",
-      "body": "Lumine-C sets a benchmark for antioxidant stability in medical aesthetic practice.",
-      "rating": 5,
-      "image": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mthi32x5-e32qa",
-      "createdAt": "2026-08-31T17:16:39.689Z",
-      "updatedAt": "2026-08-31T17:16:39.689Z",
-      "name": "Dr. Kabir Malhotra",
-      "title": "Lead Cosmetic Surgeon, Mumbai",
-      "body": "Exceptional clinical outcomes with post-procedural recovery.",
-      "rating": 5,
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      "image": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mthixfds-nlwrg",
-      "createdAt": "2026-08-31T17:40:15.520Z",
-      "updatedAt": "2026-08-31T17:40:15.520Z",
-      "name": "Dr. Aarti Subramanian",
-      "title": "Senior Dermatologist, Apollo Clinics",
-      "body": "Lumine-C sets a benchmark for antioxidant stability in medical aesthetic practice.",
-      "rating": 5,
-      "image": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mthixfej-1sher",
-      "createdAt": "2026-08-31T17:40:15.547Z",
-      "updatedAt": "2026-08-31T17:40:15.547Z",
-      "name": "Dr. Kabir Malhotra",
-      "title": "Lead Cosmetic Surgeon, Mumbai",
-      "body": "Exceptional clinical outcomes with post-procedural recovery.",
-      "rating": 5,
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      "image": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mthk01jq-pf5yj",
-      "createdAt": "2026-08-31T18:10:17.174Z",
-      "updatedAt": "2026-08-31T18:10:17.174Z",
-      "name": "Dr. Aarti Subramanian",
-      "title": "Senior Dermatologist, Apollo Clinics",
-      "body": "Lumine-C sets a benchmark for antioxidant stability in medical aesthetic practice.",
-      "rating": 5,
-      "image": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mthk01kj-9hp4q",
-      "createdAt": "2026-08-31T18:10:17.203Z",
-      "updatedAt": "2026-08-31T18:10:17.203Z",
-      "name": "Dr. Kabir Malhotra",
-      "title": "Lead Cosmetic Surgeon, Mumbai",
-      "body": "Exceptional clinical outcomes with post-procedural recovery.",
-      "rating": 5,
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      "image": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mthk93ng-w9nhw",
-      "createdAt": "2026-08-31T18:17:19.804Z",
-      "updatedAt": "2026-08-31T18:17:19.804Z",
-      "name": "Dr. Aarti Subramanian",
-      "title": "Senior Dermatologist, Apollo Clinics",
-      "body": "Lumine-C sets a benchmark for antioxidant stability in medical aesthetic practice.",
-      "rating": 5,
-      "image": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80",
-      "visible": true
-    },
-    {
-      "id": "rec-mthk93p0-c85vv",
-      "createdAt": "2026-08-31T18:17:19.860Z",
-      "updatedAt": "2026-08-31T18:17:19.860Z",
-      "name": "Dr. Kabir Malhotra",
-      "title": "Lead Cosmetic Surgeon, Mumbai",
-      "body": "Exceptional clinical outcomes with post-procedural recovery.",
-      "rating": 5,
-      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      "image": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=400&q=80",
-      "visible": true
     }
   ],
   "offers": [
@@ -3896,402 +3479,17 @@
       "message": "Requesting clinical formulation data for Lumine-C.",
       "status": "approved",
       "createdAt": "2026-08-29T07:59:01.686Z",
-      "updatedAt": "2026-08-29T07:59:01.686Z"
+      "updatedAt": "2026-08-29T07:59:01.686Z",
+      "designation": "Senior Consultant Dermatologist",
+      "experience": "14+ Years Clinical Practice",
+      "bio": "Specializing in barrier repair pharmacology and cutaneous oxidative stress management. Member of the Indian Association of Dermatologists (IADVL).",
+      "verified": true,
+      "visible": true,
+      "sort": 0,
+      "photo": "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=400&q=80"
     }
   ],
-  "reviews": [
-    {
-      "id": "rev-mtfh6rrq",
-      "createdAt": "2026-08-30T07:15:59.894Z",
-      "updatedAt": "2026-08-30T07:15:59.894Z",
-      "visible": true,
-      "helpful": 0,
-      "verified": true,
-      "productSlug": "lumine-c-serum",
-      "product": {
-        "id": "p-lumine",
-        "name": "Lumine-C Clinical Radiance 9305",
-        "slug": "lumine-c-serum"
-      },
-      "user": {
-        "name": "Dr. Rohini Verma"
-      },
-      "productId": "lumine-c-serum",
-      "customerName": "Dr. Rohini Verma",
-      "rating": 5,
-      "title": "Outstanding stability and skin barrier support",
-      "body": "Tested over 60 days in clinical trial cohort with zero adverse cutaneous responses.",
-      "image": ""
-    },
-    {
-      "id": "rev-mtfh9uqf",
-      "createdAt": "2026-08-30T07:18:23.703Z",
-      "updatedAt": "2026-08-30T07:18:23.703Z",
-      "visible": true,
-      "helpful": 0,
-      "verified": true,
-      "productSlug": "lumine-c-serum",
-      "product": {
-        "id": "p-lumine",
-        "name": "Lumine-C Clinical Radiance 3074",
-        "slug": "lumine-c-serum"
-      },
-      "user": {
-        "name": "Dr. Rohini Verma"
-      },
-      "productId": "lumine-c-serum",
-      "customerName": "Dr. Rohini Verma",
-      "rating": 5,
-      "title": "Outstanding stability and skin barrier support",
-      "body": "Tested over 60 days in clinical trial cohort with zero adverse cutaneous responses.",
-      "image": ""
-    },
-    {
-      "id": "rev-mtfhtxa5",
-      "createdAt": "2026-08-30T07:34:00.125Z",
-      "updatedAt": "2026-08-30T07:34:00.125Z",
-      "visible": true,
-      "helpful": 0,
-      "verified": true,
-      "productSlug": "lumine-c-serum",
-      "product": {
-        "id": "p-lumine",
-        "name": "Lumine-C Clinical Radiance 9425",
-        "slug": "lumine-c-serum"
-      },
-      "user": {
-        "name": "Dr. Meenakshi Sunder"
-      },
-      "productId": "lumine-c-serum",
-      "customerName": "Dr. Meenakshi Sunder",
-      "rating": 5,
-      "title": "Clinical Evaluation Report 0107",
-      "body": "High patient adherence and excellent cosmetic elegance.",
-      "image": ""
-    },
-    {
-      "id": "rev-mtfi55k2",
-      "createdAt": "2026-08-30T07:42:44.066Z",
-      "updatedAt": "2026-08-30T07:42:44.066Z",
-      "visible": true,
-      "helpful": 0,
-      "verified": true,
-      "productSlug": "lumine-c-serum",
-      "product": {
-        "id": "p-lumine",
-        "name": "Lumine-C Clinical Radiance 3609",
-        "slug": "lumine-c-serum"
-      },
-      "user": {
-        "name": "Dr. Sneha Roy"
-      },
-      "productId": "lumine-c-serum",
-      "customerName": "Dr. Sneha Roy",
-      "rating": 5,
-      "title": "Clinical Tolerability Report 4057",
-      "body": "Highly stable ascorbic formulation with rapid epidermal penetration.",
-      "image": ""
-    },
-    {
-      "id": "rev-mtfi71pq",
-      "createdAt": "2026-08-30T07:44:12.398Z",
-      "updatedAt": "2026-08-30T07:44:12.398Z",
-      "visible": true,
-      "helpful": 0,
-      "verified": true,
-      "productSlug": "lumine-c-serum",
-      "product": {
-        "id": "p-lumine",
-        "name": "Lumine-C Clinical Radiance 1666",
-        "slug": "lumine-c-serum"
-      },
-      "user": {
-        "name": "Dr. Sneha Roy"
-      },
-      "productId": "lumine-c-serum",
-      "customerName": "Dr. Sneha Roy",
-      "rating": 5,
-      "title": "Clinical Tolerability Report 2390",
-      "body": "Highly stable ascorbic formulation with rapid epidermal penetration.",
-      "image": ""
-    },
-    {
-      "id": "rev-mtfidobj",
-      "createdAt": "2026-08-30T07:49:21.631Z",
-      "updatedAt": "2026-08-30T07:49:21.631Z",
-      "visible": true,
-      "helpful": 0,
-      "verified": true,
-      "productSlug": "lumine-c-serum",
-      "product": {
-        "id": "p-lumine",
-        "name": "Lumine-C Clinical Radiance 1172",
-        "slug": "lumine-c-serum"
-      },
-      "user": {
-        "name": "Dr. Sneha Roy"
-      },
-      "productId": "lumine-c-serum",
-      "customerName": "Dr. Sneha Roy",
-      "rating": 5,
-      "title": "Clinical Tolerability Report 1628",
-      "body": "Highly stable ascorbic formulation with rapid epidermal penetration.",
-      "image": ""
-    },
-    {
-      "id": "rev-mtfjytrn",
-      "createdAt": "2026-08-30T08:33:48.083Z",
-      "updatedAt": "2026-08-30T08:33:48.083Z",
-      "visible": true,
-      "helpful": 0,
-      "verified": true,
-      "productSlug": "lumine-c-serum",
-      "product": {
-        "id": "p-lumine",
-        "name": "Lumine-C Clinical Radiance 7571",
-        "slug": "lumine-c-serum"
-      },
-      "user": {
-        "name": "Dr. Sneha Roy"
-      },
-      "productId": "lumine-c-serum",
-      "customerName": "Dr. Sneha Roy",
-      "rating": 5,
-      "title": "Clinical Tolerability Report 8072",
-      "body": "Highly stable ascorbic formulation with rapid epidermal penetration.",
-      "image": ""
-    },
-    {
-      "id": "rev-mtg4nfq5",
-      "createdAt": "2026-08-30T18:12:48.605Z",
-      "updatedAt": "2026-08-30T18:12:48.605Z",
-      "visible": true,
-      "helpful": 0,
-      "verified": true,
-      "productSlug": "lumine-c-serum",
-      "product": {
-        "id": "p-lumine",
-        "name": "Lumine-C Clinical Radiance 7915",
-        "slug": "lumine-c-serum"
-      },
-      "user": {
-        "name": "Dr. Sneha Roy"
-      },
-      "productId": "lumine-c-serum",
-      "customerName": "Dr. Sneha Roy",
-      "rating": 5,
-      "title": "Clinical Tolerability Report 8598",
-      "body": "Highly stable ascorbic formulation with rapid epidermal penetration.",
-      "image": ""
-    },
-    {
-      "id": "rev-mtg5m66z",
-      "createdAt": "2026-08-30T18:39:49.211Z",
-      "updatedAt": "2026-08-30T18:39:49.211Z",
-      "visible": true,
-      "helpful": 0,
-      "verified": true,
-      "productSlug": "lumine-c-serum",
-      "product": {
-        "id": "p-lumine",
-        "name": "Lumine-C Clinical Radiance 8707",
-        "slug": "lumine-c-serum"
-      },
-      "user": {
-        "name": "Dr. Sneha Roy"
-      },
-      "productId": "lumine-c-serum",
-      "customerName": "Dr. Sneha Roy",
-      "rating": 5,
-      "title": "Clinical Tolerability Report 9205",
-      "body": "Highly stable ascorbic formulation with rapid epidermal penetration.",
-      "image": ""
-    },
-    {
-      "id": "rev-mtg66py7",
-      "createdAt": "2026-08-30T18:55:47.935Z",
-      "updatedAt": "2026-08-30T18:55:47.935Z",
-      "visible": true,
-      "helpful": 0,
-      "verified": true,
-      "productSlug": "lumine-c-serum",
-      "product": {
-        "id": "p-lumine",
-        "name": "Lumine-C Clinical Radiance 7437",
-        "slug": "lumine-c-serum"
-      },
-      "user": {
-        "name": "Dr. Sneha Roy"
-      },
-      "productId": "lumine-c-serum",
-      "customerName": "Dr. Sneha Roy",
-      "rating": 5,
-      "title": "Clinical Tolerability Report 7920",
-      "body": "Highly stable ascorbic formulation with rapid epidermal penetration.",
-      "image": ""
-    },
-    {
-      "id": "rev-mtg6ibu2",
-      "createdAt": "2026-08-30T19:04:49.514Z",
-      "updatedAt": "2026-08-30T19:04:49.514Z",
-      "visible": true,
-      "helpful": 0,
-      "verified": true,
-      "productSlug": "liko-q-suspension",
-      "product": {
-        "id": "p-liko-q",
-        "name": "Lumine-C Clinical Radiance 9012",
-        "slug": "liko-q-suspension"
-      },
-      "user": {
-        "name": "Dr. Sneha Roy"
-      },
-      "productId": "liko-q-suspension",
-      "customerName": "Dr. Sneha Roy",
-      "rating": 5,
-      "title": "Clinical Tolerability Report 9500",
-      "body": "Highly stable ascorbic formulation with rapid epidermal penetration.",
-      "image": ""
-    },
-    {
-      "id": "rev-mtg6tzwi",
-      "createdAt": "2026-08-30T19:13:53.922Z",
-      "updatedAt": "2026-08-30T19:13:53.922Z",
-      "visible": true,
-      "helpful": 0,
-      "verified": true,
-      "productSlug": "liko-q-suspension",
-      "product": {
-        "id": "p-liko-q",
-        "name": "Lumine-C Clinical Radiance 3353",
-        "slug": "liko-q-suspension"
-      },
-      "user": {
-        "name": "Dr. Sneha Roy"
-      },
-      "productId": "liko-q-suspension",
-      "customerName": "Dr. Sneha Roy",
-      "rating": 5,
-      "title": "Clinical Tolerability Report 3907",
-      "body": "Highly stable ascorbic formulation with rapid epidermal penetration.",
-      "image": ""
-    },
-    {
-      "id": "rev-mthg1hfx",
-      "createdAt": "2026-08-31T16:19:25.965Z",
-      "updatedAt": "2026-08-31T16:19:25.965Z",
-      "visible": true,
-      "helpful": 0,
-      "verified": true,
-      "productSlug": "liko-q-suspension",
-      "product": {
-        "id": "p-liko-q",
-        "name": "Lumine-C Clinical Radiance 5433",
-        "slug": "liko-q-suspension"
-      },
-      "user": {
-        "name": "Dr. Sneha Roy"
-      },
-      "productId": "liko-q-suspension",
-      "customerName": "Dr. Sneha Roy",
-      "rating": 5,
-      "title": "Clinical Tolerability Report 5958",
-      "body": "Highly stable ascorbic formulation with rapid epidermal penetration.",
-      "image": ""
-    },
-    {
-      "id": "rev-mthi32zd",
-      "createdAt": "2026-08-31T17:16:39.769Z",
-      "updatedAt": "2026-08-31T17:16:39.769Z",
-      "visible": true,
-      "helpful": 0,
-      "verified": true,
-      "productSlug": "liko-q-suspension",
-      "product": {
-        "id": "p-liko-q",
-        "name": "Lumine-C Clinical Radiance 9235",
-        "slug": "liko-q-suspension"
-      },
-      "user": {
-        "name": "Dr. Sneha Roy"
-      },
-      "productId": "liko-q-suspension",
-      "customerName": "Dr. Sneha Roy",
-      "rating": 5,
-      "title": "Clinical Tolerability Report 9760",
-      "body": "Highly stable ascorbic formulation with rapid epidermal penetration.",
-      "image": ""
-    },
-    {
-      "id": "rev-mthixfgb",
-      "createdAt": "2026-08-31T17:40:15.611Z",
-      "updatedAt": "2026-08-31T17:40:15.611Z",
-      "visible": true,
-      "helpful": 0,
-      "verified": true,
-      "productSlug": "liko-q-suspension",
-      "product": {
-        "id": "p-liko-q",
-        "name": "Lumine-C Clinical Radiance 5104",
-        "slug": "liko-q-suspension"
-      },
-      "user": {
-        "name": "Dr. Sneha Roy"
-      },
-      "productId": "liko-q-suspension",
-      "customerName": "Dr. Sneha Roy",
-      "rating": 5,
-      "title": "Clinical Tolerability Report 5597",
-      "body": "Highly stable ascorbic formulation with rapid epidermal penetration.",
-      "image": ""
-    },
-    {
-      "id": "rev-mthk01mq",
-      "createdAt": "2026-08-31T18:10:17.282Z",
-      "updatedAt": "2026-08-31T18:10:17.282Z",
-      "visible": true,
-      "helpful": 0,
-      "verified": true,
-      "productSlug": "liko-q-suspension",
-      "product": {
-        "id": "p-liko-q",
-        "name": "Lumine-C Clinical Radiance 6799",
-        "slug": "liko-q-suspension"
-      },
-      "user": {
-        "name": "Dr. Sneha Roy"
-      },
-      "productId": "liko-q-suspension",
-      "customerName": "Dr. Sneha Roy",
-      "rating": 5,
-      "title": "Clinical Tolerability Report 7266",
-      "body": "Highly stable ascorbic formulation with rapid epidermal penetration.",
-      "image": ""
-    },
-    {
-      "id": "rev-mthk93qs",
-      "createdAt": "2026-08-31T18:17:19.924Z",
-      "updatedAt": "2026-08-31T18:17:19.924Z",
-      "visible": true,
-      "helpful": 0,
-      "verified": true,
-      "productSlug": "liko-q-suspension",
-      "product": {
-        "id": "p-liko-q",
-        "name": "Lumine-C Clinical Radiance 9266",
-        "slug": "liko-q-suspension"
-      },
-      "user": {
-        "name": "Dr. Sneha Roy"
-      },
-      "productId": "liko-q-suspension",
-      "customerName": "Dr. Sneha Roy",
-      "rating": 5,
-      "title": "Clinical Tolerability Report 9911",
-      "body": "Highly stable ascorbic formulation with rapid epidermal penetration.",
-      "image": ""
-    }
-  ],
+  "reviews": [],
   "content": [
     {
       "id": "cnt-about",
@@ -5608,7 +4806,7 @@
           "type": "video_text",
           "heading": "Application & Absorption Protocol",
           "text": "Demonstration of topical bioavailability.",
-          "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          "videoUrl": "",
           "videoPoster": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=85",
           "published": true
         }
@@ -5634,7 +4832,7 @@
           "type": "video_text",
           "heading": "Application & Absorption Protocol",
           "text": "Demonstration of topical bioavailability.",
-          "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          "videoUrl": "",
           "videoPoster": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=85",
           "published": true
         }
@@ -5660,7 +4858,7 @@
           "type": "video_text",
           "heading": "Application & Absorption Protocol",
           "text": "Demonstration of topical bioavailability.",
-          "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          "videoUrl": "",
           "videoPoster": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=85",
           "published": true
         }
@@ -5686,7 +4884,7 @@
           "type": "video_text",
           "heading": "Application & Absorption Protocol",
           "text": "Demonstration of topical bioavailability.",
-          "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          "videoUrl": "",
           "videoPoster": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=85",
           "published": true
         }
@@ -5712,7 +4910,7 @@
           "type": "video_text",
           "heading": "Application & Absorption Protocol",
           "text": "Demonstration of topical bioavailability.",
-          "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          "videoUrl": "",
           "videoPoster": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=85",
           "published": true
         }
@@ -5738,7 +4936,7 @@
           "type": "video_text",
           "heading": "Application & Absorption Protocol",
           "text": "Demonstration of topical bioavailability.",
-          "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          "videoUrl": "",
           "videoPoster": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=85",
           "published": true
         }
@@ -5764,7 +4962,7 @@
           "type": "video_text",
           "heading": "Application & Absorption Protocol",
           "text": "Demonstration of topical bioavailability.",
-          "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          "videoUrl": "",
           "videoPoster": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=85",
           "published": true
         }
@@ -5790,7 +4988,7 @@
           "type": "video_text",
           "heading": "Application & Absorption Protocol",
           "text": "Demonstration of topical bioavailability.",
-          "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          "videoUrl": "",
           "videoPoster": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=85",
           "published": true
         }
@@ -5816,7 +5014,7 @@
           "type": "video_text",
           "heading": "Application & Absorption Protocol",
           "text": "Demonstration of topical bioavailability.",
-          "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          "videoUrl": "",
           "videoPoster": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=85",
           "published": true
         }
@@ -5842,7 +5040,7 @@
           "type": "video_text",
           "heading": "Application & Absorption Protocol",
           "text": "Demonstration of topical bioavailability.",
-          "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          "videoUrl": "",
           "videoPoster": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=85",
           "published": true
         }
@@ -5868,7 +5066,7 @@
           "type": "video_text",
           "heading": "Application & Absorption Protocol",
           "text": "Demonstration of topical bioavailability.",
-          "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          "videoUrl": "",
           "videoPoster": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=85",
           "published": true
         }
@@ -5894,7 +5092,7 @@
           "type": "video_text",
           "heading": "Application & Absorption Protocol",
           "text": "Demonstration of topical bioavailability.",
-          "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          "videoUrl": "",
           "videoPoster": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=85",
           "published": true
         }
@@ -5920,7 +5118,7 @@
           "type": "video_text",
           "heading": "Application & Absorption Protocol",
           "text": "Demonstration of topical bioavailability.",
-          "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          "videoUrl": "",
           "videoPoster": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=85",
           "published": true
         }
@@ -5946,7 +5144,7 @@
           "type": "video_text",
           "heading": "Application & Absorption Protocol",
           "text": "Demonstration of topical bioavailability.",
-          "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          "videoUrl": "",
           "videoPoster": "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=85",
           "published": true
         }
