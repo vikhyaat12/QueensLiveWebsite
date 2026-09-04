@@ -267,9 +267,22 @@ export default function QueensCareExperience() {
                   {String(c.secondaryText || "How we formulate")} <span>↗</span>
                 </a>
               </div>
-              <div className="ratings">
-                <div className="avatars"><span>R</span><span>S</span><span>A</span></div>
-                <p><b>{String(c.rating || "4.9 / 5")}</b> from {String(c.ratingCount || "12,000+ care rituals")}</p>
+              <div className="ratings" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                {c.rating && c.ratingCount ? (
+                  <>
+                    <div className="avatars" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", color: "var(--gold)", background: "rgba(212,175,55,0.12)", padding: "4px 8px", borderRadius: 4, border: "1px solid rgba(212,175,55,0.3)" }}>
+                      ★ VERIFIED
+                    </div>
+                    <p style={{ margin: 0 }}><b>{String(c.rating)}</b> {String(c.ratingCount)}</p>
+                  </>
+                ) : (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--ink)" }}>
+                    <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: "#2e7d32" }} />
+                    <span style={{ fontWeight: 600, letterSpacing: "0.02em" }}>{String(c.trustHeadline || "Direct Cold-Chain Distribution")}</span>
+                    <span style={{ opacity: 0.4 }}>·</span>
+                    <span style={{ color: "var(--muted)" }}>{String(c.trustSubline || "Batch Purity Tested")}</span>
+                  </div>
+                )}
               </div>
             </div>
             {heroImage ? (
@@ -492,16 +505,17 @@ export default function QueensCareExperience() {
       }
 
       case "testimonial": {
-        const currentQuote = testimonials.length > 0
+        const hasTestimonials = testimonials.length > 0;
+        const currentQuote = hasTestimonials
           ? testimonials[testimonialIndex]?.body
-          : (c.quote || "For the first time, my wellness routine feels less like a chore — and more like a quiet promise to myself.");
-        const currentAuthor = testimonials.length > 0
+          : (c.quote || "Every formulation released by Queens Care Laboratories adheres to rigorous active compound stability, strict batch release standards, and complete ingredient transparency.");
+        const currentAuthor = hasTestimonials
           ? testimonials[testimonialIndex]?.name
-          : (c.author || "Meera Shah");
-        const currentAttribution = testimonials.length > 0
+          : (c.author || "Formulation & Quality Committee");
+        const currentAttribution = hasTestimonials
           ? testimonials[testimonialIndex]?.title
-          : (c.attribution || "Queens Care member since 2023");
-        const count = testimonials.length || 3;
+          : (c.attribution || "Queens Care Laboratories · Scientific Standards");
+        const count = testimonials.length;
         return (
           <section className="quote" key={sec.id ? String(sec.id) : `quote-${idx}`} style={secStyle}>
             <div className="quote-mark">&ldquo;</div>
@@ -509,24 +523,33 @@ export default function QueensCareExperience() {
             <div>
               <b>{currentAuthor}</b>
               <span>{currentAttribution}</span>
+              {!hasTestimonials && (
+                <div style={{ marginTop: 8 }}>
+                  <Link href="/trust" style={{ fontSize: 12, color: "var(--gold)", textDecoration: "none", fontWeight: 600 }}>
+                    Read our Trust &amp; Quality Standards →
+                  </Link>
+                </div>
+              )}
             </div>
-            <div className="quote-controls">
-              <button
-                type="button"
-                aria-label="Previous testimonial"
-                onClick={() => setTestimonialIndex((i) => (i === 0 ? (testimonials.length ? testimonials.length - 1 : 0) : i - 1))}
-              >
-                ←
-              </button>
-              <span>{String(testimonials.length ? testimonialIndex + 1 : 1).padStart(2, "0")} / {String(count).padStart(2, "0")}</span>
-              <button
-                type="button"
-                aria-label="Next testimonial"
-                onClick={() => setTestimonialIndex((i) => (testimonials.length ? (i + 1) % testimonials.length : 0))}
-              >
-                →
-              </button>
-            </div>
+            {hasTestimonials && count > 1 && (
+              <div className="quote-controls">
+                <button
+                  type="button"
+                  aria-label="Previous testimonial"
+                  onClick={() => setTestimonialIndex((i) => (i === 0 ? count - 1 : i - 1))}
+                >
+                  ←
+                </button>
+                <span>{String(testimonialIndex + 1).padStart(2, "0")} / {String(count).padStart(2, "0")}</span>
+                <button
+                  type="button"
+                  aria-label="Next testimonial"
+                  onClick={() => setTestimonialIndex((i) => (i + 1) % count)}
+                >
+                  →
+                </button>
+              </div>
+            )}
           </section>
         );
       }
@@ -833,6 +856,9 @@ export default function QueensCareExperience() {
             { label: "Contact", href: "/contact", visible: true, sort: 8 }
           ]},
           { section: "Support", links: [
+            { label: "Trust Center", href: "/trust", visible: true, sort: 8.5 },
+            { label: "Quality Assurance", href: "/quality-assurance", visible: true, sort: 8.6 },
+            { label: "Manufacturing", href: "/manufacturing", visible: true, sort: 8.7 },
             { label: "FAQ", href: "/faq", visible: true, sort: 9 },
             { label: "Track order", href: "/track-order", visible: true, sort: 10 },
             { label: "Privacy", href: "/privacy", visible: true, sort: 11 },
@@ -856,6 +882,9 @@ export default function QueensCareExperience() {
             </div>
           );
         })}
+      </div>
+      <div style={{ maxWidth: 1200, margin: "24px auto 0", padding: "16px 20px", borderTop: "1px solid rgba(255,255,255,0.08)", fontSize: 11, lineHeight: 1.6, color: "rgba(255,255,255,0.5)", textAlign: "center" }}>
+        <b>STATUTORY HEALTHCARE &amp; FORMULATION DISCLAIMER:</b> The statements and formulations presented on queenscare.in are intended solely for general wellness, educational, and cosmetic hygiene purposes. None of the products or information provided herein are intended to diagnose, treat, cure, or prevent any medical condition or acute pathology. Queens Care formulations are dietary supplements and topical dermatological preparations, not scheduled prescription drugs. Always consult a qualified, licensed medical practitioner or dermatologist before beginning any new supplementation or skincare protocol, especially if pregnant, nursing, or undergoing clinical treatment.
       </div>
       <div className="footer-bottom">
         <span>© 2026 Queens Care Laboratories. All rights reserved.</span>
