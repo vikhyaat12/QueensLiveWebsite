@@ -493,14 +493,24 @@ export function ReviewEditForm({ item, products, onSave }: { item: Record<string
           folder="reviews"
         />
 
-        <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
+        <div>
+          <label style={labelStyle}>Official Pharmacist / Medical Affairs Response (optional)</label>
+          <textarea
+            style={{ ...inputStyle, minHeight: 70 }}
+            value={String(form.response || form.pharmacistResponse || "")}
+            onChange={e => setForm({ ...form, response: e.target.value, pharmacistResponse: e.target.value })}
+            placeholder="Official clinical/formulation response from Queens Care Care Team..."
+          />
+        </div>
+
+        <div style={{ display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
           <label style={{ fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
             <input
               type="checkbox"
-              checked={form.verified !== false}
+              checked={Boolean(form.verified)}
               onChange={e => setForm({ ...form, verified: e.target.checked })}
             />
-            Verified Purchase Badge
+            <span>Verified Purchase Badge <span style={{ fontSize: 11, color: "var(--muted)" }}>(Require authenticated order match)</span></span>
           </label>
           <label style={{ fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
             <input
@@ -519,4 +529,202 @@ export function ReviewEditForm({ item, products, onSave }: { item: Record<string
     </div>
   );
 }
+
+/* ─── DOCTOR EDIT FORM ─── */
+export function DoctorEditForm({ item, onSave }: { item: Record<string, unknown>; onSave: () => void }) {
+  const [form, setForm] = useState(item);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [isError, setIsError] = useState(false);
+
+  const save = async () => {
+    setSaving(true);
+    setIsError(false);
+    setMsg("");
+    const method = form.isNew ? "POST" : "PATCH";
+    const endpoint = "/api/admin/doctors";
+    try {
+      const res = await fetch(endpoint, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setIsError(false);
+        setMsg("Doctor profile saved successfully!");
+        setTimeout(onSave, 400);
+      } else {
+        setIsError(true);
+        setMsg(d.error || "Failed to save doctor profile.");
+      }
+    } catch {
+      setIsError(true);
+      setMsg("Network error.");
+    }
+    setSaving(false);
+  };
+
+  return (
+    <div style={{ maxWidth: 680, marginTop: 20, padding: 20, background: "#fff", border: "1px solid var(--line)" }}>
+      <h3 style={{ font: "18px var(--font-display)", marginBottom: 16 }}>{form.isNew ? "Add Doctor / Specialist Profile" : "Edit Doctor Profile"}</h3>
+      {msg && (
+        <p
+          style={{
+            padding: "8px 12px",
+            background: isError ? "#fde8e8" : "#e9f7e9",
+            fontSize: 12,
+            color: isError ? "#b34141" : "#2e7d32",
+            marginBottom: 12,
+            border: isError ? "1px solid #f8b4b4" : "1px solid #c3e6cb",
+          }}
+        >
+          {msg}
+        </p>
+      )}
+      <div style={{ display: "grid", gap: 14 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div>
+            <label style={labelStyle}>Full Name *</label>
+            <input
+              style={inputStyle}
+              value={String(form.name || "")}
+              onChange={e => setForm({ ...form, name: e.target.value })}
+              placeholder="e.g. Dr. Rajesh Kothari"
+            />
+          </div>
+          <div>
+            <label style={labelStyle}>Medical Qualifications *</label>
+            <input
+              style={inputStyle}
+              value={String(form.qualification || "")}
+              onChange={e => setForm({ ...form, qualification: e.target.value })}
+              placeholder="e.g. MBBS, MD (Dermatology)"
+            />
+          </div>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div>
+            <label style={labelStyle}>Medical Council Registration No. *</label>
+            <input
+              style={inputStyle}
+              value={String(form.regNumber || form.councilRegNo || "")}
+              onChange={e => setForm({ ...form, regNumber: e.target.value, councilRegNo: e.target.value })}
+              placeholder="e.g. MCI-489201"
+            />
+          </div>
+          <div>
+            <label style={labelStyle}>Designation / Role</label>
+            <input
+              style={inputStyle}
+              value={String(form.designation || "")}
+              onChange={e => setForm({ ...form, designation: e.target.value })}
+              placeholder="e.g. Senior Consultant Dermatologist"
+            />
+          </div>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div>
+            <label style={labelStyle}>Clinic / Hospital Affiliation</label>
+            <input
+              style={inputStyle}
+              value={String(form.clinic || "")}
+              onChange={e => setForm({ ...form, clinic: e.target.value })}
+              placeholder="e.g. Kothari Skin & Wellness Clinic"
+            />
+          </div>
+          <div>
+            <label style={labelStyle}>Specialty</label>
+            <input
+              style={inputStyle}
+              value={String(form.specialty || "dermatology")}
+              onChange={e => setForm({ ...form, specialty: e.target.value })}
+              placeholder="e.g. Dermatology, Cosmetology"
+            />
+          </div>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div>
+            <label style={labelStyle}>Clinical Experience</label>
+            <input
+              style={inputStyle}
+              value={String(form.experience || "")}
+              onChange={e => setForm({ ...form, experience: e.target.value })}
+              placeholder="e.g. 14+ Years Clinical Practice"
+            />
+          </div>
+          <div>
+            <label style={labelStyle}>Contact Email</label>
+            <input
+              style={inputStyle}
+              value={String(form.email || "")}
+              onChange={e => setForm({ ...form, email: e.target.value })}
+              placeholder="e.g. dr.kothari@clinic.in"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label style={labelStyle}>Professional Bio / Clinical Focus</label>
+          <textarea
+            style={{ ...inputStyle, minHeight: 80 }}
+            value={String(form.bio || form.message || "")}
+            onChange={e => setForm({ ...form, bio: e.target.value })}
+            placeholder="Specialization areas, clinical research, publication record..."
+          />
+        </div>
+
+        <GlobalMediaUploader
+          label="Doctor Profile Photo"
+          preset="general"
+          value={String(form.photo || form.image || "")}
+          onChange={(val) => {
+            const url = typeof val === "string" ? val : Array.isArray(val) && val.length > 0 ? (typeof val[0] === "string" ? val[0] : val[0]?.url) : "";
+            setForm({ ...form, photo: url, image: url });
+          }}
+          folder="doctors"
+        />
+
+        <div style={{ display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
+          <label style={{ fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
+            <input
+              type="checkbox"
+              checked={Boolean(form.verified)}
+              onChange={e => setForm({ ...form, verified: e.target.checked })}
+            />
+            <span>Verified Specialist <span style={{ fontSize: 11, color: "var(--muted)" }}>(Credentials &amp; Registration Verified)</span></span>
+          </label>
+          <label style={{ fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
+            <input
+              type="checkbox"
+              checked={form.visible !== false}
+              onChange={e => setForm({ ...form, visible: e.target.checked })}
+            />
+            Publicly Visible on Portal
+          </label>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13 }}>
+            <label>Status:</label>
+            <select
+              value={String(form.status || "approved")}
+              onChange={e => setForm({ ...form, status: e.target.value })}
+              style={{ padding: "4px 8px", border: "1px solid var(--line)", fontSize: 12 }}
+            >
+              <option value="approved">Approved</option>
+              <option value="pending">Pending</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+        </div>
+
+        <button onClick={save} disabled={saving} style={{ padding: "10px 20px", background: "var(--purple)", color: "#fff", border: "none", cursor: "pointer", fontSize: 12, width: "fit-content" }}>
+          {saving ? "Saving…" : "Save Doctor Profile →"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 
