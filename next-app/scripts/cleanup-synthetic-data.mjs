@@ -62,6 +62,21 @@ if (Array.isArray(db.doctors)) {
   });
 }
 
+// 5. Clean unverified claims in cnt-about
+if (Array.isArray(db.content)) {
+  const aboutRecord = db.content.find(c => c.key === 'about');
+  if (aboutRecord && aboutRecord.value) {
+    aboutRecord.value.stat2Number = "100%";
+    aboutRecord.value.stat2Label = "Full INCI Disclosure";
+    aboutRecord.value.milestones = [
+      { year: "2023", title: "Laboratory Inception", description: "Established advanced formulation R&D cleanroom in New Delhi." },
+      { year: "2024", title: "Clinical Partner Network", description: "Established collaboration network with certified dermatologists and clinic practitioners." },
+      { year: "2025", title: "Therapeutic Portfolio Expansion", description: "Formulated LUMINE-C™, LIKO-Q™, and cellular antioxidant suspensions." },
+      { year: "2026", title: "Cold-Chain Direct Distribution", description: "Direct-to-consumer and clinic distribution across major Indian metro networks." }
+    ];
+  }
+}
+
 fs.writeFileSync(dbPath, JSON.stringify(db, null, 2), 'utf8');
 console.log('Cleanup completed successfully.');
 console.log('Remaining testimonials:', db.testimonials.length);
