@@ -116,7 +116,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   const model3d = full?.model3d;
   const questions = full ? await getQA(full.id) : [];
 
-  const avgRating = reviews.length > 0 ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : String(product.rating || "5.0");
+  const avgRating = reviews.length > 0 ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : "";
   const ratingDist = [5, 4, 3, 2, 1].map(star => ({ star, count: reviews.filter(r => r.rating === star).length }));
 
   const origin = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
@@ -195,19 +195,19 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
           <span style={{ color: "#D4AF37" }}>·</span>
           <span>Dermatologist Formulated</span>
           <span style={{ color: "#D4AF37" }}>·</span>
-          <span>ISO 9001 Cleanroom Certified</span>
+          <span>100% INCI Disclosure</span>
           <span style={{ color: "#D4AF37" }}>·</span>
           <span>Zero Harsh Fillers</span>
           <span style={{ color: "#D4AF37" }}>·</span>
-          <span>Clinically Proven Actives</span>
+          <span>Grade-A Bioactives</span>
           <span style={{ color: "#D4AF37" }}>·</span>
           <span>✦ Pharmaceutical Rigor</span>
           <span style={{ color: "#D4AF37" }}>·</span>
-          <span>Micro-Encapsulated Bioavailability</span>
+          <span>Batch-Tracked Purity</span>
           <span style={{ color: "#D4AF37" }}>·</span>
           <span>Dermatologist Formulated</span>
           <span style={{ color: "#D4AF37" }}>·</span>
-          <span>ISO 9001 Cleanroom Certified</span>
+          <span>Direct Cold Chain</span>
         </div>
       </div>
 
@@ -261,13 +261,24 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
             </h1>
 
             {/* Rating Bar */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
-              <span style={{ color: "#D4AF37", fontWeight: 700 }}>★★★★★ {avgRating}</span>
-              <span style={{ color: "var(--muted)" }}>·</span>
-              <span style={{ color: "var(--ink)", textDecoration: "underline", cursor: "pointer" }}>
-                {reviews.length || product.reviewCount || 128} verified clinical reviews
-              </span>
-            </div>
+            {reviews.length > 0 ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
+                <span style={{ color: "#D4AF37", fontWeight: 700 }}>★ {avgRating}</span>
+                <span style={{ color: "var(--muted)" }}>·</span>
+                <span style={{ color: "var(--ink)", textDecoration: "underline", cursor: "pointer" }}>
+                  {reviews.length} {reviews.length === 1 ? "verified review" : "verified reviews"}
+                </span>
+              </div>
+            ) : (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--muted)" }}>
+                <span style={{ color: "var(--gold)" }}>☆</span>
+                <span>No reviews yet</span>
+                <span style={{ opacity: 0.5 }}>·</span>
+                <span style={{ color: "var(--ink)", textDecoration: "underline", cursor: "pointer" }}>
+                  Be the first to review this formulation
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Pricing Row */}
@@ -389,6 +400,31 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
               </ul>
             </div>
           )}
+
+          {/* ─── PRODUCT SAFETY & FORMULATION TRANSPARENCY ─── */}
+          <div style={{ padding: "16px 20px", background: "#fbf9f6", border: "1px solid var(--line)", borderRadius: 6, display: "grid", gap: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, fontWeight: 700, color: "#2A0F3A", textTransform: "uppercase", letterSpacing: ".06em" }}>
+              <span>🛡️ Formulation Safety &amp; Batch Traceability</span>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, fontSize: 12, color: "var(--muted)", lineHeight: 1.5 }}>
+              <div>
+                <b style={{ color: "var(--ink)", display: "block" }}>Storage Integrity</b>
+                <span>Store below 25°C away from direct sunlight. Refrigerate after unsealing if indicated.</span>
+              </div>
+              <div>
+                <b style={{ color: "var(--ink)", display: "block" }}>Quality Testing</b>
+                <span>Every lot undergoes active assay, stability, and microbial limit testing.</span>
+              </div>
+              <div>
+                <b style={{ color: "var(--ink)", display: "block" }}>Safety &amp; Patch Test</b>
+                <span>Conduct a 24-hr epidermal patch test prior to initial application. Topical use only.</span>
+              </div>
+              <div>
+                <b style={{ color: "var(--ink)", display: "block" }}>Pharmacist Inquiries</b>
+                <span>Direct questions to care@queenscare.in or our clinical team.</span>
+              </div>
+            </div>
+          </div>
 
           {/* ─── BADGES ─── */}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -661,7 +697,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
         reviews={reviews.map((r: unknown) => {
           const item = r as Record<string, unknown>;
           const userObj = item.user as Record<string, unknown> | undefined;
-          const authorName = (userObj?.name as string) || (item.customerName as string) || (item.author as string) || "Verified Customer";
+          const authorName = (userObj?.name as string) || (item.customerName as string) || (item.author as string) || "Customer";
           return {
             id: String(item.id || ""),
             rating: Number(item.rating || 5),
@@ -670,6 +706,8 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
             user: { name: authorName },
             createdAt: String(item.createdAt || new Date().toISOString()),
             helpful: Number(item.helpful || 0),
+            verified: Boolean(item.verified),
+            response: (item.response as string) || (item.pharmacistResponse as string) || null,
           };
         })}
         avgRating={avgRating}
