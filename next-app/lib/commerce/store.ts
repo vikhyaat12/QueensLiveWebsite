@@ -502,25 +502,58 @@ export const store = {
 			if (input.productId) {
 				prod = fileDb.findOne("products", p => p.id === input.productId || p.slug === input.productId);
 			}
+			const prodId = prod?.id || input.productId;
+			const prodSlug = prod?.slug || input.productSlug || input.productId;
+
+			// Verify purchase against real orders in fileDb:
+			let isVerifiedPurchase = false;
+			if (input.verified !== undefined) {
+				isVerifiedPurchase = Boolean(input.verified);
+			} else if (input.userId || input.customerEmail) {
+				try {
+					const orders = fileDb.findMany("orders");
+					const matchingOrder = orders.find((ord: Record<string, unknown>) => {
+						const uMatch = (input.userId && ord.userId === input.userId) ||
+							(input.customerEmail && (ord.shipping as Record<string, unknown>)?.email && String((ord.shipping as Record<string, unknown>).email).toLowerCase() === String(input.customerEmail).toLowerCase());
+						if (!uMatch) return false;
+						const lines = Array.isArray(ord.lines) ? ord.lines : [];
+						return lines.some((l: Record<string, unknown>) => l.productId === prodId || l.productId === prodSlug);
+					});
+					if (matchingOrder) {
+						isVerifiedPurchase = true;
+					}
+				} catch {}
+			}
+
 			if (usePrisma) {
 				try {
-					const r = (await prisma.review.create({ data: input as unknown as Prisma.ReviewCreateInput })) as unknown as Review;
+					const r = (await prisma.review.create({ data: { ...input, verified: isVerifiedPurchase } as unknown as Prisma.ReviewCreateInput })) as unknown as Review;
 					fileDb.insert("reviews", r as unknown as Record<string, unknown>);
 					return r;
 				} catch {}
 			}
 			const item = fileDb.insert("reviews", {
 				id: `rev-${Date.now().toString(36)}`,
-				visible: true,
+				visible: input.visible !== undefined ? Boolean(input.visible) : true,
 				helpful: 0,
-				verified: true,
+				verified: isVerifiedPurchase,
 				createdAt: new Date().toISOString(),
-				productSlug: prod?.slug || input.productSlug || input.productId,
+				productSlug: prodSlug,
 				product: prod ? { id: prod.id, name: prod.name, slug: prod.slug } : null,
-				user: { name: input.customerName || input.author || "Verified Customer" },
+				user: { name: input.customerName || input.author || "Customer" },
 				...input,
 			});
 			return item as unknown as Review;
+		},
+		update: async (reviewId: string, data: Record<string, unknown>) => {
+			if (usePrisma) {
+				try {
+					const r = await prisma.review.update({ where: { id: reviewId }, data: data as never });
+					fileDb.update("reviews", reviewId, data);
+					return r;
+				} catch {}
+			}
+			return fileDb.update("reviews", reviewId, data);
 		},
 		updateVisibility: async (reviewId: string, visible: boolean) => {
 			if (usePrisma) {
