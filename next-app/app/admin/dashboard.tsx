@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import BlogEditForm from "./BlogEditForm";
-import { BannerEditForm, TestimonialEditForm, OfferEditForm, SettingsEditForm, ReviewEditForm } from "./ContentEditForms";
+import { BannerEditForm, TestimonialEditForm, OfferEditForm, SettingsEditForm, ReviewEditForm, DoctorEditForm } from "./ContentEditForms";
 import { ProductEditFormAdvanced } from "./ProductEditFormAdvanced";
 import HomepageSectionEdit from "./HomepageSectionEdit";
 import MarketingPanel from "./MarketingPanel";
@@ -377,17 +377,63 @@ export default function AdminDashboard() {
             )}
 
             {/* ─── DOCTORS ─── */}
-            {tab === "doctors" && (
-              <Table
-                columns={[
-                  { key: "name", label: "Name" },
-                  { key: "email", label: "Email" },
-                  { key: "specialty", label: "Specialty" },
-                  { key: "clinic", label: "Clinic" },
-                  { key: "status", label: "Status", render: (v) => <Badge status={String(v)} /> },
-                ]}
-                rows={((data.doctors as Record<string, unknown>[]) || [])}
-                onStatusChange={(row, s) => { handleStatusUpdate("/api/admin/doctors", String(row.id), s); }}
+            {tab === "doctors" && !editingItem?.doctorEdit && (
+              <div>
+                <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 16 }}>
+                  <button
+                    onClick={() => setEditingItem({ _type: "doctor", doctorEdit: true, isNew: true, status: "approved", verified: true, visible: true })}
+                    style={{ padding: "8px 16px", background: "var(--purple)", color: "#fff", border: "none", cursor: "pointer", fontSize: 12 }}
+                  >
+                    + Add Doctor / Specialist
+                  </button>
+                  <a
+                    href="/doctors"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      padding: "8px 14px",
+                      background: "#fff",
+                      color: "var(--purple)",
+                      border: "1px solid var(--purple)",
+                      borderRadius: 4,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      textDecoration: "none",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <span>👁️ Preview Doctor Portal</span>
+                    <span>↗</span>
+                  </a>
+                </div>
+                <Table
+                  columns={[
+                    { key: "name", label: "Name", render: (v, row) => (
+                      <div>
+                        <b>{String(v || "—")}</b>
+                        {row.qualification ? <span style={{ display: "block", fontSize: 11, color: "var(--muted)" }}>{String(row.qualification)}</span> : null}
+                      </div>
+                    )},
+                    { key: "regNumber", label: "Medical Reg #", render: (v, row) => String(v || row.councilRegNo || "—") },
+                    { key: "specialty", label: "Specialty", render: (v) => String(v || "—") },
+                    { key: "clinic", label: "Clinic / Affiliation", render: (v) => String(v || "—") },
+                    { key: "verified", label: "Verified", render: (v) => v ? <span style={{ color: "#2e7d32", fontWeight: 700 }}>✓ Verified</span> : <span style={{ color: "var(--muted)" }}>—</span> },
+                    { key: "visible", label: "Visible", render: (v) => v !== false ? "✓" : "✗" },
+                    { key: "status", label: "Status", render: (v) => <Badge status={String(v)} /> },
+                  ]}
+                  rows={((data.doctors as Record<string, unknown>[]) || [])}
+                  onEdit={(row) => setEditingItem({ ...row, _type: "doctor", doctorEdit: true })}
+                  onDelete={(row) => handleDelete("/api/admin/doctors", String(row.id))}
+                  onStatusChange={(row, s) => { handleStatusUpdate("/api/admin/doctors", String(row.id), s); }}
+                />
+              </div>
+            )}
+            {tab === "doctors" && editingItem?.doctorEdit && (
+              <DoctorEditForm
+                item={editingItem}
+                onSave={() => { setEditingItem(null); setMessage("Doctor profile saved."); setIsError(false); doRefresh(); }}
               />
             )}
 
