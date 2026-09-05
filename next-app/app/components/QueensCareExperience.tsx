@@ -256,7 +256,7 @@ export default function QueensCareExperience() {
               <p className="lead" style={{ ...(c.textColor ? { color: String(c.textColor) } : {}), ...bodyStyle }}>
                 {String(c.subtitle || "Intelligent formulations that turn your daily health rituals into small, powerful acts of self-respect.")}
               </p>
-              <div className="hero-ctas">
+              <div className="hero-ctas" style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
                 <a
                   href={String(c.ctaLink || "#collection")}
                   className="button"
@@ -264,6 +264,27 @@ export default function QueensCareExperience() {
                 >
                   {String(c.ctaText || "Explore the collection")} <span>→</span>
                 </a>
+                <button
+                  type="button"
+                  onClick={() => setQuizOpen(true)}
+                  className="button secondary"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    background: "rgba(212,175,55,0.12)",
+                    color: "var(--purple, #2A0F3A)",
+                    border: "1.5px solid var(--gold, #D4AF37)",
+                    borderRadius: btnStyle.borderRadius || 4,
+                    padding: "10px 18px",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                  }}
+                >
+                  <span>✦ Take Health Quiz</span>
+                </button>
                 <a
                   href={String(c.secondaryLink || "#science")}
                   className="text-link"
@@ -290,36 +311,113 @@ export default function QueensCareExperience() {
                 )}
               </div>
             </div>
-            {heroImage ? (
-              <div className="hero-visual-3d-container" style={{ position: "relative", width: "100%", maxWidth: 460, margin: "0 auto", borderRadius: 12, overflow: "hidden" }}>
-                <img
-                  src={String(heroImage)}
-                  alt={String(c.heading || "Hero")}
-                  style={{ width: "100%", height: 480, objectFit: "cover" }}
-                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=1200&q=85"; }}
-                />
-              </div>
-            ) : (
-              heroVis.enabled !== false && (
-                <div className="hero-visual-3d-container" style={{ position: "relative", width: "100%", maxWidth: 460, margin: "0 auto" }}>
-                  <Hero3DProductVisual
-                    productName={String(heroVis.productName || "LUMINE-C™")}
-                    subtitle={String(heroVis.subtitle || "Radiance serum")}
-                    verticalLabel={String(heroVis.verticalLabel || "FORMULATED WITH INTENTION")}
-                    scale={Number(heroVis.scale || 1.0)}
-                    autoRotate={heroVis.autoRotate !== false}
-                    rotationSpeed={Number(heroVis.rotationSpeed || 1.0)}
-                    mouseInteraction={heroVis.mouseInteraction !== false}
-                    lightingIntensity={Number(heroVis.lightingIntensity || 1.5)}
-                    accentColor={String(heroVis.accentColor || "#D4AF37")}
-                    bgEffect={(heroVis.bgEffect as "studio" | "purple" | "transparent") || "studio"}
-                    customImageUrl={String(heroVis.customImageUrl || "")}
-                    customModelUrl={String(heroVis.customModelUrl || "")}
-                    height={480}
+
+            {/* Cinematic Hero Visual Stage */}
+            <div
+              className="hero-cinematic-stage-wrap"
+              style={{
+                position: "relative",
+                width: "100%",
+                maxWidth: c.characterPosition === "split" || !c.characterPosition ? 680 : 460,
+                margin: "0 auto",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 20,
+                flexWrap: "wrap",
+              }}
+            >
+              {heroImage ? (
+                <div style={{ width: "100%", maxWidth: 460, borderRadius: 12, overflow: "hidden" }}>
+                  <img
+                    src={String(heroImage)}
+                    alt={String(c.heading || "Hero")}
+                    style={{ width: "100%", height: 480, objectFit: "cover" }}
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=1200&q=85"; }}
                   />
                 </div>
-              )
-            )}
+              ) : (
+                <>
+                  {/* Interactive Female Healthcare Specialist Character */}
+                  {c.characterEnabled !== false && c.characterPosition !== "product_only" && (
+                    <div
+                      className="hero-character-col"
+                      style={{
+                        flex: c.characterPosition === "character_only" ? "1 1 360px" : "1 1 240px",
+                        maxWidth: c.characterPosition === "character_only" ? 380 : 280,
+                        position: "relative",
+                        zIndex: 3,
+                      }}
+                    >
+                      <FemaleDoctorHeroVisual
+                        enabled={true}
+                        position={(c.characterPosition as "split" | "left" | "right" | "center") || "split"}
+                        size={(c.characterSize as "sm" | "md" | "lg") || "md"}
+                        animSpeed={Number(c.characterAnimSpeed || 1)}
+                        greeting={String(c.characterGreeting || "Hello, I'm Dr. Queens")}
+                        subtext={String(c.characterSubtext || "Let me guide your personalized formulation ritual")}
+                        badgeText={String(c.characterBadge || "Clinical Specialist")}
+                        customImageUrl={String(c.characterImageUrl || "")}
+                        animationStyle={(c.characterAnimation as "gentle_breathing" | "consultation" | "minimal" | "none") || "gentle_breathing"}
+                        showSpeechBubble={c.characterBubble !== false}
+                        onOpenQuiz={() => setQuizOpen(true)}
+                      />
+                    </div>
+                  )}
+
+                  {/* 3D Bioactive Product Visualizer */}
+                  {heroVis.enabled !== false && c.characterPosition !== "character_only" && (
+                    <div
+                      className="hero-product-col"
+                      style={{
+                        flex: c.characterPosition === "product_only" ? "1 1 420px" : "1 1 280px",
+                        maxWidth: c.characterPosition === "product_only" ? 460 : 380,
+                        position: "relative",
+                        zIndex: 2,
+                      }}
+                    >
+                      <Hero3DProductVisual
+                        productName={String(heroVis.productName || "LUMINE-C™")}
+                        subtitle={String(heroVis.subtitle || "Radiance serum")}
+                        verticalLabel={String(heroVis.verticalLabel || "FORMULATED WITH INTENTION")}
+                        scale={Number(heroVis.scale || 0.95)}
+                        autoRotate={heroVis.autoRotate !== false}
+                        rotationSpeed={Number(heroVis.rotationSpeed || 1.0)}
+                        mouseInteraction={heroVis.mouseInteraction !== false}
+                        lightingIntensity={Number(heroVis.lightingIntensity || 1.5)}
+                        accentColor={String(heroVis.accentColor || "#D4AF37")}
+                        bgEffect={(heroVis.bgEffect as "studio" | "purple" | "transparent") || "transparent"}
+                        customImageUrl={String(heroVis.customImageUrl || "")}
+                        customModelUrl={String(heroVis.customModelUrl || "")}
+                        height={460}
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Subtle Hero Scroll Cue */}
+            <div
+              className="hero-scroll-cue"
+              style={{
+                gridColumn: "1 / -1",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                fontSize: 11,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                color: "var(--muted, #64748b)",
+                paddingTop: 24,
+                width: "100%",
+                opacity: 0.85,
+              }}
+            >
+              <span>Explore laboratory formulations</span>
+              <span style={{ fontSize: 13, color: "var(--gold, #D4AF37)" }}>↓</span>
+            </div>
           </section>
         );
       }
