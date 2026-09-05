@@ -28,7 +28,21 @@ type Product = {
   stock: number;
 };
 
-const QUESTIONS = [
+interface QuizOption {
+  label: string;
+  desc: string;
+  icon: string;
+  recommendedSlug?: string;
+}
+
+interface QuizQuestion {
+  id: string;
+  title: string;
+  subtitle: string;
+  options: QuizOption[];
+}
+
+const QUESTIONS: QuizQuestion[] = [
   {
     id: "priority",
     title: "What is your primary wellness ritual priority today?",
