@@ -866,6 +866,18 @@ export default function QueensCareExperience() {
     ? (typeof bannerSection.content === "string" ? JSON.parse(bannerSection.content) : bannerSection.content || {})
     : getHpContent("banner");
 
+  const marqueeSection = hpSections.find((s) => s.type === "marquee");
+  const marqueeContent = marqueeSection
+    ? (typeof marqueeSection.content === "string" ? JSON.parse(marqueeSection.content) : (marqueeSection.content as Record<string, unknown>) || {})
+    : getHpContent("marquee");
+  const marqueePlacement = String(marqueeContent.placement || "hero");
+  const marqueeItems = Array.isArray(marqueeContent.items) && marqueeContent.items.length > 0
+    ? (marqueeContent.items as string[])
+    : ["Clinical intelligence", "Made with soul", "Science-backed formulas", "Traceable ingredients", "Designed with doctors", "Pharmaceutical rigor", "Everyday wellness"];
+  const marqueeSpeed = Number(marqueeContent.speed) || 24;
+  const marqueeSeparator = String(marqueeContent.separator || "✦");
+  const isMarqueeActive = marqueeSection ? (marqueeSection.active !== false && marqueeSection.visible !== false) : true;
+
   return (
     <div className="site-shell">
       {isBannerVisible && (
@@ -883,6 +895,18 @@ export default function QueensCareExperience() {
           </Link>
         </div>
       )}
+
+      {/* Universal Marquee — Above Header Placement */}
+      {isMarqueeActive && marqueePlacement === "above_header" && (
+        <UniversalMarquee
+          items={marqueeItems}
+          speed={marqueeSpeed}
+          separator={marqueeSeparator}
+          currentPlacement="above_header"
+          placement="above_header"
+        />
+      )}
+
       <header className="nav-wrap">
         <Link href="/" className="brand" aria-label="Queens Care home">
           {logoUrl && !logoFailed ? (
@@ -918,11 +942,54 @@ export default function QueensCareExperience() {
           <Link href="/account" style={{ fontSize: 12, textDecoration: "none", color: "var(--ink)", marginRight: 8, display: "flex", alignItems: "center", gap: 4 }} aria-label="Account">
             {user ? <span title={user.email}>Account</span> : <span>Sign In</span>}
           </Link>
-          <button className="search" onClick={() => setSearchOpen(true)} style={{ display: "flex", alignItems: "center", gap: 5, border: "none", borderBottom: "1px solid var(--line)", padding: "5px 0", background: "none", cursor: "pointer", fontSize: 12 }} aria-label="Open search">
+          <button
+            className="search"
+            onClick={() => {
+              setStartVoiceSearch(false);
+              setSearchOpen(true);
+            }}
+            style={{ display: "flex", alignItems: "center", gap: 5, border: "none", borderBottom: "1px solid var(--line)", padding: "5px 0", background: "none", cursor: "pointer", fontSize: 12 }}
+            aria-label="Open search"
+          >
             <Icon>⌕</Icon>
             <span style={{ color: "var(--muted)" }}>Search</span>
           </button>
-          <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
+          <button
+            type="button"
+            className="voice-search-btn"
+            onClick={() => {
+              setStartVoiceSearch(true);
+              setSearchOpen(true);
+            }}
+            aria-label="Search formulations with voice"
+            title="Voice Search"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              border: "1px solid rgba(42,15,58,0.12)",
+              background: "rgba(42,15,58,0.04)",
+              color: "var(--purple, #2A0F3A)",
+              cursor: "pointer",
+              padding: "4px 8px",
+              borderRadius: 14,
+              fontSize: 11,
+              fontWeight: 600,
+              gap: 4,
+              transition: "all 0.15s",
+            }}
+          >
+            <span aria-hidden="true">🎙️</span>
+            <span>Voice</span>
+          </button>
+          <SearchOverlay
+            open={searchOpen}
+            startVoiceOnOpen={startVoiceSearch}
+            onClose={() => {
+              setSearchOpen(false);
+              setStartVoiceSearch(false);
+            }}
+          />
           <button className="icon-button" onClick={() => setNotice(wish.length ? `${wish.length} saved product${wish.length > 1 ? "s" : ""}.` : "Your saved list is waiting for its first ritual.")} aria-label="View wishlist">
             ♡<em>{wish.length || ""}</em>
           </button>
@@ -935,6 +1002,18 @@ export default function QueensCareExperience() {
           </button>
         </div>
       </header>
+
+      {/* Universal Marquee — Below Header Placement */}
+      {isMarqueeActive && marqueePlacement === "below_header" && (
+        <UniversalMarquee
+          items={marqueeItems}
+          speed={marqueeSpeed}
+          separator={marqueeSeparator}
+          currentPlacement="below_header"
+          placement="below_header"
+        />
+      )}
+
       {notice && (
         <div className="toast" role="status">
           {notice}
@@ -946,21 +1025,29 @@ export default function QueensCareExperience() {
         <div className="stage-bg" aria-hidden="true" />
         <CareScene />
         {sortedSections.map((sec, idx) => renderSection(sec, idx))}
-        {/* Doctor Character Section */}
-        <div data-testid="doctor-debug" style={{padding:'40px',textAlign:'center',background:'linear-gradient(180deg, rgba(40,13,56,0.03) 0%, rgba(212,175,55,0.06) 100%)'}}>
-          <DoctorCharacter
-            greeting="Hi, I'm Dr. Queens!"
-            subtext="I help you find the right formulations for your wellness journey."
-            ctaText="Take the Quiz"
-            ctaLink="/recommendations"
-            position="center"
-            size="md"
-            bgStyle="gradient"
+
+        {/* Universal Marquee — Hero or Between Sections Placement */}
+        {isMarqueeActive && (marqueePlacement === "hero" || marqueePlacement === "between_sections" || marqueePlacement === "all") && (
+          <UniversalMarquee
+            items={marqueeItems}
+            speed={marqueeSpeed}
+            separator={marqueeSeparator}
+            currentPlacement={marqueePlacement as "hero" | "between_sections"}
+            placement={marqueePlacement as "hero" | "between_sections" | "all"}
           />
-        </div>
-        {/* Premium marquee ticker */}
-        <Marquee items={["Clinical intelligence", "Made with soul", "Science-backed formulas", "Traceable ingredients", "Designed with doctors", "Pharmaceutical rigor", "Everyday wellness"]} separator="✦" speed={24} />
+        )}
       </main>
+
+      {/* Universal Marquee — Above Footer Placement */}
+      {isMarqueeActive && marqueePlacement === "above_footer" && (
+        <UniversalMarquee
+          items={marqueeItems}
+          speed={marqueeSpeed}
+          separator={marqueeSeparator}
+          currentPlacement="above_footer"
+          placement="above_footer"
+        />
+      )}
       <footer
         style={{
           ...(footerSettings.bg ? { backgroundColor: footerSettings.bg } : {}),
@@ -1090,6 +1177,7 @@ export default function QueensCareExperience() {
         <span>Queens Care Laboratories · India</span>
       </div>
       </footer>
+      <HealthQuizModal isOpen={quizOpen} onClose={() => setQuizOpen(false)} />
     </div>
   );
 }
