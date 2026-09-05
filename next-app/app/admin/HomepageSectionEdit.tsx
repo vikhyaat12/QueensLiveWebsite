@@ -1654,38 +1654,207 @@ export default function HomepageSectionEdit({ item, onSave }: Props) {
 
       {form.type === "marquee" && (
         <div style={{ marginBottom: 24, padding: 20, background: "#faf8f5", border: "1px solid var(--line)", borderRadius: 6 }}>
-          <h4 style={{ font: "14px var(--font-display)", marginBottom: 14, color: "var(--purple)" }}>📢 Marquee / Ticker</h4>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <div>
+              <span style={{ fontSize: 10, fontWeight: 700, color: "#D4AF37", textTransform: "uppercase" }}>
+                Universal Scrolling Ticker
+              </span>
+              <h4 style={{ font: "16px var(--font-display)", margin: 0, color: "var(--purple)" }}>
+                📢 Multi-Placement Marquee Engine
+              </h4>
+            </div>
+          </div>
           <p style={{ fontSize: 12, color: "var(--muted)", marginBottom: 16 }}>
-            Create a seamless scrolling text ticker that appears between sections.
+            Admin-controlled infinite marquee ticker configurable across multiple website positions with custom speed, direction, colors, and items.
           </p>
+
           <div style={{ display: "grid", gap: 14 }}>
-            <div>
-              <label style={labelStyle}>Separator Symbol</label>
-              <input
-                style={inputStyle}
-                value={String(content.separator || "✦")}
-                onChange={(e) => updateContent("separator", e.target.value)}
-                placeholder="✦"
-              />
+            {/* Placement & Direction */}
+            <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr", gap: 12 }}>
+              <div>
+                <label style={labelStyle}>Ticker Placement Location</label>
+                <select
+                  style={inputStyle}
+                  value={String(content.placement || "hero")}
+                  onChange={(e) => updateContent("placement", e.target.value)}
+                >
+                  <option value="above_header">Above Header (Top Notification Ribbon)</option>
+                  <option value="below_header">Below Header (Primary Brand Ticker)</option>
+                  <option value="hero">Hero Sequence (Sub-Hero Ticker)</option>
+                  <option value="between_sections">Between Sections (In-Page Transition)</option>
+                  <option value="above_footer">Above Footer (Bottom Trust Strip)</option>
+                  <option value="all">Universal (All Placements)</option>
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Scroll Direction</label>
+                <select
+                  style={inputStyle}
+                  value={String(content.direction || "rtl")}
+                  onChange={(e) => updateContent("direction", e.target.value)}
+                >
+                  <option value="rtl">Right to Left (Standard)</option>
+                  <option value="ltr">Left to Right (Reverse)</option>
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Separator Symbol</label>
+                <input
+                  style={inputStyle}
+                  value={String(content.separator || "✦")}
+                  onChange={(e) => updateContent("separator", e.target.value)}
+                  placeholder="✦"
+                />
+              </div>
             </div>
-            <div>
-              <label style={labelStyle}>Scroll Speed (seconds)</label>
-              <input
-                style={inputStyle}
-                type="number"
-                min={8}
-                max={60}
-                value={Number(content.speed) || 24}
-                onChange={(e) => updateContent("speed", Number(e.target.value))}
-              />
+
+            {/* Speeds & Hover */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1.2fr", gap: 12 }}>
+              <div>
+                <label style={labelStyle}>Desktop Speed (Seconds per cycle)</label>
+                <input
+                  style={inputStyle}
+                  type="number"
+                  min={8}
+                  max={90}
+                  value={Number(content.speed) || 24}
+                  onChange={(e) => updateContent("speed", Number(e.target.value))}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Mobile Speed (Seconds per cycle)</label>
+                <input
+                  style={inputStyle}
+                  type="number"
+                  min={6}
+                  max={60}
+                  value={Number(content.mobileSpeed) || 18}
+                  onChange={(e) => updateContent("mobileSpeed", Number(e.target.value))}
+                />
+              </div>
+              <div style={{ display: "flex", alignItems: "flex-end", paddingBottom: 10 }}>
+                <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 12, fontWeight: 600 }}>
+                  <input
+                    type="checkbox"
+                    checked={content.pauseOnHover !== false}
+                    onChange={(e) => updateContent("pauseOnHover", e.target.checked)}
+                  />
+                  <span>Pause Scrolling on Cursor Hover</span>
+                </label>
+              </div>
             </div>
+
+            {/* Typography & Colors */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+              <div>
+                <label style={labelStyle}>Text Color</label>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input
+                    type="color"
+                    value={String(content.textColor || "#1c1917").startsWith("#") ? String(content.textColor) : "#1c1917"}
+                    onChange={(e) => updateContent("textColor", e.target.value)}
+                    style={{ width: 38, height: 38, padding: 0, border: "1px solid var(--line)", borderRadius: 4, cursor: "pointer" }}
+                  />
+                  <input
+                    style={inputStyle}
+                    value={String(content.textColor || "")}
+                    onChange={(e) => updateContent("textColor", e.target.value)}
+                    placeholder="e.g. #1c1917"
+                  />
+                </div>
+              </div>
+              <div>
+                <label style={labelStyle}>Background Color</label>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input
+                    type="color"
+                    value={String(content.bgColor || "#FAF8F5").startsWith("#") ? String(content.bgColor) : "#FAF8F5"}
+                    onChange={(e) => updateContent("bgColor", e.target.value)}
+                    style={{ width: 38, height: 38, padding: 0, border: "1px solid var(--line)", borderRadius: 4, cursor: "pointer" }}
+                  />
+                  <input
+                    style={inputStyle}
+                    value={String(content.bgColor || "")}
+                    onChange={(e) => updateContent("bgColor", e.target.value)}
+                    placeholder="e.g. #FAF8F5"
+                  />
+                </div>
+              </div>
+              <div>
+                <label style={labelStyle}>Font Size</label>
+                <input
+                  style={inputStyle}
+                  value={String(content.fontSize || "12px")}
+                  onChange={(e) => updateContent("fontSize", e.target.value)}
+                  placeholder="12px"
+                />
+              </div>
+            </div>
+
             <div>
-              <label style={labelStyle}>Marquee Items (one per line)</label>
+              <label style={labelStyle}>Marquee Items (one item per line)</label>
               <textarea
-                style={{ ...inputStyle, minHeight: 120 }}
-                value={Array.isArray(content.items) ? (content.items as string[]).join("\n") : "Clinical intelligence\nMade with soul\nScience-backed formulas\nTraceable ingredients\nDesigned with doctors"}
+                style={{ ...inputStyle, minHeight: 120, fontFamily: "monospace" }}
+                value={Array.isArray(content.items) ? (content.items as string[]).join("\n") : "Clinical intelligence\nMade with soul\nScience-backed formulas\nTraceable ingredients\nDesigned with doctors\nPharmaceutical rigor\nEveryday wellness"}
                 onChange={(e) => updateContent("items", e.target.value.split("\n").filter((s: string) => s.trim()))}
                 placeholder="Enter one item per line..."
+              />
+              <span style={{ fontSize: 11, color: "var(--muted)" }}>
+                Each line will be rendered as an individual ticker item separated by the separator symbol.
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* HEALTH QUIZ SECTION */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {form.type === "quiz" && (
+        <div style={{ marginBottom: 24, padding: 20, background: "#faf8f5", border: "1px solid var(--line)", borderRadius: 6 }}>
+          <h4 style={{ font: "14px var(--font-display)", marginBottom: 14, color: "var(--purple)" }}>
+            📋 Clinical Health Consultation Quiz
+          </h4>
+          <p style={{ fontSize: 12, color: "var(--muted)", marginBottom: 16 }}>
+            Configure the interactive health diagnostic quiz that guides visitors to personalized product recommendations.
+          </p>
+          <div style={{ display: "grid", gap: 14 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div>
+                <label style={labelStyle}>Quiz Section Eyebrow</label>
+                <input
+                  style={inputStyle}
+                  value={String(content.eyebrow || "")}
+                  onChange={(e) => updateContent("eyebrow", e.target.value)}
+                  placeholder="Personalized Consultation"
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>CTA Button Label</label>
+                <input
+                  style={inputStyle}
+                  value={String(content.ctaText || "")}
+                  onChange={(e) => updateContent("ctaText", e.target.value)}
+                  placeholder="Take Formulation Quiz"
+                />
+              </div>
+            </div>
+            <div>
+              <label style={labelStyle}>Heading</label>
+              <input
+                style={inputStyle}
+                value={String(content.heading || "")}
+                onChange={(e) => updateContent("heading", e.target.value)}
+                placeholder="Find the exact formulation your routine requires."
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Description</label>
+              <textarea
+                style={{ ...inputStyle, minHeight: 70 }}
+                value={String(content.description || "")}
+                onChange={(e) => updateContent("description", e.target.value)}
+                placeholder="Answer 4 clinical questions to calculate your personalized bioactive routine."
               />
             </div>
           </div>
