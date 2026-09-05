@@ -1768,10 +1768,18 @@
         "secondaryText": "How we formulate",
         "secondaryLink": "/#science",
         "rating": "4.9 / 5",
-        "ratingCount": "12,500+ care rituals"
+        "ratingCount": "12,500+ care rituals",
+        "enableFemaleDoctor": true,
+        "doctorComposition": "split",
+        "doctorSize": "lg",
+        "doctorAnimation": "gaze_and_breath",
+        "doctorGreeting": "Hello, I am Dr. Elena Vance. How may we personalize your daily ritual today?",
+        "doctorSubtext": "Clinical Formulations & Cellular Vitality Lead",
+        "doctorBadge": "BOARD-CERTIFIED CLINICAL SPECIALIST",
+        "doctorBubble": true
       },
       "createdAt": "2026-08-29T07:59:01.686Z",
-      "updatedAt": "2026-09-03T13:50:40.487Z"
+      "updatedAt": "2026-09-05T06:23:00.592Z"
     },
     {
       "id": "hs-trust",
@@ -2001,6 +2009,29 @@
       },
       "createdAt": "2026-09-01T18:13:52.419Z",
       "updatedAt": "2026-09-03T13:50:40.688Z"
+    },
+    {
+      "id": "hs-marquee",
+      "createdAt": "2026-09-05T06:19:22.251Z",
+      "updatedAt": "2026-09-05T06:23:01.636Z",
+      "content": {
+        "placement": "below_header",
+        "speedDesktop": 32,
+        "speedMobile": 22,
+        "direction": "rtl",
+        "pauseOnHover": true,
+        "bgColor": "rgba(10, 15, 13, 0.95)",
+        "fontColor": "#F5F2EB",
+        "fontSize": "sm",
+        "separator": "✦",
+        "items": [
+          "CLINICALLY PROVEN BIOACTIVE CELLULAR NOURISHMENT",
+          "GMP-CERTIFIED PHARMACEUTICAL MANUFACTURING FACILITY",
+          "COLD-STABILIZED VITAMIN C & LYCOPENE SUSPENSION",
+          "COMPLIMENTARY DERMATOLOGIST CONSULTATION QUIZ",
+          "EXPRESS COMPLIANT COLD-CHAIN DISPATCH ACROSS INDIA"
+        ]
+      }
     }
   ],
   "settings": [

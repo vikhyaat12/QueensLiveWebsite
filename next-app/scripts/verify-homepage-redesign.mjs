@@ -124,14 +124,16 @@ async function run() {
   });
   assert.strictEqual(chatRes.status, 200, "Chatbot API call failed");
   const chatData = await chatRes.json();
-  assert(chatData.reply && chatData.reply.length > 20, "Expected meaningful clinical advice reply");
-  console.log(`✓ Test 6 Passed: Chatbot responded with intelligence (${chatData.reply.length} chars)`);
+  const botText = chatData.response || chatData.reply;
+  assert(botText && botText.length > 20, "Expected meaningful clinical advice reply");
+  console.log(`✓ Test 6 Passed: Chatbot responded with intelligence (${botText.length} chars)`);
 
   // 7. Verify Product Catalog with Authentic Stock and Data
   console.log("\n[TEST 7] Verify Product Catalog Endpoint");
   const productsRes = await fetch(`${BASE_URL}/api/products`);
   assert.strictEqual(productsRes.status, 200, "Products API call failed");
-  const products = await productsRes.json();
+  const data = await productsRes.json();
+  const products = Array.isArray(data) ? data : (data.products || []);
   assert(Array.isArray(products) && products.length > 0, "Expected non-empty products catalog");
   const sampleProd = products[0];
   assert(typeof sampleProd.price === "number", "Product price must be a number");
