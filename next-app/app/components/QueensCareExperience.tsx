@@ -2007,36 +2007,7 @@ export default function QueensCareExperience() {
           </section>
         );
       }
-              <p>{String(c.description || "Our care team is here to help you make confident choices — no pressure, no jargon.")}</p>
-              <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                <Link href={String(c.ctaLink || "/contact")} className="button">
-                  {String(c.ctaText || "Talk to our care team")} <span>→</span>
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => setQuizOpen(true)}
-                  className="button"
-                  style={{ background: "rgba(212,175,55,0.12)", color: "var(--purple)", border: "1.5px solid var(--gold)", cursor: "pointer", fontWeight: 700 }}
-                >
-                  ✦ Take Health Quiz <span>→</span>
-                </button>
-                {(c.secondaryCtaText || c.secondaryCtaLink) && (
-                  <Link href={String(c.secondaryCtaLink || "/doctors")} className="button" style={{ background: "transparent", color: "var(--purple)", border: "1px solid var(--purple)" }}>
-                    {String(c.secondaryCtaText || "For healthcare professionals")} <span>→</span>
-                  </Link>
-                )}
-              </div>
-            </div>
-            <div className="consult-image">
-              <img
-                src={String(c.imageUrl || "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=1000&q=85")}
-                alt="Doctor speaking with a patient"
-                onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=1000&q=85"; }}
-              />
-            </div>
-          </section>
-        );
-      }
+
 
       case "quiz": {
         return (
