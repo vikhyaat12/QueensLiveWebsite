@@ -20,7 +20,8 @@ type SectionType =
   | "affiliate"
   | "banner"
   | "custom"
-  | "marquee";
+  | "marquee"
+  | "quiz";
 
 const SECTION_TYPES: { value: SectionType; label: string; icon: string }[] = [
   { value: "hero", label: "Hero Banner", icon: "✨" },
@@ -36,6 +37,7 @@ const SECTION_TYPES: { value: SectionType; label: string; icon: string }[] = [
   { value: "banner", label: "Announcement Bar", icon: "📢" },
   { value: "custom", label: "Custom Section", icon: "📝" },
   { value: "marquee", label: "Marquee / Ticker", icon: "📢" },
+  { value: "quiz", label: "Health Quiz & Consultation", icon: "📋" },
 ];
 
 interface Props {
@@ -808,6 +810,124 @@ export default function HomepageSectionEdit({ item, onSave }: Props) {
                   placeholder="12,000+ care rituals"
                 />
               </div>
+            </div>
+
+            {/* ─── FEMALE HEALTHCARE BRAND SPECIALIST (HERO CHARACTER) ─── */}
+            <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--line)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <div>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: "#D4AF37", textTransform: "uppercase" }}>
+                    Interactive Brand Character
+                  </span>
+                  <h5 style={{ font: "15px var(--font-display)", margin: 0, color: "var(--purple)" }}>
+                    Female Healthcare Specialist (Hero Character)
+                  </h5>
+                </div>
+                <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 12, fontWeight: 700 }}>
+                  <input
+                    type="checkbox"
+                    checked={content.characterEnabled !== false}
+                    onChange={(e) => updateContent("characterEnabled", e.target.checked)}
+                  />
+                  <span>Enable Specialist Character</span>
+                </label>
+              </div>
+
+              {content.characterEnabled !== false && (
+                <div style={{ display: "grid", gap: 12, background: "#fff", padding: 14, border: "1px solid var(--line)", borderRadius: 6 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+                    <div>
+                      <label style={labelStyle}>Composition / Display Mode</label>
+                      <select
+                        style={inputStyle}
+                        value={String(content.characterPosition || "split")}
+                        onChange={(e) => updateContent("characterPosition", e.target.value)}
+                      >
+                        <option value="split">Side-by-Side (Doctor + 3D Product)</option>
+                        <option value="character_only">Doctor Focused Only</option>
+                        <option value="product_only">3D Product Only</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Character Size</label>
+                      <select
+                        style={inputStyle}
+                        value={String(content.characterSize || "md")}
+                        onChange={(e) => updateContent("characterSize", e.target.value)}
+                      >
+                        <option value="sm">Small (220px)</option>
+                        <option value="md">Medium (280px)</option>
+                        <option value="lg">Large (340px)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Animation Style</label>
+                      <select
+                        style={inputStyle}
+                        value={String(content.characterAnimation || "gentle_breathing")}
+                        onChange={(e) => updateContent("characterAnimation", e.target.value)}
+                      >
+                        <option value="gentle_breathing">Natural Breathing Motion</option>
+                        <option value="consultation">Consultation Presence</option>
+                        <option value="minimal">Subtle Micro-Motion</option>
+                        <option value="none">Static Silhouette</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                    <div>
+                      <label style={labelStyle}>Doctor Greeting / Name</label>
+                      <input
+                        style={inputStyle}
+                        value={String(content.characterGreeting || "")}
+                        onChange={(e) => updateContent("characterGreeting", e.target.value)}
+                        placeholder="Hello, I'm Dr. Queens"
+                      />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Specialist Badge Text</label>
+                      <input
+                        style={inputStyle}
+                        value={String(content.characterBadge || "")}
+                        onChange={(e) => updateContent("characterBadge", e.target.value)}
+                        placeholder="Clinical Specialist"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={labelStyle}>Interactive Speech Bubble Message</label>
+                    <input
+                      style={inputStyle}
+                      value={String(content.characterSubtext || "")}
+                      onChange={(e) => updateContent("characterSubtext", e.target.value)}
+                      placeholder="Let me guide your personalized formulation ritual"
+                    />
+                  </div>
+
+                  <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 12, fontWeight: 600 }}>
+                      <input
+                        type="checkbox"
+                        checked={content.characterBubble !== false}
+                        onChange={(e) => updateContent("characterBubble", e.target.checked)}
+                      />
+                      <span>Show Interactive Consultation Speech Bubble</span>
+                    </label>
+                  </div>
+
+                  <div>
+                    <GlobalMediaUploader
+                      label="Custom Specialist Portrait / Avatar (Optional — SVG rendered if empty)"
+                      preset="employee_photo"
+                      value={String(content.characterImageUrl || "")}
+                      onChange={(url) => updateContent("characterImageUrl", url)}
+                      folder="characters"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
