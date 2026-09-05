@@ -1640,51 +1640,218 @@ export default function QueensCareExperience() {
       }
 
       case "newsletter": {
+        const REFERENCE_ARTICLES = [
+          {
+            tag: "SCIENCE",
+            title: "The Science Behind Immunity Support",
+            slug: "science-behind-immunity-support",
+            img: "/images/reference/blog-science-doc.png",
+          },
+          {
+            tag: "WELLNESS",
+            title: "Daily Habits for a Healthier Gut",
+            slug: "daily-habits-healthier-gut",
+            img: "/images/reference/blog-gut-health.png",
+          },
+          {
+            tag: "LIFESTYLE",
+            title: "Skincare Science: Real Ingredients, Real Results",
+            slug: "skincare-science-real-ingredients",
+            img: "/images/reference/blog-skin-science.png",
+          },
+        ];
+
         return (
-          <section className="journal section" id="journal" key={sec.id ? String(sec.id) : `journal-${idx}`} style={secStyle}>
-            <div className="section-head">
-              <div>
-                <p className="eyebrow">{String(c.eyebrow || "The care journal")}</p>
-                <h2 style={headingStyle} dangerouslySetInnerHTML={{ __html: String(c.heading || "Ideas, insights and<br/><em>everyday care.</em>") }} />
-              </div>
-              <Link href={String(c.ctaLink || "/blog")} className="text-link">
-                {String(c.ctaText || "View all journal")} <span>→</span>
-              </Link>
-            </div>
-            <div className="journal-grid">
-              {blogPosts.slice(0, Number(c.postCount || 2)).map((post) => (
-                <Link key={post.slug} href={`/blog/${post.slug}`} style={{ textDecoration: "none", color: "inherit" }}>
-                  <article style={{ height: "100%", display: "flex", flexDirection: "column" }}>
-                    <div style={{ position: "relative", aspectRatio: "3/2", overflow: "hidden", marginBottom: 12, borderRadius: 4 }}>
-                      <img
-                        src={post.image || "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?auto=format&fit=crop&w=900&q=80"}
-                        alt={post.title}
-                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                        onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?auto=format&fit=crop&w=900&q=80"; }}
-                      />
-                    </div>
-                    <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: ".1em", color: "var(--muted)" }}>
-                      {(post.category || "Wellness Notes").toUpperCase()} {post.readTime ? `· ${post.readTime.toUpperCase()}` : ""}
-                    </p>
-                    <h3 style={{ font: "20px var(--font-display)", margin: "6px 0 10px", flex: 1 }}>{post.title}</h3>
-                    <span style={{ fontSize: 13, color: "var(--purple)", fontWeight: 600 }}>Read story →</span>
-                  </article>
+          <section
+            className="journal-reference-section"
+            id="journal"
+            key={sec.id ? String(sec.id) : `journal-${idx}`}
+            style={{ padding: "48px 20px", background: "#FAFBFD", ...secStyle }}
+          >
+            <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: 16,
+                  marginBottom: 24,
+                }}
+              >
+                <h2
+                  style={{
+                    fontFamily: "var(--font-display, serif)",
+                    fontSize: "clamp(24px, 3.2vw, 34px)",
+                    fontWeight: 850,
+                    color: "#1E1638",
+                    margin: 0,
+                  }}
+                >
+                  Ideas, insights and everyday care.
+                </h2>
+                <Link
+                  href="/blog"
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: "#1E1638",
+                    textDecoration: "none",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  <span>View All Articles</span> <span>→</span>
                 </Link>
-              ))}
-              {blogPosts.length === 0 && (
-                <p style={{ gridColumn: "1 / span 2", color: "var(--muted)", padding: "30px 0" }}>
-                  Dispatches from our laboratory are being prepared. <Link href="/blog" style={{ color: "var(--purple)" }}>Visit the journal</Link>
-                </p>
-              )}
-              <article className="journal-cta">
-                <span>THE<br/>CARE<br/>LETTER</span>
-                <h3>{String(c.newsletterHeading || "A smarter kind of inbox.")}</h3>
-                <p>{String(c.newsletterSubtitle || "Thoughtful dispatches on science, care, and living well.")}</p>
-                <form onSubmit={subscribe}>
-                  <input type="email" required aria-label="Your email address" placeholder="Your email address"/>
-                  <button aria-label="Subscribe">→</button>
-                </form>
-              </article>
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                  gap: 18,
+                }}
+              >
+                {REFERENCE_ARTICLES.map((art) => (
+                  <Link
+                    key={art.title}
+                    href={`/blog/${art.slug}`}
+                    style={{ textDecoration: "none", color: "inherit" }}
+                  >
+                    <article
+                      style={{
+                        background: "#FFFFFF",
+                        borderRadius: 16,
+                        overflow: "hidden",
+                        border: "1px solid #E2E8F0",
+                        padding: "12px",
+                        height: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                        boxShadow: "0 2px 10px rgba(0,0,0,0.03)",
+                      }}
+                    >
+                      <div
+                        style={{
+                          position: "relative",
+                          aspectRatio: "16/10",
+                          borderRadius: 10,
+                          overflow: "hidden",
+                          marginBottom: 12,
+                        }}
+                      >
+                        <img
+                          src={art.img}
+                          alt={art.title}
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        />
+                      </div>
+                      <span
+                        style={{
+                          padding: "3px 8px",
+                          borderRadius: 4,
+                          background: "#FEF3C7",
+                          color: "#D97706",
+                          fontSize: 10,
+                          fontWeight: 800,
+                          width: "fit-content",
+                          marginBottom: 8,
+                          letterSpacing: "0.05em",
+                        }}
+                      >
+                        {art.tag}
+                      </span>
+                      <h3
+                        style={{
+                          fontSize: 14,
+                          fontWeight: 700,
+                          color: "#1E1638",
+                          margin: "0 0 12px",
+                          lineHeight: 1.35,
+                          flex: 1,
+                        }}
+                      >
+                        {art.title}
+                      </h3>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: "#4F46E5", marginTop: "auto" }}>
+                        Read More →
+                      </span>
+                    </article>
+                  </Link>
+                ))}
+
+                {/* 4th Card: Reference Dark Newsletter Box */}
+                <article
+                  style={{
+                    background: "linear-gradient(135deg, #1E1638 0%, #110B22 100%)",
+                    borderRadius: 16,
+                    padding: "24px 20px",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    color: "#FFFFFF",
+                    boxShadow: "0 6px 20px rgba(30, 22, 56, 0.2)",
+                  }}
+                >
+                  <div>
+                    <span
+                      style={{
+                        fontSize: 9.5,
+                        fontWeight: 800,
+                        letterSpacing: "0.14em",
+                        color: "#D4AF37",
+                        textTransform: "uppercase",
+                        display: "block",
+                        marginBottom: 8,
+                      }}
+                    >
+                      THE CARE MATTERS
+                    </span>
+                    <h3 style={{ fontSize: 18, fontWeight: 800, margin: "0 0 6px" }}>
+                      A smarter kind of inbox.
+                    </h3>
+                    <p style={{ fontSize: 11.5, color: "#94A3B8", lineHeight: 1.45, margin: "0 0 16px" }}>
+                      Tips, updates and wellness insights — straight to you.
+                    </p>
+                  </div>
+
+                  <form onSubmit={subscribe} style={{ display: "flex", gap: 6 }}>
+                    <input
+                      type="email"
+                      required
+                      aria-label="Your email address"
+                      placeholder="Enter your email"
+                      style={{
+                        flex: 1,
+                        padding: "8px 12px",
+                        borderRadius: 8,
+                        background: "rgba(255,255,255,0.1)",
+                        border: "1px solid rgba(255,255,255,0.2)",
+                        color: "#FFFFFF",
+                        fontSize: 11.5,
+                        outline: "none",
+                      }}
+                    />
+                    <button
+                      type="submit"
+                      aria-label="Subscribe"
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 8,
+                        background: "#D4AF37",
+                        color: "#1E1638",
+                        border: "none",
+                        fontWeight: 800,
+                        cursor: "pointer",
+                      }}
+                    >
+                      →
+                    </button>
+                  </form>
+                </article>
+              </div>
             </div>
           </section>
         );
@@ -1734,10 +1901,112 @@ export default function QueensCareExperience() {
 
       case "consult": {
         return (
-          <section className="consult" key={sec.id ? String(sec.id) : `consult-${idx}`} style={secStyle}>
-            <div>
-              <p className="eyebrow">{String(c.eyebrow || "Care, with a human on the other end")}</p>
-              <h2 style={headingStyle} dangerouslySetInnerHTML={{ __html: String(c.heading || "Questions deserve<br/>thoughtful answers.") }} />
+          <section
+            className="ai-assistant-reference-banner"
+            key={sec.id ? String(sec.id) : `consult-${idx}`}
+            style={{ padding: "32px 20px", ...secStyle }}
+          >
+            <div
+              style={{
+                maxWidth: 1200,
+                margin: "0 auto",
+                background: "linear-gradient(135deg, #FDF2F8 0%, #EEF2FF 50%, #F5F3FF 100%)",
+                borderRadius: 24,
+                border: "1px solid #E0E7FF",
+                padding: "28px 36px",
+                display: "grid",
+                gridTemplateColumns: "1fr 1.2fr 1fr",
+                gap: 24,
+                alignItems: "center",
+                boxShadow: "0 6px 24px rgba(79, 70, 229, 0.04)",
+              }}
+              className="ai-banner-grid"
+            >
+              {/* Left Column: Dr. Queens Persona & Image */}
+              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                <img
+                  src="/images/reference/dr-queens-ai-banner.png"
+                  alt="Dr. Queens AI Assistant"
+                  style={{ width: 100, height: 75, objectFit: "contain" }}
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = "/images/reference/dr-queens-hero.png";
+                  }}
+                />
+                <div>
+                  <span style={{ fontStyle: "italic", fontSize: 13, fontWeight: 700, color: "#DB2777" }}>
+                    &ldquo;Your Health Our Priority&rdquo; 💗
+                  </span>
+                  <b style={{ fontSize: 15, color: "#1E1638", display: "block", marginTop: 2 }}>
+                    Dr. Queens
+                  </b>
+                  <span style={{ fontSize: 11, color: "#64748B", display: "block" }}>
+                    AI Health Assistant ▾
+                  </span>
+                </div>
+              </div>
+
+              {/* Middle Column: Quiz Callout */}
+              <div style={{ textAlign: "left" }}>
+                <b style={{ fontSize: 16, color: "#1E1638", display: "block", marginBottom: 4 }}>
+                  Not sure which product is right for you?
+                </b>
+                <p style={{ fontSize: 12, color: "#475569", lineHeight: 1.45, margin: "0 0 14px" }}>
+                  Take a short quiz and I&apos;ll help you find the best options based on your needs.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setQuizOpen(true)}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "10px 22px",
+                    borderRadius: 999,
+                    background: "#1E1638",
+                    color: "#FFFFFF",
+                    fontSize: 12.5,
+                    fontWeight: 700,
+                    border: "none",
+                    cursor: "pointer",
+                    boxShadow: "0 4px 12px rgba(30, 22, 56, 0.2)",
+                  }}
+                >
+                  Take the Health Quiz ➔
+                </button>
+              </div>
+
+              {/* Right Column: 4 Vertical Feature Pills */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {[
+                  { icon: "💊", label: "Personalized Recommendations" },
+                  { icon: "👥", label: "Trusted by Thousands" },
+                  { icon: "🛡️", label: "Better Health Everyday" },
+                  { icon: "🏷️", label: "100% Safe & Genuine" },
+                ].map((item) => (
+                  <div
+                    key={item.label}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      background: "rgba(255,255,255,0.85)",
+                      padding: "6px 12px",
+                      borderRadius: 999,
+                      border: "1px solid #E2E8F0",
+                      fontSize: 11,
+                      fontWeight: 600,
+                      color: "#1E293B",
+                    }}
+                  >
+                    <span>{item.icon}</span>
+                    <span>{item.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+      }
               <p>{String(c.description || "Our care team is here to help you make confident choices — no pressure, no jargon.")}</p>
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                 <Link href={String(c.ctaLink || "/contact")} className="button">
