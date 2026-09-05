@@ -170,7 +170,7 @@ export default function FemaleDoctorHeroVisual({
         }}
       />
 
-      {/* Floating Interactive Speech / Consultation Bubble */}
+      {/* Floating Interactive Speech / Consultation Bubble Matching Reference */}
       {showSpeechBubble && (
         <div
           className="qc-speech-bubble"
@@ -185,51 +185,60 @@ export default function FemaleDoctorHeroVisual({
           }}
           style={{
             position: "absolute",
-            top: -24,
-            right: position === "right" ? "auto" : -12,
-            left: position === "right" ? -12 : "auto",
+            top: -28,
+            right: -20,
             zIndex: 10,
-            maxWidth: sizeConfig.bubbleWidth,
-            padding: "9px 14px",
-            background: "rgba(255, 255, 255, 0.94)",
+            maxWidth: 240,
+            padding: "10px 16px",
+            background: "rgba(255, 255, 255, 0.97)",
             backdropFilter: "blur(12px)",
             WebkitBackdropFilter: "blur(12px)",
-            borderRadius: 14,
+            borderRadius: 18,
+            border: "1.5px solid #BAE6FD",
             boxShadow: isHovered
-              ? "0 10px 30px rgba(42,15,58,0.18), 0 0 0 1.5px rgba(212,175,55,0.6)"
-              : "0 6px 22px rgba(42,15,58,0.1), 0 0 0 1px rgba(212,175,55,0.3)",
+              ? "0 10px 28px rgba(2, 132, 199, 0.18)"
+              : "0 6px 20px rgba(2, 132, 199, 0.12)",
             cursor: onOpenQuiz ? "pointer" : "default",
             transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
             transform: isHovered ? "translateY(-3px) scale(1.03)" : "none",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
-            <span
-              style={{
-                width: 7,
-                height: 7,
-                borderRadius: "50%",
-                background: "#2e7d32",
-                boxShadow: "0 0 0 2px rgba(46,125,50,0.25)",
-                display: "inline-block",
-              }}
-            />
-            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "var(--purple, #2A0F3A)", textTransform: "uppercase" }}>
-              {badgeText}
-            </span>
-          </div>
-          <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#1c1917", lineHeight: 1.35 }}>
-            {greeting}
-          </p>
-          <p style={{ margin: "2px 0 0", fontSize: 10.5, color: "#64748b", lineHeight: 1.3 }}>
-            {subtext}
-          </p>
-          {onOpenQuiz && (
-            <div style={{ marginTop: 5, display: "flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 700, color: "#b45309" }}>
-              <span>Take formulation quiz</span>
-              <span aria-hidden="true">→</span>
+          {badgeText && badgeText !== "Clinical Specialist" && badgeText !== "BOARD-CERTIFIED CLINICAL SPECIALIST" && (
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+              <span
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: "50%",
+                  background: "#0284C7",
+                  display: "inline-block",
+                }}
+              />
+              <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.06em", color: "#0284C7", textTransform: "uppercase" }}>
+                {badgeText}
+              </span>
             </div>
           )}
+          <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#1E293B", lineHeight: 1.3 }}>
+            {greeting}
+          </p>
+          <p style={{ margin: "3px 0 0", fontSize: 11, color: "#475569", lineHeight: 1.35 }}>
+            {subtext}
+          </p>
+          {/* Subtle Speech Bubble Tail */}
+          <div
+            style={{
+              position: "absolute",
+              bottom: -7,
+              left: 28,
+              width: 12,
+              height: 12,
+              background: "#FFFFFF",
+              borderRight: "1.5px solid #BAE6FD",
+              borderBottom: "1.5px solid #BAE6FD",
+              transform: "rotate(45deg)",
+            }}
+          />
         </div>
       )}
 

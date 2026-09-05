@@ -81,7 +81,7 @@ export default function PremiumAnimations() {
         ".hero h1, .science h2, .section h2, .ritual .section-head h2, .quote blockquote, .consult h2"
       )
       .forEach((el) => {
-        if (el.dataset.premiumSplit) return;
+        if (el.dataset.premiumSplit || el.dataset.noSplit || el.classList.contains("no-split")) return;
         el.dataset.premiumSplit = "true";
         splitText(el);
         const words = el.querySelectorAll<HTMLElement>(".premium-word");

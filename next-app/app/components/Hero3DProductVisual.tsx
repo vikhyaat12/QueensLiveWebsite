@@ -19,6 +19,7 @@ export type Hero3DProductVisualProps = {
   customModelUrl?: string;
   isInteractive?: boolean;
   height?: number | string;
+  showInfoPlate?: boolean;
 };
 
 // Helper to generate the authentic Liko-Q pharmaceutical label texture
@@ -196,12 +197,18 @@ export default function Hero3DProductVisual({
   customImageUrl = "/uploads/liko-q-suspension.png",
   customModelUrl = "",
   height = 480,
+  showInfoPlate = false,
 }: Hero3DProductVisualProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const [hasWebGL, setHasWebGL] = useState(true);
   const [isInteracting, setIsInteracting] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = useState(false);
+
+  const isImageMode = Boolean(customImageUrl && !customModelUrl);
 
   useEffect(() => {
+    if (isImageMode) return;
     const mount = mountRef.current;
     if (!mount) return;
 
@@ -587,14 +594,51 @@ export default function Hero3DProductVisual({
         height,
         background: bgStyle,
         borderRadius: 8,
-        overflow: "hidden",
+        overflow: "visible",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
       }}
-      aria-label={`3D Product Presentation: ${productName}`}
+      aria-label={`Product Presentation: ${productName}`}
     >
-      {hasWebGL ? (
+      {isImageMode ? (
+        <div
+          onMouseMove={(e) => {
+            if (!mouseInteraction) return;
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+            const y = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+            setMousePos({ x, y });
+          }}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => {
+            setIsHovered(false);
+            setMousePos({ x: 0, y: 0 });
+          }}
+          style={{
+            position: "relative",
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            perspective: 1000,
+          }}
+        >
+          <img
+            src={customImageUrl}
+            alt={productName}
+            style={{
+              maxHeight: typeof height === "number" ? height : 440,
+              maxWidth: "100%",
+              objectFit: "contain",
+              transform: `perspective(1000px) rotateY(${mousePos.x * 12}deg) rotateX(${-mousePos.y * 10}deg) scale(${isHovered ? 1.03 : 1})`,
+              transition: isHovered ? "transform 0.1s ease-out" : "transform 0.4s ease-out",
+              filter: "drop-shadow(0 16px 32px rgba(42, 15, 58, 0.15))",
+            }}
+          />
+        </div>
+      ) : hasWebGL ? (
         <div
           ref={mountRef}
           style={{ width: "100%", height: "100%", cursor: isInteracting ? "grabbing" : "grab" }}
@@ -607,44 +651,46 @@ export default function Hero3DProductVisual({
         />
       ) : null}
 
-      {/* Floating Clinical Product Label Overlay */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 16,
-          left: 16,
-          background: "rgba(255, 255, 255, 0.92)",
-          backdropFilter: "blur(8px)",
-          border: "1px solid var(--line)",
-          padding: "8px 16px",
-          borderRadius: 4,
-          pointerEvents: "none",
-          boxShadow: "0 4px 14px rgba(0,0,0,0.08)",
-        }}
-      >
-        <span
+      {/* Floating Clinical Product Label Overlay - only when requested */}
+      {showInfoPlate && (
+        <div
           style={{
-            fontSize: 9,
-            fontWeight: 800,
-            letterSpacing: ".14em",
-            textTransform: "uppercase",
-            color: "#D4AF37",
-            display: "block",
+            position: "absolute",
+            bottom: 16,
+            left: 16,
+            background: "rgba(255, 255, 255, 0.92)",
+            backdropFilter: "blur(8px)",
+            border: "1px solid var(--line)",
+            padding: "8px 16px",
+            borderRadius: 4,
+            pointerEvents: "none",
+            boxShadow: "0 4px 14px rgba(0,0,0,0.08)",
           }}
         >
-          QUEENS CARE PHARMACEUTICALS
-        </span>
-        <b style={{ fontSize: 15, color: "#2A0F3A", fontFamily: "var(--font-display)", letterSpacing: ".02em" }}>
-          {productName}
-        </b>
-        {subtitle && (
-          <span style={{ fontSize: 11, color: "var(--muted)", display: "block", marginTop: 2 }}>
-            {subtitle}
+          <span
+            style={{
+              fontSize: 9,
+              fontWeight: 800,
+              letterSpacing: ".14em",
+              textTransform: "uppercase",
+              color: "#D4AF37",
+              display: "block",
+            }}
+          >
+            QUEENS CARE PHARMACEUTICALS
           </span>
-        )}
-      </div>
+          <b style={{ fontSize: 15, color: "#2A0F3A", fontFamily: "var(--font-display)", letterSpacing: ".02em" }}>
+            {productName}
+          </b>
+          {subtitle && (
+            <span style={{ fontSize: 11, color: "var(--muted)", display: "block", marginTop: 2 }}>
+              {subtitle}
+            </span>
+          )}
+        </div>
+      )}
 
-      {verticalLabel && (
+      {showInfoPlate && verticalLabel && (
         <p
           className="vertical-label"
           style={{

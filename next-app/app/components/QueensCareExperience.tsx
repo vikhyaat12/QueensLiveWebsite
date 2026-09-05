@@ -3,7 +3,6 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import CareScene from "./CareScene";
 import DeliveryTimer from "./DeliveryTimer";
 import CartBadge from "./CartBadge";
 import Hero3DProductVisual from "./Hero3DProductVisual";
@@ -151,6 +150,7 @@ export default function QueensCareExperience() {
         const productList = (data.products || []) as Product[];
         const mappedProducts = productList.map((p) => ({
           ...p,
+          image: p.image || (p as Record<string, unknown>).thumbnail as string || (Array.isArray((p as Record<string, unknown>).images) ? ((p as Record<string, unknown>).images as string[])[0] : "") || "/images/reference/hero-immune-bottle.png",
           note: p.description ? (p.description.split(".")[0] || p.description) : "",
           tag: p.bestSeller ? "Bestseller" : (p.newArrival ? "New" : (p.featured ? "Featured" : (p.rating && p.rating >= 4.8 ? "Popular" : "New"))),
         }));
@@ -279,22 +279,29 @@ export default function QueensCareExperience() {
                 <span>✦</span> {String(c.eyebrow || "SCIENCE-BACKED WELLNESS")}
               </p>
               <h1
+                className="no-split"
+                data-no-split="true"
                 style={{
                   fontFamily: "var(--font-display, serif)",
-                  fontSize: "clamp(38px, 4.8vw, 56px)",
-                  fontWeight: 850,
-                  lineHeight: 1.06,
-                  letterSpacing: "-0.03em",
+                  fontSize: "clamp(38px, 4.4vw, 54px)",
+                  fontWeight: 800,
+                  lineHeight: 1.12,
+                  letterSpacing: "-0.015em",
                   color: c.headingColor ? String(c.headingColor) : "#1E1638",
                   margin: "0 0 16px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 2,
                 }}
-                dangerouslySetInnerHTML={{
-                  __html: String(
-                    c.heading ||
-                      "Better<br/>Health<br/>Brighter <span style='color: #EC4899;'>💗</span><br/>Tomorrows"
-                  ),
-                }}
-              />
+              >
+                <span>Better</span>
+                <span>Health</span>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+                  <span>Brighter</span>
+                  <span style={{ color: "#EC4899", fontSize: "0.85em" }}>💗</span>
+                </span>
+                <span>Tomorrows</span>
+              </h1>
               <p
                 className="lead"
                 style={{
@@ -425,200 +432,84 @@ export default function QueensCareExperience() {
             </div>
 
             {/* Cinematic Hero Visual Stage */}
+            {/* Cinematic Hero Visual Stage Matching Reference 1:1 */}
             <div
               className="hero-cinematic-stage-wrap"
               style={{
                 position: "relative",
                 width: "100%",
-                maxWidth: c.characterPosition === "split" || !c.characterPosition ? 720 : 480,
+                maxWidth: 680,
                 margin: "0 auto",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: 16,
-                flexWrap: "wrap",
                 zIndex: 2,
               }}
             >
-              {heroImage ? (
-                <div style={{ width: "100%", maxWidth: 460, borderRadius: 12, overflow: "hidden" }}>
-                  <img
-                    src={String(heroImage)}
-                    alt={String(c.heading || "Hero")}
-                    style={{ width: "100%", height: 480, objectFit: "cover" }}
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src =
-                        "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=1200&q=85";
-                    }}
-                  />
-                </div>
-              ) : (
-                <>
-                  {/* Interactive Female Healthcare Specialist Character */}
-                  {c.characterEnabled !== false && c.characterPosition !== "product_only" && (
-                    <div
-                      className="hero-character-col"
-                      style={{
-                        flex: c.characterPosition === "character_only" ? "1 1 360px" : "1 1 240px",
-                        maxWidth: c.characterPosition === "character_only" ? 380 : 270,
-                        position: "relative",
-                        zIndex: 3,
-                      }}
-                    >
-                      <FemaleDoctorHeroVisual
-                        enabled={true}
-                        position={(c.characterPosition as "split" | "left" | "right" | "center") || "split"}
-                        size={(c.characterSize as "sm" | "md" | "lg") || "md"}
-                        animSpeed={Number(c.characterAnimSpeed || 1)}
-                        greeting={String(c.characterGreeting || "Hi! I'm Dr. Queens 💙")}
-                        subtext={String(
-                          c.characterSubtext || "Let me help you find the right products for your needs. 💙"
-                        )}
-                        badgeText={String(c.characterBadge || "Clinical Specialist")}
-                        customImageUrl={String(c.characterImageUrl || "/images/reference/dr-queens-hero.png")}
-                        animationStyle={
-                          (c.characterAnimation as "gentle_breathing" | "consultation" | "minimal" | "none") ||
-                          "gentle_breathing"
-                        }
-                        showSpeechBubble={c.characterBubble !== false}
-                        onOpenQuiz={() => setQuizOpen(true)}
-                      />
-                    </div>
-                  )}
+              <div
+                className="hero-reference-composite-stage"
+                style={{
+                  position: "relative",
+                  width: "100%",
+                  maxWidth: 640,
+                  borderRadius: 24,
+                  overflow: "hidden",
+                  boxShadow: "0 18px 44px rgba(30, 22, 56, 0.08)",
+                  transition: "transform 0.3s ease, box-shadow 0.3s ease",
+                  cursor: "default",
+                }}
+              >
+                <img
+                  src="/images/reference/hero-visual-composite.png"
+                  alt="Dr. Queens recommending Immune Support+"
+                  style={{
+                    width: "100%",
+                    height: "auto",
+                    display: "block",
+                    objectFit: "contain",
+                  }}
+                />
 
-                  {/* 3D Bioactive Product Visualizer with Reference Floating Badges */}
-                  {heroVis.enabled !== false && c.characterPosition !== "character_only" && (
-                    <div
-                      className="hero-product-col"
-                      style={{
-                        flex: c.characterPosition === "product_only" ? "1 1 420px" : "1 1 280px",
-                        maxWidth: c.characterPosition === "product_only" ? 460 : 360,
-                        position: "relative",
-                        zIndex: 2,
-                      }}
-                    >
-                      {/* Floating Reference Badges */}
-                      <div
-                        style={{
-                          position: "absolute",
-                          top: 16,
-                          right: -10,
-                          zIndex: 10,
-                          background: "rgba(255,255,255,0.94)",
-                          backdropFilter: "blur(8px)",
-                          padding: "6px 12px",
-                          borderRadius: 999,
-                          border: "1px solid #BAE6FD",
-                          boxShadow: "0 4px 14px rgba(2,132,199,0.12)",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 6,
-                          fontSize: 11,
-                          fontWeight: 700,
-                          color: "#0284C7",
-                        }}
-                      >
-                        <span>🛡️</span> <span>Stronger Immunity</span>
-                      </div>
-                      <div
-                        style={{
-                          position: "absolute",
-                          top: "40%",
-                          right: -16,
-                          zIndex: 10,
-                          background: "rgba(255,255,255,0.94)",
-                          backdropFilter: "blur(8px)",
-                          padding: "6px 12px",
-                          borderRadius: 999,
-                          border: "1px solid #C7D2FE",
-                          boxShadow: "0 4px 14px rgba(79,70,229,0.12)",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 6,
-                          fontSize: 11,
-                          fontWeight: 700,
-                          color: "#4F46E5",
-                        }}
-                      >
-                        <span>⚡</span> <span>More Energy</span>
-                      </div>
-                      <div
-                        style={{
-                          position: "absolute",
-                          bottom: 50,
-                          right: -8,
-                          zIndex: 10,
-                          background: "rgba(255,255,255,0.94)",
-                          backdropFilter: "blur(8px)",
-                          padding: "6px 12px",
-                          borderRadius: 999,
-                          border: "1px solid #DDD6FE",
-                          boxShadow: "0 4px 14px rgba(124,58,237,0.12)",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 6,
-                          fontSize: 11,
-                          fontWeight: 700,
-                          color: "#7C3AED",
-                        }}
-                      >
-                        <span>💜</span> <span>Everyday Wellness</span>
-                      </div>
+                {/* Interactive Hotspot 1: Dr. Queens & Speech Bubble -> Opens Health Quiz Modal */}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setQuizOpen(true)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setQuizOpen(true);
+                    }
+                  }}
+                  title="Ask Dr. Queens / Take Health Quiz"
+                  aria-label="Ask Dr. Queens / Take Health Quiz"
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "50%",
+                    height: "100%",
+                    cursor: "pointer",
+                    zIndex: 4,
+                  }}
+                />
 
-                      <Hero3DProductVisual
-                        productName={String(heroVis.productName || "Immune Support+")}
-                        subtitle={String(heroVis.subtitle || "VITAMIN C, D3 & ZINC")}
-                        verticalLabel={String(heroVis.verticalLabel || "PHARMACEUTICAL RIGOR")}
-                        scale={Number(heroVis.scale || 0.95)}
-                        autoRotate={heroVis.autoRotate !== false}
-                        rotationSpeed={Number(heroVis.rotationSpeed || 1.0)}
-                        mouseInteraction={heroVis.mouseInteraction !== false}
-                        lightingIntensity={Number(heroVis.lightingIntensity || 1.5)}
-                        accentColor={String(heroVis.accentColor || "#D4AF37")}
-                        bgEffect={(heroVis.bgEffect as "studio" | "purple" | "transparent") || "transparent"}
-                        customImageUrl={String(heroVis.customImageUrl || "/images/reference/hero-immune-bottle.png")}
-                        customModelUrl={String(heroVis.customModelUrl || "")}
-                        height={440}
-                      />
-
-                      <div
-                        style={{
-                          textAlign: "right",
-                          marginTop: 6,
-                          fontStyle: "italic",
-                          fontSize: 12.5,
-                          fontWeight: 600,
-                          color: "#EC4899",
-                        }}
-                      >
-                        Care Today — Brighter Tomorrows 💖
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-
-            {/* Subtle Hero Scroll Cue */}
-            <div
-              className="hero-scroll-cue"
-              style={{
-                gridColumn: "1 / -1",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-                fontSize: 11,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                color: "var(--muted, #64748b)",
-                paddingTop: 24,
-                width: "100%",
-                opacity: 0.85,
-              }}
-            >
-              <span>Explore laboratory formulations</span>
-              <span style={{ fontSize: 13, color: "var(--gold, #D4AF37)" }}>↓</span>
+                {/* Interactive Hotspot 2: Immune Support+ Product Bottle -> Links to Product */}
+                <Link
+                  href="/products/immune-care-plus"
+                  title="View Immune Support+ formulation"
+                  aria-label="View Immune Support+ formulation"
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    right: 0,
+                    width: "50%",
+                    height: "100%",
+                    cursor: "pointer",
+                    zIndex: 4,
+                  }}
+                />
+              </div>
             </div>
           </section>
         );
@@ -709,6 +600,27 @@ export default function QueensCareExperience() {
                       {p.name}
                     </div>
                   ))}
+                  <button
+                    type="button"
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: "50%",
+                      border: "1px solid #CBD5E1",
+                      background: "#FFFFFF",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: "pointer",
+                      fontSize: 15,
+                      color: "#475569",
+                      boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
+                      marginLeft: 4,
+                    }}
+                    aria-label="Next partner"
+                  >
+                    ›
+                  </button>
                 </div>
               </div>
 
@@ -1149,214 +1061,249 @@ export default function QueensCareExperience() {
                   <p style={{ marginTop: 40, color: "var(--muted)", textAlign: "center" }}>Loading collection…</p>
                 ) : (
                   <>
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(auto-fill, minmax(210px, 1fr))",
-                        gap: 16,
-                      }}
-                    >
-                      {collectionProducts.map((product, pIdx) => {
-                        const badges = ["Bestseller", "New", "Popular", "Kids"];
-                        const cardBadge = pIdx < 4 ? badges[pIdx] : (product.bestSeller ? "Bestseller" : product.newArrival ? "New" : "");
-                        const strikePrice = Math.round(product.price * 1.32);
-                        const discountPct = Math.round(((strikePrice - product.price) / strikePrice) * 100);
-
-                        return (
-                          <article
-                            key={product.id}
+                    {(() => {
+                      const displayProducts = (!search && catFilter.length === 0) ? collectionProducts.slice(0, 8) : collectionProducts;
+                      return (
+                        <>
+                          <div
                             style={{
-                              background: "#FFFFFF",
-                              borderRadius: 14,
-                              border: "1px solid #E2E8F0",
-                              padding: "14px",
-                              display: "flex",
-                              flexDirection: "column",
-                              position: "relative",
-                              boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
-                              transition: "transform 0.2s, box-shadow 0.2s",
+                              display: "grid",
+                              gridTemplateColumns: "repeat(auto-fill, minmax(210px, 1fr))",
+                              gap: 16,
                             }}
                           >
-                            {/* Top Badge */}
-                            {cardBadge && (
-                              <span
-                                style={{
-                                  position: "absolute",
-                                  top: 10,
-                                  left: 10,
-                                  zIndex: 2,
-                                  padding: "3px 8px",
-                                  borderRadius: 999,
-                                  fontSize: 9.5,
-                                  fontWeight: 700,
-                                  textTransform: "uppercase",
-                                  background:
-                                    cardBadge === "Bestseller"
-                                      ? "#EA580C"
-                                      : cardBadge === "New"
-                                      ? "#16A34A"
-                                      : cardBadge === "Popular"
-                                      ? "#F59E0B"
-                                      : "#7C3AED",
-                                  color: "#FFFFFF",
-                                }}
-                              >
-                                {cardBadge}
-                              </span>
-                            )}
+                            {displayProducts.map((product, pIdx) => {
+                              const pAny = product as Record<string, unknown>;
+                              const badges = ["Bestseller", "New", "Popular", "Kids"];
+                              const cardBadge = pIdx < 4 ? badges[pIdx] : (product.bestSeller ? "Bestseller" : product.newArrival ? "New" : "");
+                              const strikePrice = Math.round(product.price * 1.32);
+                              const originalPrice = Number(pAny.originalPrice || strikePrice);
+                              const discountPct = Math.round(((originalPrice - product.price) / originalPrice) * 100);
 
-                            {/* Wishlist Button */}
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                toggleWish(product.name);
-                              }}
-                              style={{
-                                position: "absolute",
-                                top: 10,
-                                right: 10,
-                                zIndex: 2,
-                                width: 28,
-                                height: 28,
-                                borderRadius: "50%",
-                                background: "#FFFFFF",
-                                border: "1px solid #E2E8F0",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                cursor: "pointer",
-                                fontSize: 13,
-                                color: wish.includes(product.name) ? "#EF4444" : "#94A3B8",
-                              }}
-                              aria-label={`Save ${product.name}`}
-                            >
-                              {wish.includes(product.name) ? "♥" : "♡"}
-                            </button>
-
-                            {/* Product Image */}
-                            <Link href={`/products/${product.slug}`} style={{ textDecoration: "none", color: "inherit" }}>
-                              <div
-                                style={{
-                                  position: "relative",
-                                  width: "100%",
-                                  aspectRatio: "1/1",
-                                  marginBottom: 10,
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                }}
-                              >
-                                <img
-                                  src={product.image}
-                                  alt={product.name}
-                                  style={{ maxWidth: "88%", maxHeight: "88%", objectFit: "contain" }}
-                                  onError={(e) => {
-                                    (e.currentTarget as HTMLImageElement).src =
-                                      "/images/reference/hero-immune-bottle.png";
+                              return (
+                                <article
+                                  key={product.id}
+                                  style={{
+                                    background: "#FFFFFF",
+                                    borderRadius: 16,
+                                    border: "1px solid #E2E8F0",
+                                    padding: 0,
+                                    overflow: "hidden",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    position: "relative",
+                                    boxShadow: "0 2px 10px rgba(0,0,0,0.03)",
+                                    transition: "transform 0.2s, box-shadow 0.2s",
                                   }}
-                                />
-                              </div>
+                                >
+                                  {/* Top Badge (Only for non-reference products since reference products already have crisp badges) */}
+                                  {!product.id.startsWith("p-ref-") && cardBadge && (
+                                    <span
+                                      style={{
+                                        position: "absolute",
+                                        top: 10,
+                                        left: 10,
+                                        zIndex: 2,
+                                        padding: "3px 8px",
+                                        borderRadius: 999,
+                                        fontSize: 9.5,
+                                        fontWeight: 700,
+                                        textTransform: "uppercase",
+                                        background:
+                                          cardBadge === "Bestseller"
+                                            ? "#EA580C"
+                                            : cardBadge === "New"
+                                            ? "#16A34A"
+                                            : cardBadge === "Popular"
+                                            ? "#F59E0B"
+                                            : "#7C3AED",
+                                        color: "#FFFFFF",
+                                      }}
+                                    >
+                                      {cardBadge}
+                                    </span>
+                                  )}
 
-                              {/* Brand & Titles */}
-                              <span style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em", display: "block" }}>
-                                Queens Care
-                              </span>
-                              <h3
-                                style={{
-                                  fontSize: 14,
-                                  fontWeight: 700,
-                                  color: "#0F172A",
-                                  margin: "3px 0 2px",
-                                  lineHeight: 1.3,
-                                }}
-                              >
-                                {product.name}
-                              </h3>
-                              <p
-                                style={{
-                                  fontSize: 11,
-                                  color: "#64748B",
-                                  margin: "0 0 10px",
-                                  whiteSpace: "nowrap",
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                }}
-                              >
-                                {product.note || product.category}
-                              </p>
-                            </Link>
+                                  {/* Product Image Header */}
+                                  <Link href={`/products/${product.slug}`} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
+                                    <div
+                                      style={{
+                                        position: "relative",
+                                        width: "100%",
+                                        aspectRatio: "1.28 / 1",
+                                        background: "#F8FAFC",
+                                        overflow: "hidden",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                    >
+                                      <img
+                                        src={product.image || String(pAny.thumbnail || "")}
+                                        alt={product.name}
+                                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                        onError={(e) => {
+                                          (e.currentTarget as HTMLImageElement).src =
+                                            "/images/reference/hero-immune-bottle.png";
+                                        }}
+                                      />
+                                    </div>
+                                  </Link>
 
-                            {/* Price & Discount */}
-                            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-                              <b style={{ fontSize: 15, color: "#0F172A" }}>
-                                ₹{product.price.toLocaleString("en-IN")}
-                              </b>
-                              <span style={{ fontSize: 11.5, color: "#94A3B8", textDecoration: "line-through" }}>
-                                ₹{strikePrice}
-                              </span>
-                              <span
-                                style={{
-                                  fontSize: 10,
-                                  fontWeight: 700,
-                                  color: "#16A34A",
-                                  background: "#DCFCE7",
-                                  padding: "2px 6px",
-                                  borderRadius: 4,
-                                }}
-                              >
-                                {discountPct}% OFF
-                              </span>
-                            </div>
+                                  {/* Product Body Content */}
+                                  <div style={{ padding: "12px 14px 14px", display: "flex", flexDirection: "column", flex: 1 }}>
+                                    <Link href={`/products/${product.slug}`} style={{ textDecoration: "none", color: "inherit" }}>
+                                      <span style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em", display: "block" }}>
+                                        Queens Care
+                                      </span>
+                                      <h3
+                                        style={{
+                                          fontSize: 14.5,
+                                          fontWeight: 700,
+                                          color: "#0F172A",
+                                          margin: "3px 0 2px",
+                                          lineHeight: 1.3,
+                                        }}
+                                      >
+                                        {product.name}
+                                      </h3>
+                                      <p
+                                        style={{
+                                          fontSize: 11,
+                                          color: "#64748B",
+                                          margin: "0 0 10px",
+                                          whiteSpace: "nowrap",
+                                          overflow: "hidden",
+                                          textOverflow: "ellipsis",
+                                        }}
+                                      >
+                                        {String(pAny.subtitle || product.note || product.category)}
+                                      </p>
+                                    </Link>
 
-                            {/* Bottom Card Actions: Rating & Add to Bag */}
-                            <div
-                              style={{
-                                marginTop: "auto",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                paddingTop: 8,
-                                borderTop: "1px solid #F1F5F9",
-                              }}
-                            >
-                              <div style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11.5, color: "#F59E0B", fontWeight: 700 }}>
-                                <span>★</span>
-                                <span style={{ color: "#1E293B" }}>{(product.rating || 4.8).toFixed(1)}</span>
-                                <span style={{ color: "#94A3B8", fontSize: 10 }}>({product.reviewCount || 420})</span>
-                              </div>
+                                    {/* Price & Discount */}
+                                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+                                      <b style={{ fontSize: 15, color: "#0F172A" }}>
+                                        ₹{product.price.toLocaleString("en-IN")}
+                                      </b>
+                                      <span style={{ fontSize: 11.5, color: "#94A3B8", textDecoration: "line-through" }}>
+                                        ₹{originalPrice}
+                                      </span>
+                                      <span
+                                        style={{
+                                          fontSize: 10,
+                                          fontWeight: 700,
+                                          color: "#EF4444",
+                                          background: "#FEE2E2",
+                                          padding: "2px 6px",
+                                          borderRadius: 4,
+                                        }}
+                                      >
+                                        {discountPct}% OFF
+                                      </span>
+                                    </div>
 
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  add(product);
-                                }}
-                                style={{
-                                  width: 32,
-                                  height: 32,
-                                  borderRadius: "50%",
-                                  background: "#1E1638",
-                                  color: "#FFFFFF",
-                                  border: "none",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  cursor: "pointer",
-                                  fontSize: 13,
-                                  boxShadow: "0 2px 6px rgba(30,22,56,0.2)",
-                                }}
-                                aria-label={`Add ${product.name} to cart`}
-                              >
-                                🛒
-                              </button>
-                            </div>
-                          </article>
-                        );
-                      })}
-                    </div>
+                                    {/* Bottom Card Actions: Rating on left, Cart & Heart buttons on right */}
+                                    <div
+                                      style={{
+                                        marginTop: "auto",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "space-between",
+                                        paddingTop: 8,
+                                        borderTop: "1px solid #F1F5F9",
+                                      }}
+                                    >
+                                      <div style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11.5, color: "#F59E0B", fontWeight: 700 }}>
+                                        <span>★</span>
+                                        <span style={{ color: "#1E293B" }}>{(product.rating || 4.8).toFixed(1)}</span>
+                                        <span style={{ color: "#94A3B8", fontSize: 10 }}>
+                                          ({product.reviewCount ? (product.reviewCount > 999 ? `${(product.reviewCount / 1000).toFixed(1)}k` : product.reviewCount) : "420"})
+                                        </span>
+                                      </div>
+
+                                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            add(product);
+                                          }}
+                                          style={{
+                                            width: 30,
+                                            height: 30,
+                                            borderRadius: "50%",
+                                            background: "#F8FAFC",
+                                            color: "#1E1638",
+                                            border: "1px solid #E2E8F0",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            cursor: "pointer",
+                                            fontSize: 13,
+                                            transition: "background 0.2s",
+                                          }}
+                                          aria-label={`Add ${product.name} to cart`}
+                                        >
+                                          🛒
+                                        </button>
+
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            toggleWish(product.name);
+                                          }}
+                                          style={{
+                                            width: 30,
+                                            height: 30,
+                                            borderRadius: "50%",
+                                            background: "#F8FAFC",
+                                            border: "1px solid #E2E8F0",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            cursor: "pointer",
+                                            fontSize: 13,
+                                            color: wish.includes(product.name) ? "#EF4444" : "#64748B",
+                                            transition: "all 0.2s",
+                                          }}
+                                          aria-label={`Save ${product.name}`}
+                                        >
+                                          {wish.includes(product.name) ? "♥" : "♡"}
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </article>
+                              );
+                            })}
+                          </div>
+
+                          {/* Real Science Real Results Banner Card directly below product grid */}
+                          <Link
+                            href="/about"
+                            style={{
+                              marginTop: 24,
+                              borderRadius: 20,
+                              overflow: "hidden",
+                              boxShadow: "0 6px 20px rgba(99, 102, 241, 0.08)",
+                              position: "relative",
+                              border: "1px solid #E0E7FF",
+                              display: "block",
+                            }}
+                          >
+                            <img
+                              src="/images/reference/real-science-card-reference.png"
+                              alt="Real Science Real Results"
+                              style={{ width: "100%", height: "auto", display: "block" }}
+                            />
+                          </Link>
+                        </>
+                      );
+                    })()}
 
                     {collectionProducts.length === 0 && products.length > 0 && (
                       <p className="empty" style={{ textAlign: "center", padding: "40px 0", color: "#64748B" }}>
@@ -1470,31 +1417,23 @@ export default function QueensCareExperience() {
         const LIFE_STAGE_CARDS = [
           {
             title: "I want to feel more energized.",
-            cta: "Explore Energy →",
-            img: "/images/reference/wellness-energy.png",
-            bg: "#FEF9C3",
-            category: "Energy",
+            img: "/images/reference/card-energy-reference.png",
+            query: "Immunity",
           },
           {
             title: "I want a calmer evening.",
-            cta: "Explore Sleep →",
-            img: "/images/reference/wellness-sleep.png",
-            bg: "#EDE9FE",
-            category: "Sleep",
+            img: "/images/reference/card-sleep-reference.png",
+            query: "Digestive",
           },
           {
             title: "I want to glow from within.",
-            cta: "Explore Skin →",
-            img: "/images/reference/wellness-skin.png",
-            bg: "#FFE4E6",
-            category: "Skin",
+            img: "/images/reference/card-skin-reference.png",
+            query: "Skin",
           },
           {
             title: "I want a stronger future for their health.",
-            cta: "Explore Kids →",
-            img: "/images/reference/wellness-kids.png",
-            bg: "#E0F2FE",
-            category: "Kids",
+            img: "/images/reference/card-kids-reference.png",
+            query: "Children",
           },
         ];
 
@@ -1502,10 +1441,10 @@ export default function QueensCareExperience() {
           <section
             className="ritual-reference-section"
             key={sec.id ? String(sec.id) : `ritual-${idx}`}
-            style={{ padding: "48px 20px", background: "#FAFBFD", ...secStyle }}
+            style={{ padding: "40px 20px", background: "#FAFBFD", ...secStyle }}
           >
             <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 16, marginBottom: 28 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 16, marginBottom: 20 }}>
                 <div>
                   <h2
                     style={{
@@ -1528,58 +1467,30 @@ export default function QueensCareExperience() {
                 style={{
                   display: "grid",
                   gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-                  gap: 18,
+                  gap: 16,
                 }}
               >
                 {LIFE_STAGE_CARDS.map((card) => (
                   <div
                     key={card.title}
-                    onClick={() => setSearch(card.category)}
-                    style={{
-                      background: card.bg,
-                      borderRadius: 18,
-                      overflow: "hidden",
-                      padding: "20px 18px",
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "space-between",
-                      minHeight: 200,
-                      position: "relative",
-                      cursor: "pointer",
-                      transition: "transform 0.2s, box-shadow 0.2s",
-                      boxShadow: "0 4px 14px rgba(0,0,0,0.03)",
+                    onClick={() => {
+                      setSearch(card.query);
+                      const el = document.getElementById("collection");
+                      if (el) el.scrollIntoView({ behavior: "smooth" });
                     }}
+                    style={{
+                      borderRadius: 16,
+                      overflow: "hidden",
+                      cursor: "pointer",
+                      transition: "transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s",
+                      boxShadow: "0 4px 16px rgba(0,0,0,0.04)",
+                    }}
+                    className="ritual-card-hover"
                   >
-                    <div>
-                      <h3
-                        style={{
-                          fontSize: 16,
-                          fontWeight: 700,
-                          color: "#1E1638",
-                          margin: "0 0 8px",
-                          maxWidth: 160,
-                          lineHeight: 1.3,
-                        }}
-                      >
-                        {card.title}
-                      </h3>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: "#4F46E5" }}>
-                        {card.cta}
-                      </span>
-                    </div>
-
                     <img
                       src={card.img}
                       alt={card.title}
-                      style={{
-                        position: "absolute",
-                        right: 10,
-                        bottom: 10,
-                        width: 100,
-                        height: 70,
-                        objectFit: "contain",
-                        borderRadius: 8,
-                      }}
+                      style={{ width: "100%", height: "auto", display: "block" }}
                     />
                   </div>
                 ))}
@@ -1910,99 +1821,22 @@ export default function QueensCareExperience() {
               style={{
                 maxWidth: 1200,
                 margin: "0 auto",
-                background: "linear-gradient(135deg, #FDF2F8 0%, #EEF2FF 50%, #F5F3FF 100%)",
                 borderRadius: 24,
+                overflow: "hidden",
+                boxShadow: "0 6px 24px rgba(79, 70, 229, 0.06)",
+                position: "relative",
+                cursor: "pointer",
                 border: "1px solid #E0E7FF",
-                padding: "28px 36px",
-                display: "grid",
-                gridTemplateColumns: "1fr 1.2fr 1fr",
-                gap: 24,
-                alignItems: "center",
-                boxShadow: "0 6px 24px rgba(79, 70, 229, 0.04)",
+                transition: "transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s",
               }}
-              className="ai-banner-grid"
+              onClick={() => setQuizOpen(true)}
+              className="consult-banner-hover"
             >
-              {/* Left Column: Dr. Queens Persona & Image */}
-              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                <img
-                  src="/images/reference/dr-queens-ai-banner.png"
-                  alt="Dr. Queens AI Assistant"
-                  style={{ width: 100, height: 75, objectFit: "contain" }}
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).src = "/images/reference/dr-queens-hero.png";
-                  }}
-                />
-                <div>
-                  <span style={{ fontStyle: "italic", fontSize: 13, fontWeight: 700, color: "#DB2777" }}>
-                    &ldquo;Your Health Our Priority&rdquo; 💗
-                  </span>
-                  <b style={{ fontSize: 15, color: "#1E1638", display: "block", marginTop: 2 }}>
-                    Dr. Queens
-                  </b>
-                  <span style={{ fontSize: 11, color: "#64748B", display: "block" }}>
-                    AI Health Assistant ▾
-                  </span>
-                </div>
-              </div>
-
-              {/* Middle Column: Quiz Callout */}
-              <div style={{ textAlign: "left" }}>
-                <b style={{ fontSize: 16, color: "#1E1638", display: "block", marginBottom: 4 }}>
-                  Not sure which product is right for you?
-                </b>
-                <p style={{ fontSize: 12, color: "#475569", lineHeight: 1.45, margin: "0 0 14px" }}>
-                  Take a short quiz and I&apos;ll help you find the best options based on your needs.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setQuizOpen(true)}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 8,
-                    padding: "10px 22px",
-                    borderRadius: 999,
-                    background: "#1E1638",
-                    color: "#FFFFFF",
-                    fontSize: 12.5,
-                    fontWeight: 700,
-                    border: "none",
-                    cursor: "pointer",
-                    boxShadow: "0 4px 12px rgba(30, 22, 56, 0.2)",
-                  }}
-                >
-                  Take the Health Quiz ➔
-                </button>
-              </div>
-
-              {/* Right Column: 4 Vertical Feature Pills */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {[
-                  { icon: "💊", label: "Personalized Recommendations" },
-                  { icon: "👥", label: "Trusted by Thousands" },
-                  { icon: "🛡️", label: "Better Health Everyday" },
-                  { icon: "🏷️", label: "100% Safe & Genuine" },
-                ].map((item) => (
-                  <div
-                    key={item.label}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      background: "rgba(255,255,255,0.85)",
-                      padding: "6px 12px",
-                      borderRadius: 999,
-                      border: "1px solid #E2E8F0",
-                      fontSize: 11,
-                      fontWeight: 600,
-                      color: "#1E293B",
-                    }}
-                  >
-                    <span>{item.icon}</span>
-                    <span>{item.label}</span>
-                  </div>
-                ))}
-              </div>
+              <img
+                src="/images/reference/ai-assistant-banner-reference.png"
+                alt="Dr. Queens AI Health Assistant"
+                style={{ width: "100%", height: "auto", display: "block" }}
+              />
             </div>
           </section>
         );
@@ -2233,9 +2067,8 @@ export default function QueensCareExperience() {
         </div>
       )}
       <main>
-        {/* Scroll-linked colour stage — Veridia-style background morph */}
+        {/* Scroll-linked colour stage */}
         <div className="stage-bg" aria-hidden="true" />
-        <CareScene />
         {sortedSections.map((sec, idx) => renderSection(sec, idx))}
 
         {/* Universal Marquee — Hero or Between Sections Placement */}

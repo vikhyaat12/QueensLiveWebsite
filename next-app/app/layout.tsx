@@ -1,20 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./premium-animations.css";
-import { Fraunces, Inter } from "next/font/google";
-
-const fraunces = Fraunces({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-fraunces",
-  weight: ["300", "400", "500", "600"],
-});
-
-const inter = Inter({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-inter",
-});
+const fraunces = { variable: "font-fraunces" };
+const inter = { variable: "font-inter" };
 import { ReticleDev } from "./reticle-dev";
 import Providers from "./providers";
 import AnalyticsTracker from "./components/AnalyticsTracker";
