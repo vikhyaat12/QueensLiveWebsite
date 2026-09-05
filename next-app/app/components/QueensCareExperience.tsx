@@ -462,12 +462,51 @@ export default function QueensCareExperience() {
               </div>
               <a href="#collection" className="text-link">{String(c.ctaText || "Shop all care")} <span>→</span></a>
             </div>
-            <div className="category-row">
-              {categories.map((cat, index) => (
-                <button key={cat} onClick={() => setSearch(cat)}>
-                  <span>0{index + 1}</span>{cat}<b>→</b>
-                </button>
-              ))}
+            <div className="category-row" style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 8 }}>
+              <button
+                type="button"
+                className={search === "" ? "active" : ""}
+                onClick={() => setSearch("")}
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: 20,
+                  border: search === "" ? "1.5px solid var(--purple, #2A0F3A)" : "1px solid var(--line)",
+                  background: search === "" ? "var(--purple, #2A0F3A)" : "#fff",
+                  color: search === "" ? "#fff" : "var(--ink)",
+                  fontWeight: 600,
+                  fontSize: 12,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  transition: "all 0.15s",
+                }}
+              >
+                All Formulations
+              </button>
+              {categories.map((cat, index) => {
+                const isActive = search.toLowerCase() === cat.toLowerCase();
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    className={isActive ? "active" : ""}
+                    onClick={() => setSearch(isActive ? "" : cat)}
+                    style={{
+                      padding: "8px 16px",
+                      borderRadius: 20,
+                      border: isActive ? "1.5px solid var(--purple, #2A0F3A)" : "1px solid var(--line)",
+                      background: isActive ? "var(--purple, #2A0F3A)" : "#fff",
+                      color: isActive ? "#fff" : "var(--ink)",
+                      fontWeight: 600,
+                      fontSize: 12,
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    <span>0{index + 1} </span>{cat}
+                  </button>
+                );
+              })}
             </div>
             {loading ? (
               <p style={{ marginTop: 40, color: "var(--muted)", textAlign: "center" }}>Loading collection…</p>
@@ -476,10 +515,15 @@ export default function QueensCareExperience() {
                 <div className="product-grid">
                   {collectionProducts.map((product) => (
                     <Link href={`/products/${product.slug}`} key={product.id} style={{ textDecoration: "none", color: "inherit" }}>
-                      <article className="product">
+                      <article className="product" style={{ transition: "transform 0.2s, box-shadow 0.2s" }}>
                         <div className="product-image">
                           <Image src={product.image} alt={product.name} fill sizes="(max-width: 650px) 50vw, 25vw"/>
                           <span className="pill">{product.tag}</span>
+                          {product.stock <= 0 ? (
+                            <span className="pill" style={{ top: 38, background: "#78716c", color: "#fff" }}>Awaiting Batch</span>
+                          ) : product.stock < 50 ? (
+                            <span className="pill" style={{ top: 38, background: "#d97706", color: "#fff" }}>Low Stock ({product.stock})</span>
+                          ) : null}
                           <button className="heart" onClick={(e: React.MouseEvent) => { e.preventDefault(); e.stopPropagation(); toggleWish(product.name); }} aria-label={`Save ${product.name}`}>
                             {wish.includes(product.name) ? "♥" : "♡"}
                           </button>
@@ -492,7 +536,15 @@ export default function QueensCareExperience() {
                         <small>{product.note}</small>
                         <div className="price">
                           <b>₹{product.price.toLocaleString("en-IN")}</b>
-                          <span>★★★★★</span>
+                          {product.rating && product.reviewCount && product.reviewCount > 0 ? (
+                            <span style={{ fontSize: 12, color: "var(--gold, #D4AF37)", fontWeight: 600 }}>
+                              ★ {product.rating.toFixed(1)} ({product.reviewCount})
+                            </span>
+                          ) : (
+                            <span style={{ fontSize: 11, color: product.stock > 0 ? "#2e7d32" : "#991b1b", fontWeight: 600 }}>
+                              ● {product.stock > 0 ? "Cold-Chain Ready" : "Preserved"}
+                            </span>
+                          )}
                         </div>
                       </article>
                     </Link>
