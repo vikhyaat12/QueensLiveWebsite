@@ -11,8 +11,11 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { getCartCount, subscribeCart } from "@/lib/client-cart";
 import { SocialBrandIcon } from "./SocialIcons";
 import Marquee from "./Marquee";
+import UniversalMarquee from "./UniversalMarquee";
 import SearchOverlay from "./SearchOverlay";
 import DoctorCharacter from "./DoctorCharacter";
+import FemaleDoctorHeroVisual from "./FemaleDoctorHeroVisual";
+import HealthQuizModal from "./HealthQuizModal";
 
 type Product = { 
   id: string;
@@ -56,6 +59,8 @@ export default function QueensCareExperience() {
   const [wish, setWish] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [startVoiceSearch, setStartVoiceSearch] = useState(false);
+  const [quizOpen, setQuizOpen] = useState(false);
   const [notice, setNotice] = useState("");
   const [menu, setMenu] = useState(false);
   const [loading, setLoading] = useState(true);
