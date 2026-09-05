@@ -813,6 +813,14 @@ export default function QueensCareExperience() {
                 <Link href={String(c.ctaLink || "/contact")} className="button">
                   {String(c.ctaText || "Talk to our care team")} <span>→</span>
                 </Link>
+                <button
+                  type="button"
+                  onClick={() => setQuizOpen(true)}
+                  className="button"
+                  style={{ background: "rgba(212,175,55,0.12)", color: "var(--purple)", border: "1.5px solid var(--gold)", cursor: "pointer", fontWeight: 700 }}
+                >
+                  ✦ Take Health Quiz <span>→</span>
+                </button>
                 {(c.secondaryCtaText || c.secondaryCtaLink) && (
                   <Link href={String(c.secondaryCtaLink || "/doctors")} className="button" style={{ background: "transparent", color: "var(--purple)", border: "1px solid var(--purple)" }}>
                     {String(c.secondaryCtaText || "For healthcare professionals")} <span>→</span>
@@ -826,6 +834,40 @@ export default function QueensCareExperience() {
                 alt="Doctor speaking with a patient"
                 onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=1000&q=85"; }}
               />
+            </div>
+          </section>
+        );
+      }
+
+      case "quiz": {
+        return (
+          <section className="section" key={sec.id ? String(sec.id) : `quiz-${idx}`} style={{ background: "linear-gradient(180deg, rgba(40,13,56,0.03) 0%, rgba(212,175,55,0.06) 100%)", padding: "72px 0", ...secStyle }}>
+            <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 24px", textAlign: "center" }}>
+              <p className="eyebrow" style={{ color: "var(--gold, #D4AF37)" }}>{String(c.eyebrow || "Personalized Consultation")}</p>
+              <h2 style={{ font: "clamp(28px, 4vw, 42px)/1.15 var(--font-display)", color: "var(--purple, #2A0F3A)", margin: "12px 0 16px", ...headingStyle }} dangerouslySetInnerHTML={{ __html: String(c.heading || "Find the exact formulation your routine requires.") }} />
+              <p style={{ fontSize: 16, lineHeight: 1.8, color: "var(--muted, #64748b)", maxWidth: 640, margin: "0 auto 28px" }}>
+                {String(c.description || "Answer 4 clinical questions to calculate your personalized bioactive routine.")}
+              </p>
+              <button
+                type="button"
+                onClick={() => setQuizOpen(true)}
+                className="button"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "14px 32px",
+                  background: "var(--purple, #2A0F3A)",
+                  color: "var(--gold, #D4AF37)",
+                  border: "none",
+                  borderRadius: 4,
+                  fontSize: 14,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                <span>✦ {String(c.ctaText || "Take Formulation Quiz")}</span> <span>→</span>
+              </button>
             </div>
           </section>
         );
