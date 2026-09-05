@@ -103,7 +103,7 @@ export default function PremiumAnimations() {
     /* ── 3. FADE-IN REVEALS (data-fade-reveal) ───────────────── */
     document
       .querySelectorAll<HTMLElement>(
-        ".eyebrow, .lead, .hero-ctas, .ratings, .section-head, .science-copy > p:not(.eyebrow), .ritual-card, .consult .button"
+        ".eyebrow, .lead, .hero-ctas, .ratings, .section-head, .science-copy > p:not(.eyebrow), .ritual-card-hover, .consult .button"
       )
       .forEach((el) => {
         if (el.dataset.premiumFade) return;
@@ -125,7 +125,7 @@ export default function PremiumAnimations() {
 
     /* ── 4. STAGGER REVEALS (product cards, ritual cards) ─────── */
     ScrollTrigger.batch(
-      ".product, .ritual-card, .journal-grid article",
+      ".collection article, .ritual-card-hover, .journal-reference-section article",
       {
         start: "top 88%",
         onEnter: (batch) =>
@@ -140,7 +140,7 @@ export default function PremiumAnimations() {
       }
     );
     gsap.set(
-      ".product, .ritual-card, .journal-grid article",
+      ".collection article, .ritual-card-hover, .journal-reference-section article",
       { y: 40, opacity: 0 }
     );
 
@@ -164,7 +164,7 @@ export default function PremiumAnimations() {
 
     /* ── 6. PRODUCT IMAGES scale on scroll ────────────────────── */
     if (!REDUCED) {
-      document.querySelectorAll<HTMLElement>(".product-image img").forEach((el) => {
+      document.querySelectorAll<HTMLElement>(".collection article img").forEach((el) => {
         gsap.fromTo(
           el,
           { scale: 1.08 },

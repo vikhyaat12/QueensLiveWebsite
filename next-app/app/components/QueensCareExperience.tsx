@@ -250,14 +250,14 @@ export default function QueensCareExperience() {
             style={{
               background: heroBg
                 ? String(heroBg)
-                : "radial-gradient(ellipse at 75% 25%, rgba(224, 231, 255, 0.55) 0%, rgba(243, 232, 255, 0.4) 40%, #F8F9FD 80%)",
+                : "linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 25%, #F0E6FF 50%, #F5F3FF 75%, #FAF5FF 100%)",
               position: "relative",
               overflow: "hidden",
               padding: "50px 24px 40px",
               ...secStyle,
             }}
           >
-            <div className="hero-copy" style={{ maxWidth: 520, zIndex: 3 }}>
+            <div className="hero-copy" style={{ maxWidth: 520, zIndex: 3, padding: "60px 0" }}>
               <p
                 className="eyebrow"
                 style={{
@@ -1085,15 +1085,15 @@ export default function QueensCareExperience() {
                                   key={product.id}
                                   style={{
                                     background: "#FFFFFF",
-                                    borderRadius: 16,
-                                    border: "1px solid #E2E8F0",
+                                    borderRadius: 18,
+                                    border: "1px solid rgba(226, 232, 240, 0.8)",
                                     padding: 0,
                                     overflow: "hidden",
                                     display: "flex",
                                     flexDirection: "column",
                                     position: "relative",
-                                    boxShadow: "0 2px 10px rgba(0,0,0,0.03)",
-                                    transition: "transform 0.2s, box-shadow 0.2s",
+                                    boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
+                                    transition: "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease",
                                   }}
                                 >
                                   {/* Top Badge (Only for non-reference products since reference products already have crisp badges) */}
@@ -1130,12 +1130,13 @@ export default function QueensCareExperience() {
                                       style={{
                                         position: "relative",
                                         width: "100%",
-                                        aspectRatio: "1.28 / 1",
-                                        background: "#F8FAFC",
+                                        aspectRatio: "1.15 / 1",
+                                        background: "linear-gradient(135deg, #FAFBFD 0%, #F1F5F9 100%)",
                                         overflow: "hidden",
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
+                                        borderRadius: "14px 14px 0 0",
                                       }}
                                     >
                                       <img
@@ -1815,7 +1816,7 @@ export default function QueensCareExperience() {
           <section
             className="ai-assistant-reference-banner"
             key={sec.id ? String(sec.id) : `consult-${idx}`}
-            style={{ padding: "32px 20px", ...secStyle }}
+            style={{ padding: "36px 20px", ...secStyle }}
           >
             <div
               style={{
@@ -1823,14 +1824,18 @@ export default function QueensCareExperience() {
                 margin: "0 auto",
                 borderRadius: 24,
                 overflow: "hidden",
-                boxShadow: "0 6px 24px rgba(79, 70, 229, 0.06)",
+                boxShadow: "0 8px 32px rgba(79, 70, 229, 0.08)",
                 position: "relative",
                 cursor: "pointer",
-                border: "1px solid #E0E7FF",
-                transition: "transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s",
+                border: "1.5px solid #E0E7FF",
+                transition: "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease",
+                background: "linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 50%, #FAF5FF 100%)",
               }}
               onClick={() => setQuizOpen(true)}
               className="consult-banner-hover"
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setQuizOpen(true); } }}
             >
               <img
                 src="/images/reference/ai-assistant-banner-reference.png"
@@ -2173,52 +2178,44 @@ export default function QueensCareExperience() {
       <div style={{ maxWidth: 1200, margin: "24px auto 0", padding: "16px 20px", borderTop: "1px solid rgba(255,255,255,0.08)", fontSize: 11, lineHeight: 1.6, color: "rgba(255,255,255,0.5)", textAlign: "center" }}>
         <b>STATUTORY HEALTHCARE &amp; FORMULATION DISCLAIMER:</b> The statements and formulations presented on queenscare.in are intended solely for general wellness, educational, and cosmetic hygiene purposes. None of the products or information provided herein are intended to diagnose, treat, cure, or prevent any medical condition or acute pathology. Queens Care formulations are dietary supplements and topical dermatological preparations, not scheduled prescription drugs. Always consult a qualified, licensed medical practitioner or dermatologist before beginning any new supplementation or skincare protocol, especially if pregnant, nursing, or undergoing clinical treatment.
       </div>
-      <div className="footer-bottom">
-        <span>© 2026 Queens Care Laboratories. All rights reserved.</span>
-        {socialLinks && socialLinks.length > 0 && (
-          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-            {socialLinks.map((link) => {
-              const size = Number(link.desktopIconSize || link.iconSize || 20);
+      {/* Follow Us Section */}
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "20px 20px 0", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.7)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Follow Us</span>
+          <div style={{ display: "flex", gap: 8 }}>
+            {[
+              { platform: "instagram", icon: "📷", label: "Instagram" },
+              { platform: "youtube", icon: "▶", label: "YouTube" },
+              { platform: "facebook", icon: "f", label: "Facebook" },
+              { platform: "twitter", icon: "𝕏", label: "X / Twitter" },
+              { platform: "linkedin", icon: "in", label: "LinkedIn" },
+            ].map((item) => {
+              const existingLink = socialLinks.find(l => l.platform === item.platform);
+              const url = existingLink?.url || "#";
               return (
                 <a
-                  key={link.id}
-                  href={link.url}
-                  target={link.openNewTab !== false ? "_blank" : undefined}
-                  rel={link.openNewTab !== false ? "noopener noreferrer" : undefined}
-                  title={link.label}
-                  aria-label={link.label}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: size + 10,
-                    height: size + 10,
-                    borderRadius: "50%",
-                    background: "rgba(255,255,255,0.06)",
-                    border: "1px solid rgba(255,255,255,0.12)",
-                    transition: "all 0.2s ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLAnchorElement).style.background = "rgba(212,175,55,0.2)";
-                    (e.currentTarget as HTMLAnchorElement).style.borderColor = "#D4AF37";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLAnchorElement).style.background = "rgba(255,255,255,0.06)";
-                    (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(255,255,255,0.12)";
-                  }}
+                  key={item.platform}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={item.label}
+                  aria-label={item.label}
+                  className="footer-social-icon"
+                  style={{ width: 34, height: 34 }}
                 >
-                  <SocialBrandIcon
-                    platform={link.platform}
-                    size={size}
-                    customIconUrl={link.customIconUrl}
-                    color="#ffffff"
-                  />
+                  <span style={{ fontSize: 13 }}>{item.icon}</span>
                 </a>
               );
             })}
           </div>
-        )}
-        <span>India · English</span>
+        </div>
+      </div>
+      <div className="footer-bottom">
+        <span>© 2026 Queens Care Laboratories. All rights reserved.</span>
+        <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+          <a href="/privacy" style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>Privacy Policy</a>
+          <a href="/terms" style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>Terms & Conditions</a>
+        </div>
         <span>Queens Care Laboratories · India</span>
       </div>
       </footer>

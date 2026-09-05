@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./premium-animations.css";
+import "./premium-homepage.css";
 const fraunces = { variable: "font-fraunces" };
 const inter = { variable: "font-inter" };
 import { ReticleDev } from "./reticle-dev";
