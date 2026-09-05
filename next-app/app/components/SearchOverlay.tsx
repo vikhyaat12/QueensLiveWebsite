@@ -23,9 +23,10 @@ type SearchResult = {
 type SearchOverlayProps = {
   open: boolean;
   onClose: () => void;
+  startVoiceOnOpen?: boolean;
 };
 
-export default function SearchOverlay({ open, onClose }: SearchOverlayProps) {
+export default function SearchOverlay({ open, onClose, startVoiceOnOpen = false }: SearchOverlayProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -42,18 +43,29 @@ export default function SearchOverlay({ open, onClose }: SearchOverlayProps) {
     setVoiceSupported(!!SR);
   }, []);
 
-  // Focus input when opened
+  // Focus input when opened & optionally trigger voice recognition
   useEffect(() => {
     if (open) {
       setTimeout(() => inputRef.current?.focus(), 100);
       document.body.style.overflow = "hidden";
+      if (startVoiceOnOpen) {
+        setTimeout(() => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+          if (SR) {
+            try {
+              startVoice();
+            } catch {}
+          }
+        }, 200);
+      }
     } else {
       document.body.style.overflow = "";
     }
     return () => {
       document.body.style.overflow = "";
     };
-  }, [open]);
+  }, [open, startVoiceOnOpen]);
 
   // Debounced search
   const search = useCallback(async (q: string) => {
