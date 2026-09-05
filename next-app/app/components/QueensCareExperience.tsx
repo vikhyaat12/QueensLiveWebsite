@@ -625,10 +625,130 @@ export default function QueensCareExperience() {
       }
 
       case "trust": {
-        const badges = (c.badges as string[]) || ["Made in India", "Third-party tested", "Traceable ingredients", "Designed with doctors"];
         return (
-          <section className="trust-strip" key={sec.id ? String(sec.id) : `trust-${idx}`} style={secStyle}>
-            {badges.map((b: string) => <span key={b}>✦ {b}</span>)}
+          <section
+            className="trust-section"
+            key={sec.id ? String(sec.id) : `trust-${idx}`}
+            style={{
+              padding: "44px 20px",
+              background: "linear-gradient(180deg, #FAFBFD 0%, #F1F5F9 100%)",
+              borderTop: "1px solid #E2E8F0",
+              borderBottom: "1px solid #E2E8F0",
+              ...secStyle,
+            }}
+          >
+            <div style={{ maxWidth: 1200, margin: "0 auto", textAlign: "center" }}>
+              <span
+                style={{
+                  fontSize: 10.5,
+                  fontWeight: 800,
+                  letterSpacing: "0.15em",
+                  color: "#64748B",
+                  textTransform: "uppercase",
+                  display: "block",
+                  marginBottom: 16,
+                }}
+              >
+                QUALITY CARE, WIDER REACH, A HEALTHIER INDIA
+              </span>
+
+              <div
+                style={{
+                  background: "#FFFFFF",
+                  borderRadius: 20,
+                  border: "1px solid #E2E8F0",
+                  padding: "24px 28px",
+                  boxShadow: "0 6px 24px rgba(30,22,56,0.03)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: 20,
+                  marginBottom: 20,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 16, textAlign: "left" }}>
+                  <img
+                    src="/images/reference/trust-globe-india.png"
+                    alt="India Coverage"
+                    style={{ width: 68, height: 60, objectFit: "contain" }}
+                  />
+                  <div>
+                    <h3 style={{ fontSize: 18, fontWeight: 800, color: "#1E1638", margin: 0 }}>
+                      Trusted by Millions Across India
+                    </h3>
+                    <p style={{ fontSize: 12, color: "#64748B", margin: "4px 0 0", maxWidth: 360 }}>
+                      Our products are available on leading platforms and trusted by healthcare professionals nationwide.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Partner Badges */}
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                  {[
+                    { name: "PharmEasy", color: "#0EA5E9" },
+                    { name: "TATA 1mg", color: "#DC2626" },
+                    { name: "netmeds", color: "#16A34A" },
+                    { name: "amazon", color: "#EA580C" },
+                    { name: "Flipkart", color: "#2563EB" },
+                    { name: "Apollo PHARMACY", color: "#0D9488" },
+                  ].map((p) => (
+                    <div
+                      key={p.name}
+                      style={{
+                        padding: "8px 14px",
+                        background: "#F8FAFC",
+                        borderRadius: 999,
+                        border: "1px solid #E2E8F0",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: p.color,
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
+                      }}
+                    >
+                      {p.name}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 3 Guarantee Badges */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                  gap: 12,
+                  maxWidth: 960,
+                  margin: "0 auto",
+                }}
+              >
+                {[
+                  { icon: "🛡️", title: "100% Original Products", sub: "Direct & Verified Supply" },
+                  { icon: "🚚", title: "Fast & Secure Delivery", sub: "Across India" },
+                  { icon: "🔄", title: "Easy Returns", sub: "Hassle-free Support" },
+                ].map((g) => (
+                  <div
+                    key={g.title}
+                    style={{
+                      background: "#FFFFFF",
+                      borderRadius: 12,
+                      border: "1px solid #E2E8F0",
+                      padding: "10px 16px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      textAlign: "left",
+                    }}
+                  >
+                    <span style={{ fontSize: 20 }}>{g.icon}</span>
+                    <div>
+                      <b style={{ fontSize: 12, color: "#1E1638", display: "block" }}>{g.title}</b>
+                      <span style={{ fontSize: 10.5, color: "#64748B" }}>{g.sub}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </section>
         );
       }
@@ -1252,40 +1372,72 @@ export default function QueensCareExperience() {
       }
 
       case "science": {
-        const principles = ((c.principles as Array<Record<string, string>>) || [
-          { number: "01", title: "Purposeful dosage", text: "Not marketing-magic ingredients." },
-          { number: "02", title: "Radical clarity", text: "Every ingredient has a reason to be here." },
-          { number: "03", title: "Better by design", text: "Elegant rituals, lower-impact choices." }
-        ]).filter(p => p.title || p.text);
         return (
-          <section className="science" id="science" key={sec.id ? String(sec.id) : `science-${idx}`} style={secStyle}>
-            <div className="science-image">
-              <Image
-                src={String(c.imageUrl || "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=1200&q=85")}
-                alt="Laboratory researcher at work"
-                fill
-                sizes="(max-width: 650px) 100vw, 50vw"
-              />
-              <div className="stat-card">
-                <b>{String(c.stat || "97")}<sup>%</sup></b>
-                <span>{String(c.statText || "of customers feel a difference within 30 days*")}</span>
+          <section
+            className="science-section"
+            id="science"
+            key={sec.id ? String(sec.id) : `science-${idx}`}
+            style={{ padding: "40px 20px", ...secStyle }}
+          >
+            <div
+              style={{
+                maxWidth: 1200,
+                margin: "0 auto",
+                background: "linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 50%, #FAF5FF 100%)",
+                borderRadius: 24,
+                border: "1px solid #E0E7FF",
+                padding: "36px 44px",
+                display: "grid",
+                gridTemplateColumns: "1fr 1.2fr",
+                gap: 32,
+                alignItems: "center",
+                boxShadow: "0 8px 28px rgba(99, 102, 241, 0.05)",
+              }}
+              className="science-grid-card"
+            >
+              <div>
+                <h2
+                  style={{
+                    fontSize: "clamp(26px, 3.4vw, 38px)",
+                    fontFamily: "var(--font-display, serif)",
+                    fontWeight: 850,
+                    color: "#1E1638",
+                    lineHeight: 1.15,
+                    margin: "0 0 12px",
+                  }}
+                >
+                  Real Science<br />Real Results
+                </h2>
+                <p style={{ fontSize: 13.5, lineHeight: 1.65, color: "#475569", maxWidth: 380, margin: "0 0 22px" }}>
+                  {String(c.description || "Discover the ingredients, research and care behind every Queens Care product.")}
+                </p>
+                <Link
+                  href={String(c.ctaLink || "/about")}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    background: "#1E1638",
+                    color: "#FFFFFF",
+                    borderRadius: 999,
+                    padding: "12px 24px",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    textDecoration: "none",
+                    boxShadow: "0 4px 14px rgba(30,22,56,0.2)",
+                  }}
+                >
+                  <span>{String(c.ctaText || "Explore Our Science")}</span> <span>→</span>
+                </Link>
               </div>
-            </div>
-            <div className="science-copy">
-              <p className="eyebrow">{String(c.eyebrow || "The Queens Care standard")}</p>
-              <h2 style={headingStyle} dangerouslySetInnerHTML={{ __html: String(c.heading || "Precision you can feel. <em>Proof you can see.</em>") }} />
-              <p>{String(c.description || "We bring pharmaceutical rigor to the products that live on your shelf. Each formula begins with a real need, is built around meaningful dosage, and is independently tested for purity.")}</p>
-              <div className="principles">
-                {principles.map((p, i) => (
-                  <div key={i}>
-                    <b>{p.number || `0${i + 1}`}</b>
-                    <span><strong>{p.title}</strong>{p.text}</span>
-                  </div>
-                ))}
+
+              <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+                <img
+                  src="/images/reference/science-beaker-microscope.png"
+                  alt="Real Science Real Results"
+                  style={{ width: "100%", maxHeight: 220, objectFit: "contain" }}
+                />
               </div>
-              <Link className="button light" href={String(c.ctaLink || "/about")}>
-                {String(c.ctaText || "Meet our standard")} <span>→</span>
-              </Link>
             </div>
           </section>
         );
@@ -1315,37 +1467,123 @@ export default function QueensCareExperience() {
       }
 
       case "ritual": {
-        const cards = ((c.cards as Array<Record<string, string>>) || [
-          { number: "01", heading: "I want to feel<br/>more <em>energised.</em>", cta: "Discover energy care →", link: "#collection", color: "amber" },
-          { number: "02", heading: "I want a calmer<br/><em>evening.</em>", cta: "Discover sleep care →", link: "#collection", color: "lavender" },
-          { number: "03", heading: "I want to glow<br/>from <em>within.</em>", cta: "Discover dermal care →", link: "#collection", color: "rose" }
-        ]).filter(card => card.heading);
+        const LIFE_STAGE_CARDS = [
+          {
+            title: "I want to feel more energized.",
+            cta: "Explore Energy →",
+            img: "/images/reference/wellness-energy.png",
+            bg: "#FEF9C3",
+            category: "Energy",
+          },
+          {
+            title: "I want a calmer evening.",
+            cta: "Explore Sleep →",
+            img: "/images/reference/wellness-sleep.png",
+            bg: "#EDE9FE",
+            category: "Sleep",
+          },
+          {
+            title: "I want to glow from within.",
+            cta: "Explore Skin →",
+            img: "/images/reference/wellness-skin.png",
+            bg: "#FFE4E6",
+            category: "Skin",
+          },
+          {
+            title: "I want a stronger future for their health.",
+            cta: "Explore Kids →",
+            img: "/images/reference/wellness-kids.png",
+            bg: "#E0F2FE",
+            category: "Kids",
+          },
+        ];
+
         return (
-          <section className="ritual section" key={sec.id ? String(sec.id) : `ritual-${idx}`} style={secStyle}>
-            <div className="section-head">
-              <div>
-                <p className="eyebrow">{String(c.eyebrow || "Build your ritual")}</p>
-                <h2 style={headingStyle} dangerouslySetInnerHTML={{ __html: String(c.heading || "Care that meets you<br/><em>where you are.</em>") }} />
+          <section
+            className="ritual-reference-section"
+            key={sec.id ? String(sec.id) : `ritual-${idx}`}
+            style={{ padding: "48px 20px", background: "#FAFBFD", ...secStyle }}
+          >
+            <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 16, marginBottom: 28 }}>
+                <div>
+                  <h2
+                    style={{
+                      fontFamily: "var(--font-display, serif)",
+                      fontSize: "clamp(26px, 3.2vw, 36px)",
+                      fontWeight: 850,
+                      color: "#1E1638",
+                      margin: "0 0 6px",
+                    }}
+                  >
+                    Care that meets you where you are.
+                  </h2>
+                </div>
+                <p style={{ fontSize: 13, color: "#64748B", margin: 0 }}>
+                  Wellness for every chapter of life — because a healthier tomorrow starts today.
+                </p>
               </div>
-              <p className="side-copy">{String(c.sideText || "Not sure where to begin? Let our guided care finder create a considered starting point in under two minutes.")}</p>
-            </div>
-            <div className="ritual-cards">
-              {cards.map((card, i) => (
-                <a
-                  key={card.id || i}
-                  href={card.link || "#collection"}
-                  className={`ritual-card ${card.color || "amber"}`}
-                  style={{
-                    ...(card.bgColor ? { backgroundColor: card.bgColor } : {}),
-                    ...(card.textColor ? { color: card.textColor } : {}),
-                  }}
-                >
-                  <span>{card.number || `0${i + 1}`}</span>
-                  <h3 dangerouslySetInnerHTML={{ __html: card.heading }} />
-                  {card.description && <p style={{ fontSize: 13, opacity: 0.85, margin: "6px 0 12px" }}>{card.description}</p>}
-                  <b>{card.cta || "Explore ritual →"}</b>
-                </a>
-              ))}
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                  gap: 18,
+                }}
+              >
+                {LIFE_STAGE_CARDS.map((card) => (
+                  <div
+                    key={card.title}
+                    onClick={() => setSearch(card.category)}
+                    style={{
+                      background: card.bg,
+                      borderRadius: 18,
+                      overflow: "hidden",
+                      padding: "20px 18px",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between",
+                      minHeight: 200,
+                      position: "relative",
+                      cursor: "pointer",
+                      transition: "transform 0.2s, box-shadow 0.2s",
+                      boxShadow: "0 4px 14px rgba(0,0,0,0.03)",
+                    }}
+                  >
+                    <div>
+                      <h3
+                        style={{
+                          fontSize: 16,
+                          fontWeight: 700,
+                          color: "#1E1638",
+                          margin: "0 0 8px",
+                          maxWidth: 160,
+                          lineHeight: 1.3,
+                        }}
+                      >
+                        {card.title}
+                      </h3>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: "#4F46E5" }}>
+                        {card.cta}
+                      </span>
+                    </div>
+
+                    <img
+                      src={card.img}
+                      alt={card.title}
+                      style={{
+                        position: "absolute",
+                        right: 10,
+                        bottom: 10,
+                        width: 100,
+                        height: 70,
+                        objectFit: "contain",
+                        borderRadius: 8,
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           </section>
         );
