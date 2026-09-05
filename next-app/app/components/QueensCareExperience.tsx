@@ -244,71 +244,183 @@ export default function QueensCareExperience() {
         const heroImage = c.heroImage || c.imageUrl;
         const heroVis = getHpContent("heroVisual");
         return (
-          <section className="hero" key={sec.id ? String(sec.id) : `hero-${idx}`} style={{ ...(heroBg ? { background: String(heroBg) } : {}), ...secStyle }}>
-            <div className="hero-copy">
-              <p className="eyebrow" style={{ ...(c.textColor ? { color: String(c.textColor) } : {}) }}>
-                {String(c.eyebrow || "A higher standard of everyday care")}
+          <section
+            className="hero"
+            key={sec.id ? String(sec.id) : `hero-${idx}`}
+            style={{
+              background: heroBg
+                ? String(heroBg)
+                : "radial-gradient(ellipse at 75% 25%, rgba(224, 231, 255, 0.55) 0%, rgba(243, 232, 255, 0.4) 40%, #F8F9FD 80%)",
+              position: "relative",
+              overflow: "hidden",
+              padding: "50px 24px 40px",
+              ...secStyle,
+            }}
+          >
+            <div className="hero-copy" style={{ maxWidth: 520, zIndex: 3 }}>
+              <p
+                className="eyebrow"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "6px 14px",
+                  borderRadius: 999,
+                  background: "rgba(99, 102, 241, 0.08)",
+                  color: "#4F46E5",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: "0.08em",
+                  width: "fit-content",
+                  textTransform: "uppercase",
+                  marginBottom: 14,
+                }}
+              >
+                <span>✦</span> {String(c.eyebrow || "SCIENCE-BACKED WELLNESS")}
               </p>
               <h1
-                style={{ ...(c.headingColor ? { color: String(c.headingColor) } : {}) }}
-                dangerouslySetInnerHTML={{ __html: String(c.heading || "Science, made <em>personal.</em>") }}
+                style={{
+                  fontFamily: "var(--font-display, serif)",
+                  fontSize: "clamp(38px, 4.8vw, 56px)",
+                  fontWeight: 850,
+                  lineHeight: 1.06,
+                  letterSpacing: "-0.03em",
+                  color: c.headingColor ? String(c.headingColor) : "#1E1638",
+                  margin: "0 0 16px",
+                }}
+                dangerouslySetInnerHTML={{
+                  __html: String(
+                    c.heading ||
+                      "Better<br/>Health<br/>Brighter <span style='color: #EC4899;'>💗</span><br/>Tomorrows"
+                  ),
+                }}
               />
-              <p className="lead" style={{ ...(c.textColor ? { color: String(c.textColor) } : {}), ...bodyStyle }}>
-                {String(c.subtitle || "Intelligent formulations that turn your daily health rituals into small, powerful acts of self-respect.")}
+              <p
+                className="lead"
+                style={{
+                  fontSize: 15,
+                  lineHeight: 1.6,
+                  color: "#475569",
+                  maxWidth: 440,
+                  margin: "0 0 24px",
+                  ...bodyStyle,
+                }}
+              >
+                {String(
+                  c.subtitle ||
+                    "Premium pharmaceutical wellness solutions for you and your loved ones."
+                )}
               </p>
-              <div className="hero-ctas" style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
+              <div
+                className="hero-ctas"
+                style={{ display: "flex", flexWrap: "wrap", gap: 14, alignItems: "center", marginBottom: 26 }}
+              >
                 <a
                   href={String(c.ctaLink || "#collection")}
                   className="button"
-                  style={btnStyle}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    background: "#1E1638",
+                    color: "#ffffff",
+                    borderRadius: 999,
+                    padding: "13px 26px",
+                    fontWeight: 700,
+                    fontSize: 14,
+                    textDecoration: "none",
+                    boxShadow: "0 6px 20px rgba(30, 22, 56, 0.25)",
+                    transition: "transform 0.2s, box-shadow 0.2s",
+                  }}
                 >
-                  {String(c.ctaText || "Explore the collection")} <span>→</span>
+                  {String(c.ctaText || "Explore Products")} <span>→</span>
                 </a>
-                <button
-                  type="button"
-                  onClick={() => setQuizOpen(true)}
+                <a
+                  href={String(c.secondaryLink || "#science")}
                   className="button secondary"
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
-                    gap: 6,
-                    background: "rgba(212,175,55,0.12)",
-                    color: "var(--purple, #2A0F3A)",
-                    border: "1.5px solid var(--gold, #D4AF37)",
-                    borderRadius: btnStyle.borderRadius || 4,
-                    padding: "10px 18px",
-                    fontSize: 13,
+                    gap: 8,
+                    background: "rgba(255, 255, 255, 0.9)",
+                    backdropFilter: "blur(8px)",
+                    color: "#1E1638",
+                    border: "1px solid rgba(30, 22, 56, 0.15)",
+                    borderRadius: 999,
+                    padding: "12px 20px",
                     fontWeight: 700,
-                    cursor: "pointer",
-                    transition: "all 0.2s",
+                    fontSize: 13,
+                    textDecoration: "none",
                   }}
                 >
-                  <span>✦ Take Health Quiz</span>
-                </button>
-                <a
-                  href={String(c.secondaryLink || "#science")}
-                  className="text-link"
-                  style={{ ...(c.textColor ? { color: String(c.textColor) } : {}) }}
-                >
-                  {String(c.secondaryText || "How we formulate")} <span>↗</span>
+                  <span
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: "50%",
+                      background: "#EDE9FE",
+                      color: "#6D28D9",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 10,
+                    }}
+                  >
+                    ▶
+                  </span>
+                  <span>{String(c.secondaryText || "Watch Our Story")}</span>
                 </a>
               </div>
-              <div className="ratings" style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                {c.rating && c.ratingCount ? (
-                  <>
-                    <div className="avatars" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", color: "var(--gold)", background: "rgba(212,175,55,0.12)", padding: "4px 8px", borderRadius: 4, border: "1px solid rgba(212,175,55,0.3)" }}>
-                      ★ VERIFIED
+
+              {/* 4 Trust Signals from Reference Image */}
+              <div
+                className="hero-trust-badges"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(4, 1fr)",
+                  gap: 8,
+                  maxWidth: 420,
+                  paddingTop: 16,
+                  borderTop: "1px solid rgba(30, 22, 56, 0.08)",
+                }}
+              >
+                {[
+                  { icon: "🔬", label: "Clinically Inspired" },
+                  { icon: "🛡️", label: "Safe & Effective" },
+                  { icon: "👥", label: "Trusted by Thousands" },
+                  { icon: "🩺", label: "Doctor Recommended" },
+                ].map((b, bi) => (
+                  <div key={bi} style={{ textAlign: "center" }}>
+                    <div
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: "50%",
+                        background: "#FFFFFF",
+                        border: "1px solid rgba(30, 22, 56, 0.1)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        margin: "0 auto 4px",
+                        fontSize: 15,
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                      }}
+                    >
+                      {b.icon}
                     </div>
-                    <p style={{ margin: 0 }}><b>{String(c.rating)}</b> {String(c.ratingCount)}</p>
-                  </>
-                ) : (
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--ink)" }}>
-                    <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: "#2e7d32" }} />
-                    <span style={{ fontWeight: 600, letterSpacing: "0.02em" }}>{String(c.trustHeadline || "Direct Cold-Chain Distribution")}</span>
-                    <span style={{ opacity: 0.4 }}>·</span>
-                    <span style={{ color: "var(--muted)" }}>{String(c.trustSubline || "Batch Purity Tested")}</span>
+                    <span
+                      style={{
+                        fontSize: 9.5,
+                        fontWeight: 600,
+                        color: "#475569",
+                        lineHeight: 1.25,
+                        display: "block",
+                      }}
+                    >
+                      {b.label}
+                    </span>
                   </div>
-                )}
+                ))}
               </div>
             </div>
 
@@ -318,13 +430,14 @@ export default function QueensCareExperience() {
               style={{
                 position: "relative",
                 width: "100%",
-                maxWidth: c.characterPosition === "split" || !c.characterPosition ? 680 : 460,
+                maxWidth: c.characterPosition === "split" || !c.characterPosition ? 720 : 480,
                 margin: "0 auto",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: 20,
+                gap: 16,
                 flexWrap: "wrap",
+                zIndex: 2,
               }}
             >
               {heroImage ? (
@@ -333,7 +446,10 @@ export default function QueensCareExperience() {
                     src={String(heroImage)}
                     alt={String(c.heading || "Hero")}
                     style={{ width: "100%", height: 480, objectFit: "cover" }}
-                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=1200&q=85"; }}
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src =
+                        "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=1200&q=85";
+                    }}
                   />
                 </div>
               ) : (
@@ -344,7 +460,7 @@ export default function QueensCareExperience() {
                       className="hero-character-col"
                       style={{
                         flex: c.characterPosition === "character_only" ? "1 1 360px" : "1 1 240px",
-                        maxWidth: c.characterPosition === "character_only" ? 380 : 280,
+                        maxWidth: c.characterPosition === "character_only" ? 380 : 270,
                         position: "relative",
                         zIndex: 3,
                       }}
@@ -354,32 +470,105 @@ export default function QueensCareExperience() {
                         position={(c.characterPosition as "split" | "left" | "right" | "center") || "split"}
                         size={(c.characterSize as "sm" | "md" | "lg") || "md"}
                         animSpeed={Number(c.characterAnimSpeed || 1)}
-                        greeting={String(c.characterGreeting || "Hello, I'm Dr. Queens")}
-                        subtext={String(c.characterSubtext || "Let me guide your personalized formulation ritual")}
+                        greeting={String(c.characterGreeting || "Hi! I'm Dr. Queens 💙")}
+                        subtext={String(
+                          c.characterSubtext || "Let me help you find the right products for your needs. 💙"
+                        )}
                         badgeText={String(c.characterBadge || "Clinical Specialist")}
-                        customImageUrl={String(c.characterImageUrl || "")}
-                        animationStyle={(c.characterAnimation as "gentle_breathing" | "consultation" | "minimal" | "none") || "gentle_breathing"}
+                        customImageUrl={String(c.characterImageUrl || "/images/reference/dr-queens-hero.png")}
+                        animationStyle={
+                          (c.characterAnimation as "gentle_breathing" | "consultation" | "minimal" | "none") ||
+                          "gentle_breathing"
+                        }
                         showSpeechBubble={c.characterBubble !== false}
                         onOpenQuiz={() => setQuizOpen(true)}
                       />
                     </div>
                   )}
 
-                  {/* 3D Bioactive Product Visualizer */}
+                  {/* 3D Bioactive Product Visualizer with Reference Floating Badges */}
                   {heroVis.enabled !== false && c.characterPosition !== "character_only" && (
                     <div
                       className="hero-product-col"
                       style={{
                         flex: c.characterPosition === "product_only" ? "1 1 420px" : "1 1 280px",
-                        maxWidth: c.characterPosition === "product_only" ? 460 : 380,
+                        maxWidth: c.characterPosition === "product_only" ? 460 : 360,
                         position: "relative",
                         zIndex: 2,
                       }}
                     >
+                      {/* Floating Reference Badges */}
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: 16,
+                          right: -10,
+                          zIndex: 10,
+                          background: "rgba(255,255,255,0.94)",
+                          backdropFilter: "blur(8px)",
+                          padding: "6px 12px",
+                          borderRadius: 999,
+                          border: "1px solid #BAE6FD",
+                          boxShadow: "0 4px 14px rgba(2,132,199,0.12)",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: "#0284C7",
+                        }}
+                      >
+                        <span>🛡️</span> <span>Stronger Immunity</span>
+                      </div>
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "40%",
+                          right: -16,
+                          zIndex: 10,
+                          background: "rgba(255,255,255,0.94)",
+                          backdropFilter: "blur(8px)",
+                          padding: "6px 12px",
+                          borderRadius: 999,
+                          border: "1px solid #C7D2FE",
+                          boxShadow: "0 4px 14px rgba(79,70,229,0.12)",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: "#4F46E5",
+                        }}
+                      >
+                        <span>⚡</span> <span>More Energy</span>
+                      </div>
+                      <div
+                        style={{
+                          position: "absolute",
+                          bottom: 50,
+                          right: -8,
+                          zIndex: 10,
+                          background: "rgba(255,255,255,0.94)",
+                          backdropFilter: "blur(8px)",
+                          padding: "6px 12px",
+                          borderRadius: 999,
+                          border: "1px solid #DDD6FE",
+                          boxShadow: "0 4px 14px rgba(124,58,237,0.12)",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: "#7C3AED",
+                        }}
+                      >
+                        <span>💜</span> <span>Everyday Wellness</span>
+                      </div>
+
                       <Hero3DProductVisual
-                        productName={String(heroVis.productName || "LUMINE-C™")}
-                        subtitle={String(heroVis.subtitle || "Radiance serum")}
-                        verticalLabel={String(heroVis.verticalLabel || "FORMULATED WITH INTENTION")}
+                        productName={String(heroVis.productName || "Immune Support+")}
+                        subtitle={String(heroVis.subtitle || "VITAMIN C, D3 & ZINC")}
+                        verticalLabel={String(heroVis.verticalLabel || "PHARMACEUTICAL RIGOR")}
                         scale={Number(heroVis.scale || 0.95)}
                         autoRotate={heroVis.autoRotate !== false}
                         rotationSpeed={Number(heroVis.rotationSpeed || 1.0)}
@@ -387,10 +576,23 @@ export default function QueensCareExperience() {
                         lightingIntensity={Number(heroVis.lightingIntensity || 1.5)}
                         accentColor={String(heroVis.accentColor || "#D4AF37")}
                         bgEffect={(heroVis.bgEffect as "studio" | "purple" | "transparent") || "transparent"}
-                        customImageUrl={String(heroVis.customImageUrl || "")}
+                        customImageUrl={String(heroVis.customImageUrl || "/images/reference/hero-immune-bottle.png")}
                         customModelUrl={String(heroVis.customModelUrl || "")}
-                        height={460}
+                        height={440}
                       />
+
+                      <div
+                        style={{
+                          textAlign: "right",
+                          marginTop: 6,
+                          fontStyle: "italic",
+                          fontSize: 12.5,
+                          fontWeight: 600,
+                          color: "#EC4899",
+                        }}
+                      >
+                        Care Today — Brighter Tomorrows 💖
+                      </div>
                     </div>
                   )}
                 </>
@@ -440,121 +642,611 @@ export default function QueensCareExperience() {
       }
 
       case "collection": {
-        const selectedIds: string[] = Array.isArray(c.selectedProductIds) ? c.selectedProductIds as string[] : [];
-        const catFilter: string[] = Array.isArray(c.selectedCategoryFilter) ? c.selectedCategoryFilter as string[] : [];
+        const selectedIds: string[] = Array.isArray(c.selectedProductIds) ? (c.selectedProductIds as string[]) : [];
+        const catFilter: string[] = Array.isArray(c.selectedCategoryFilter) ? (c.selectedCategoryFilter as string[]) : [];
         const collectionProducts = (() => {
           if (selectedIds.length > 0) {
             const idSet = new Set(selectedIds);
-            return products.filter(p => idSet.has(p.id));
+            return products.filter((p) => idSet.has(p.id));
           }
           if (catFilter.length > 0) {
             const catSet = new Set(catFilter);
-            return products.filter(p => catSet.has(p.category));
+            return products.filter((p) => catSet.has(p.category));
           }
           return shown;
         })();
+
+        const REFERENCE_CATEGORIES = [
+          { name: "All Products", desc: "Explore everything", icon: "⊞", query: "" },
+          { name: "Immunity", desc: "Stronger You", icon: "🛡️", query: "Immunity" },
+          { name: "Women's Health", desc: "Care at Every Stage", icon: "💗", query: "Women's Health" },
+          { name: "Digestive Health", desc: "Happier Gut", icon: "🌿", query: "Digestive" },
+          { name: "Respiratory Care", desc: "Breathe Better", icon: "🫁", query: "Respiratory" },
+          { name: "Skin & Hair", desc: "Natural Confidence", icon: "✨", query: "Skin" },
+          { name: "Bone & Joint", desc: "Move Freely", icon: "🦴", query: "Bone" },
+          { name: "Children's Health", desc: "Growing Stronger", icon: "👶", query: "Children" },
+        ];
+
         return (
-          <section className="collection section" id="collection" key={sec.id ? String(sec.id) : `collection-${idx}`} style={secStyle}>
-            <div className="section-head">
-              <div>
-                <p className="eyebrow">{String(c.eyebrow || "The care edit")}</p>
-                <h2 style={headingStyle} dangerouslySetInnerHTML={{ __html: String(c.heading || "Considered essentials<br/>for your <em>whole self.</em>") }} />
-              </div>
-              <a href="#collection" className="text-link">{String(c.ctaText || "Shop all care")} <span>→</span></a>
-            </div>
-            <div className="category-row" style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 8 }}>
-              <button
-                type="button"
-                className={search === "" ? "active" : ""}
-                onClick={() => setSearch("")}
+          <section
+            className="collection section"
+            id="collection"
+            key={sec.id ? String(sec.id) : `collection-${idx}`}
+            style={{ padding: "32px 0 60px", background: "#FAFBFD", ...secStyle }}
+          >
+            {/* Reference Horizontal Category Carousel */}
+            <div style={{ maxWidth: 1240, margin: "0 auto 36px", padding: "0 20px" }}>
+              <div
                 style={{
-                  padding: "8px 16px",
-                  borderRadius: 20,
-                  border: search === "" ? "1.5px solid var(--purple, #2A0F3A)" : "1px solid var(--line)",
-                  background: search === "" ? "var(--purple, #2A0F3A)" : "#fff",
-                  color: search === "" ? "#fff" : "var(--ink)",
-                  fontWeight: 600,
-                  fontSize: 12,
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
-                  transition: "all 0.15s",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  background: "#FFFFFF",
+                  border: "1px solid rgba(226, 232, 240, 0.9)",
+                  borderRadius: 18,
+                  padding: "12px 14px",
+                  boxShadow: "0 4px 20px rgba(30, 22, 56, 0.04)",
+                  overflowX: "auto",
                 }}
               >
-                All Formulations
-              </button>
-              {categories.map((cat, index) => {
-                const isActive = search.toLowerCase() === cat.toLowerCase();
-                return (
-                  <button
-                    key={cat}
-                    type="button"
-                    className={isActive ? "active" : ""}
-                    onClick={() => setSearch(isActive ? "" : cat)}
-                    style={{
-                      padding: "8px 16px",
-                      borderRadius: 20,
-                      border: isActive ? "1.5px solid var(--purple, #2A0F3A)" : "1px solid var(--line)",
-                      background: isActive ? "var(--purple, #2A0F3A)" : "#fff",
-                      color: isActive ? "#fff" : "var(--ink)",
-                      fontWeight: 600,
-                      fontSize: 12,
-                      cursor: "pointer",
-                      whiteSpace: "nowrap",
-                      transition: "all 0.15s",
-                    }}
-                  >
-                    <span>0{index + 1} </span>{cat}
-                  </button>
-                );
-              })}
+                <button
+                  type="button"
+                  aria-label="Previous Category"
+                  onClick={() => {
+                    const el = document.getElementById("qc-cat-track");
+                    if (el) el.scrollBy({ left: -200, behavior: "smooth" });
+                  }}
+                  style={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: "50%",
+                    border: "1px solid #E2E8F0",
+                    background: "#F8FAFC",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    flexShrink: 0,
+                    fontSize: 13,
+                    color: "#475569",
+                  }}
+                >
+                  ‹
+                </button>
+
+                <div
+                  id="qc-cat-track"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    overflowX: "auto",
+                    flex: 1,
+                    scrollBehavior: "smooth",
+                    scrollbarWidth: "none",
+                  }}
+                >
+                  {REFERENCE_CATEGORIES.map((catItem) => {
+                    const isSelected =
+                      (catItem.query === "" && search === "") ||
+                      (catItem.query !== "" && search.toLowerCase().includes(catItem.query.toLowerCase()));
+                    return (
+                      <button
+                        key={catItem.name}
+                        type="button"
+                        onClick={() => setSearch(catItem.query)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                          padding: "8px 14px",
+                          borderRadius: 14,
+                          background: isSelected ? "rgba(99, 102, 241, 0.08)" : "transparent",
+                          border: isSelected ? "1.5px solid #6366F1" : "1px solid transparent",
+                          cursor: "pointer",
+                          whiteSpace: "nowrap",
+                          flexShrink: 0,
+                          transition: "all 0.15s ease",
+                        }}
+                      >
+                        <span
+                          style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: "50%",
+                            background: isSelected ? "#6366F1" : "#F1F5F9",
+                            color: isSelected ? "#FFFFFF" : "#1E293B",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: 14,
+                          }}
+                        >
+                          {catItem.icon}
+                        </span>
+                        <div style={{ textAlign: "left" }}>
+                          <b style={{ display: "block", fontSize: 12.5, color: isSelected ? "#4338CA" : "#0F172A" }}>
+                            {catItem.name}
+                          </b>
+                          <span style={{ fontSize: 10, color: "#64748B", display: "block" }}>
+                            {catItem.desc}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  type="button"
+                  aria-label="Next Category"
+                  onClick={() => {
+                    const el = document.getElementById("qc-cat-track");
+                    if (el) el.scrollBy({ left: 200, behavior: "smooth" });
+                  }}
+                  style={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: "50%",
+                    border: "1px solid #E2E8F0",
+                    background: "#F8FAFC",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    flexShrink: 0,
+                    fontSize: 13,
+                    color: "#475569",
+                  }}
+                >
+                  ›
+                </button>
+              </div>
             </div>
-            {loading ? (
-              <p style={{ marginTop: 40, color: "var(--muted)", textAlign: "center" }}>Loading collection…</p>
-            ) : (
-              <>
-                <div className="product-grid">
-                  {collectionProducts.map((product) => (
-                    <Link href={`/products/${product.slug}`} key={product.id} style={{ textDecoration: "none", color: "inherit" }}>
-                      <article className="product" style={{ transition: "transform 0.2s, box-shadow 0.2s" }}>
-                        <div className="product-image">
-                          <Image src={product.image} alt={product.name} fill sizes="(max-width: 650px) 50vw, 25vw"/>
-                          <span className="pill">{product.tag}</span>
-                          {product.stock <= 0 ? (
-                            <span className="pill" style={{ top: 38, background: "#78716c", color: "#fff" }}>Awaiting Batch</span>
-                          ) : product.stock < 50 ? (
-                            <span className="pill" style={{ top: 38, background: "#d97706", color: "#fff" }}>Low Stock ({product.stock})</span>
-                          ) : null}
-                          <button className="heart" onClick={(e: React.MouseEvent) => { e.preventDefault(); e.stopPropagation(); toggleWish(product.name); }} aria-label={`Save ${product.name}`}>
-                            {wish.includes(product.name) ? "♥" : "♡"}
-                          </button>
-                          <button className="quick-add" onClick={(e: React.MouseEvent) => { e.preventDefault(); e.stopPropagation(); add(product); }}>
-                            Add to bag
-                          </button>
-                        </div>
-                        <p>{product.category}</p>
-                        <h3>{product.name}</h3>
-                        <small>{product.note}</small>
-                        <div className="price">
-                          <b>₹{product.price.toLocaleString("en-IN")}</b>
-                          {product.rating && product.reviewCount && product.reviewCount > 0 ? (
-                            <span style={{ fontSize: 12, color: "var(--gold, #D4AF37)", fontWeight: 600 }}>
-                              ★ {product.rating.toFixed(1)} ({product.reviewCount})
-                            </span>
-                          ) : (
-                            <span style={{ fontSize: 11, color: product.stock > 0 ? "#2e7d32" : "#991b1b", fontWeight: 600 }}>
-                              ● {product.stock > 0 ? "Cold-Chain Ready" : "Preserved"}
-                            </span>
-                          )}
-                        </div>
-                      </article>
-                    </Link>
+
+            {/* Main Shopping Experience: Two Columns (Left Filters Sidebar + Right Product Grid) */}
+            <div
+              style={{
+                maxWidth: 1240,
+                margin: "0 auto",
+                padding: "0 20px",
+                display: "grid",
+                gridTemplateColumns: "240px 1fr",
+                gap: 28,
+              }}
+              className="shop-two-column-wrap"
+            >
+              {/* Left Filters Sidebar */}
+              <aside
+                style={{
+                  background: "#FFFFFF",
+                  borderRadius: 16,
+                  border: "1px solid #E2E8F0",
+                  padding: "20px 16px",
+                  height: "fit-content",
+                  boxShadow: "0 2px 10px rgba(0,0,0,0.02)",
+                }}
+                className="shop-filter-sidebar"
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18, borderBottom: "1px solid #F1F5F9", paddingBottom: 10 }}>
+                  <b style={{ fontSize: 15, color: "#0F172A" }}>Filters</b>
+                  <button
+                    type="button"
+                    onClick={() => setSearch("")}
+                    style={{ background: "none", border: "none", color: "#6366F1", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+                  >
+                    Clear All
+                  </button>
+                </div>
+
+                {/* Category Checklist */}
+                <div style={{ marginBottom: 20 }}>
+                  <span style={{ fontSize: 12.5, fontWeight: 700, color: "#1E293B", display: "block", marginBottom: 10 }}>
+                    Category
+                  </span>
+                  {[
+                    { label: "Immunity", count: 12 },
+                    { label: "Women's Health", count: 8 },
+                    { label: "Digestive Health", count: 10 },
+                    { label: "Respiratory Care", count: 6 },
+                    { label: "Skin & Hair", count: 9 },
+                    { label: "Bone & Joint", count: 7 },
+                    { label: "Children's Health", count: 5 },
+                    { label: "Wellness", count: 14 },
+                  ].map((catItem) => {
+                    const active = search.toLowerCase() === catItem.label.toLowerCase();
+                    return (
+                      <label
+                        key={catItem.label}
+                        style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#475569", margin: "6px 0", cursor: "pointer" }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={active}
+                          onChange={() => setSearch(active ? "" : catItem.label)}
+                          style={{ accentColor: "#4F46E5" }}
+                        />
+                        <span style={{ flex: 1 }}>{catItem.label}</span>
+                        <span style={{ color: "#94A3B8", fontSize: 11 }}>({catItem.count})</span>
+                      </label>
+                    );
+                  })}
+                </div>
+
+                {/* Price Range */}
+                <div style={{ marginBottom: 20, borderTop: "1px solid #F1F5F9", paddingTop: 14 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, fontWeight: 700, color: "#1E293B", marginBottom: 8 }}>
+                    <span>Price Range</span>
+                    <span style={{ color: "#6366F1", fontWeight: 700 }}>₹0 - ₹5000</span>
+                  </div>
+                  <input type="range" min="0" max="5000" defaultValue="5000" style={{ width: "100%", accentColor: "#4F46E5" }} />
+                </div>
+
+                {/* Formulation Checklist */}
+                <div style={{ marginBottom: 20, borderTop: "1px solid #F1F5F9", paddingTop: 14 }}>
+                  <span style={{ fontSize: 12.5, fontWeight: 700, color: "#1E293B", display: "block", marginBottom: 8 }}>
+                    Formulation
+                  </span>
+                  {["Tablet", "Capsule", "Syrup", "Powder", "Cream", "Drops"].map((f) => (
+                    <label key={f} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#475569", margin: "5px 0" }}>
+                      <input type="checkbox" style={{ accentColor: "#4F46E5" }} />
+                      <span>{f}</span>
+                    </label>
                   ))}
                 </div>
-                {collectionProducts.length === 0 && products.length > 0 && (
-                  <p className="empty">No results yet. Try &ldquo;wellness&rdquo; or choose a care category above.</p>
+
+                {/* Brand */}
+                <div style={{ marginBottom: 20, borderTop: "1px solid #F1F5F9", paddingTop: 14 }}>
+                  <span style={{ fontSize: 12.5, fontWeight: 700, color: "#1E293B", display: "block", marginBottom: 8 }}>
+                    Brand
+                  </span>
+                  <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#475569" }}>
+                    <input type="checkbox" defaultChecked style={{ accentColor: "#4F46E5" }} />
+                    <span>Queens Care</span>
+                  </label>
+                </div>
+
+                {/* Rating Filter */}
+                <div style={{ marginBottom: 20, borderTop: "1px solid #F1F5F9", paddingTop: 14 }}>
+                  <span style={{ fontSize: 12.5, fontWeight: 700, color: "#1E293B", display: "block", marginBottom: 8 }}>
+                    Rating
+                  </span>
+                  {[5, 4, 3, 2, 1].map((stars) => (
+                    <div key={stars} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, color: "#F59E0B", margin: "4px 0" }}>
+                      <span>{"★".repeat(stars)}{"☆".repeat(5 - stars)}</span>
+                      <span style={{ color: "#64748B", fontSize: 11 }}>& up</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Sticky Doctor Quiz Assistance Card */}
+                <div
+                  style={{
+                    background: "linear-gradient(135deg, #EEF2FF 0%, #FAF5FF 100%)",
+                    borderRadius: 14,
+                    padding: "16px 12px",
+                    border: "1px solid #E0E7FF",
+                    textAlign: "center",
+                    marginTop: 20,
+                  }}
+                >
+                  <img
+                    src="/images/reference/dr-queens-quiz-avatar.png"
+                    alt="Dr. Queens"
+                    style={{ width: 50, height: 40, objectFit: "contain", margin: "0 auto 6px", display: "block" }}
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = "/images/reference/dr-queens-hero.png";
+                    }}
+                  />
+                  <b style={{ fontSize: 12, color: "#1E1638", display: "block", marginBottom: 4 }}>
+                    Need Help Choosing?
+                  </b>
+                  <p style={{ fontSize: 10.5, color: "#64748B", lineHeight: 1.35, margin: "0 0 10px" }}>
+                    Take a short quiz for personalized recommendations.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setQuizOpen(true)}
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px",
+                      borderRadius: 999,
+                      background: "#1E1638",
+                      color: "#FFFFFF",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      border: "none",
+                      cursor: "pointer",
+                      boxShadow: "0 4px 10px rgba(30, 22, 56, 0.2)",
+                    }}
+                  >
+                    Take the Health Quiz ➔
+                  </button>
+                </div>
+              </aside>
+
+              {/* Right Products Catalog Area */}
+              <div>
+                {/* Catalog Tabs & Sort Bar */}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    flexWrap: "wrap",
+                    gap: 12,
+                    marginBottom: 20,
+                    paddingBottom: 12,
+                    borderBottom: "1px solid #E2E8F0",
+                  }}
+                >
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                    {["All Products (48)", "Bestsellers", "New Arrivals", "Featured", "Offers"].map((tab, ti) => (
+                      <button
+                        key={tab}
+                        type="button"
+                        style={{
+                          background: ti === 0 ? "#1E1638" : "transparent",
+                          color: ti === 0 ? "#FFFFFF" : "#475569",
+                          borderRadius: 999,
+                          padding: "6px 14px",
+                          fontSize: 12,
+                          fontWeight: 700,
+                          border: ti === 0 ? "none" : "1px solid #E2E8F0",
+                          cursor: "pointer",
+                        }}
+                      >
+                        {tab}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: 12, color: "#64748B" }}>Sort by:</span>
+                    <select
+                      style={{
+                        padding: "5px 10px",
+                        borderRadius: 8,
+                        border: "1px solid #CBD5E1",
+                        fontSize: 12,
+                        background: "#FFFFFF",
+                        color: "#1E293B",
+                      }}
+                    >
+                      <option>Featured</option>
+                      <option>Price: Low to High</option>
+                      <option>Price: High to Low</option>
+                      <option>Customer Rating</option>
+                    </select>
+                    <div style={{ display: "flex", gap: 4 }}>
+                      <span style={{ padding: "4px 8px", background: "#E0E7FF", borderRadius: 6, fontSize: 12, color: "#4F46E5" }}>⊞</span>
+                      <span style={{ padding: "4px 8px", background: "#F1F5F9", borderRadius: 6, fontSize: 12, color: "#64748B" }}>☰</span>
+                    </div>
+                  </div>
+                </div>
+
+                {loading ? (
+                  <p style={{ marginTop: 40, color: "var(--muted)", textAlign: "center" }}>Loading collection…</p>
+                ) : (
+                  <>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fill, minmax(210px, 1fr))",
+                        gap: 16,
+                      }}
+                    >
+                      {collectionProducts.map((product, pIdx) => {
+                        const badges = ["Bestseller", "New", "Popular", "Kids"];
+                        const cardBadge = pIdx < 4 ? badges[pIdx] : (product.bestSeller ? "Bestseller" : product.newArrival ? "New" : "");
+                        const strikePrice = Math.round(product.price * 1.32);
+                        const discountPct = Math.round(((strikePrice - product.price) / strikePrice) * 100);
+
+                        return (
+                          <article
+                            key={product.id}
+                            style={{
+                              background: "#FFFFFF",
+                              borderRadius: 14,
+                              border: "1px solid #E2E8F0",
+                              padding: "14px",
+                              display: "flex",
+                              flexDirection: "column",
+                              position: "relative",
+                              boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
+                              transition: "transform 0.2s, box-shadow 0.2s",
+                            }}
+                          >
+                            {/* Top Badge */}
+                            {cardBadge && (
+                              <span
+                                style={{
+                                  position: "absolute",
+                                  top: 10,
+                                  left: 10,
+                                  zIndex: 2,
+                                  padding: "3px 8px",
+                                  borderRadius: 999,
+                                  fontSize: 9.5,
+                                  fontWeight: 700,
+                                  textTransform: "uppercase",
+                                  background:
+                                    cardBadge === "Bestseller"
+                                      ? "#EA580C"
+                                      : cardBadge === "New"
+                                      ? "#16A34A"
+                                      : cardBadge === "Popular"
+                                      ? "#F59E0B"
+                                      : "#7C3AED",
+                                  color: "#FFFFFF",
+                                }}
+                              >
+                                {cardBadge}
+                              </span>
+                            )}
+
+                            {/* Wishlist Button */}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                toggleWish(product.name);
+                              }}
+                              style={{
+                                position: "absolute",
+                                top: 10,
+                                right: 10,
+                                zIndex: 2,
+                                width: 28,
+                                height: 28,
+                                borderRadius: "50%",
+                                background: "#FFFFFF",
+                                border: "1px solid #E2E8F0",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                cursor: "pointer",
+                                fontSize: 13,
+                                color: wish.includes(product.name) ? "#EF4444" : "#94A3B8",
+                              }}
+                              aria-label={`Save ${product.name}`}
+                            >
+                              {wish.includes(product.name) ? "♥" : "♡"}
+                            </button>
+
+                            {/* Product Image */}
+                            <Link href={`/products/${product.slug}`} style={{ textDecoration: "none", color: "inherit" }}>
+                              <div
+                                style={{
+                                  position: "relative",
+                                  width: "100%",
+                                  aspectRatio: "1/1",
+                                  marginBottom: 10,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                <img
+                                  src={product.image}
+                                  alt={product.name}
+                                  style={{ maxWidth: "88%", maxHeight: "88%", objectFit: "contain" }}
+                                  onError={(e) => {
+                                    (e.currentTarget as HTMLImageElement).src =
+                                      "/images/reference/hero-immune-bottle.png";
+                                  }}
+                                />
+                              </div>
+
+                              {/* Brand & Titles */}
+                              <span style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em", display: "block" }}>
+                                Queens Care
+                              </span>
+                              <h3
+                                style={{
+                                  fontSize: 14,
+                                  fontWeight: 700,
+                                  color: "#0F172A",
+                                  margin: "3px 0 2px",
+                                  lineHeight: 1.3,
+                                }}
+                              >
+                                {product.name}
+                              </h3>
+                              <p
+                                style={{
+                                  fontSize: 11,
+                                  color: "#64748B",
+                                  margin: "0 0 10px",
+                                  whiteSpace: "nowrap",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                }}
+                              >
+                                {product.note || product.category}
+                              </p>
+                            </Link>
+
+                            {/* Price & Discount */}
+                            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                              <b style={{ fontSize: 15, color: "#0F172A" }}>
+                                ₹{product.price.toLocaleString("en-IN")}
+                              </b>
+                              <span style={{ fontSize: 11.5, color: "#94A3B8", textDecoration: "line-through" }}>
+                                ₹{strikePrice}
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: 10,
+                                  fontWeight: 700,
+                                  color: "#16A34A",
+                                  background: "#DCFCE7",
+                                  padding: "2px 6px",
+                                  borderRadius: 4,
+                                }}
+                              >
+                                {discountPct}% OFF
+                              </span>
+                            </div>
+
+                            {/* Bottom Card Actions: Rating & Add to Bag */}
+                            <div
+                              style={{
+                                marginTop: "auto",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                paddingTop: 8,
+                                borderTop: "1px solid #F1F5F9",
+                              }}
+                            >
+                              <div style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11.5, color: "#F59E0B", fontWeight: 700 }}>
+                                <span>★</span>
+                                <span style={{ color: "#1E293B" }}>{(product.rating || 4.8).toFixed(1)}</span>
+                                <span style={{ color: "#94A3B8", fontSize: 10 }}>({product.reviewCount || 420})</span>
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  add(product);
+                                }}
+                                style={{
+                                  width: 32,
+                                  height: 32,
+                                  borderRadius: "50%",
+                                  background: "#1E1638",
+                                  color: "#FFFFFF",
+                                  border: "none",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  cursor: "pointer",
+                                  fontSize: 13,
+                                  boxShadow: "0 2px 6px rgba(30,22,56,0.2)",
+                                }}
+                                aria-label={`Add ${product.name} to cart`}
+                              >
+                                🛒
+                              </button>
+                            </div>
+                          </article>
+                        );
+                      })}
+                    </div>
+
+                    {collectionProducts.length === 0 && products.length > 0 && (
+                      <p className="empty" style={{ textAlign: "center", padding: "40px 0", color: "#64748B" }}>
+                        No results found. Try clearing filters or choosing another category.
+                      </p>
+                    )}
+                  </>
                 )}
-              </>
-            )}
+              </div>
+            </div>
           </section>
         );
       }
