@@ -2,6 +2,10 @@ import { json, requireUser, safeText } from "@/lib/http";
 import { categoryStore } from "@/lib/commerce/store-extensions";
 
 export async function GET() {
+  // Admin/employee only — the public shop derives categories from product data,
+  // and /api/products already exposes what customers need.
+  const user = await requireUser(["admin", "employee"]);
+  if (!user) return json({ error: "Unauthorized" }, 401);
   const categories = await categoryStore.list();
   return json({ categories });
 }

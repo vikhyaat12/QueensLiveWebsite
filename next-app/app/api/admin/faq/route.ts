@@ -2,6 +2,10 @@ import { json, requireUser } from "@/lib/http";
 import { faqStore } from "@/lib/commerce/store-extensions";
 
 export async function GET() {
+  // Admin only — the public /faq page and homepage read faqStore directly
+  // server-side; they never call this admin endpoint.
+  const user = await requireUser(["admin", "employee"]);
+  if (!user) return json({ error: "Unauthorized" }, 401);
   const faqs = await faqStore.list();
   return json({ faqs });
 }
