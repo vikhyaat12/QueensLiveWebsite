@@ -1,24 +1,37 @@
 /* eslint-disable @next/next/no-img-element */
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { store } from "@/lib/commerce/store";
 import { prisma } from "@/lib/prisma";
 import { fileDb } from "@/lib/commerce/file-db";
-import { aplusStore } from "@/lib/commerce/store-extensions";
-import AddToCartButton from "@/app/components/AddToCartButton";
+import { aplusStore, redirectStore } from "@/lib/commerce/store-extensions";
+import ProductPurchaseZone from "@/app/components/ProductPurchaseZone";
+import DownloadPdfButton from "@/app/components/DownloadPdfButton";
 import ProductGallery from "@/app/components/ProductGallery";
 import ProductTabs from "./ProductTabs";
+import HighlightsList from "./HighlightsList";
 import DeliveryCalculator from "@/app/components/DeliveryCalculator";
 import RecommendationsSection from "@/app/components/RecommendationsSection";
 import ProductRangeCarousel from "@/app/components/ProductRangeCarousel";
-import DownloadPdfButton from "@/app/components/DownloadPdfButton";
+import RecentlyViewed from "@/app/components/RecentlyViewed";
+import QueensCareHeader from "@/app/components/QueensCareHeader";
+import QueensCareFooter from "@/app/components/QueensCareFooter";
+import UniversalPromoRenderer from "@/app/components/promotions/UniversalPromoRenderer";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const product = await store.products.bySlug((await params).slug);
-  if (!product) return { title: "Product not found" };
+  const slug = (await params).slug;
+  const product = await store.products.bySlug(slug);
+  if (!product) {
+    const redirectTarget = await redirectStore.resolve(`/products/${slug}`);
+    if (redirectTarget) {
+      permanentRedirect(redirectTarget.destination);
+    }
+    return { title: "Product not found" };
+  }
   return {
     title: `${product.name} | Queens Care Laboratories`,
     description: product.description,
@@ -32,6 +45,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 }
 
 async function getProductFull(slug: string) {
+  if (!process.env.DATABASE_URL) return null;
   try {
     const product = await prisma.product.findUnique({
       where: { slug },
@@ -54,14 +68,44 @@ async function getProductFull(slug: string) {
 }
 
 async function getQA(productId: string) {
+  if (!process.env.DATABASE_URL) return [];
   try {
     return await prisma.productQA.findMany({ where: { productId, visible: true }, orderBy: { createdAt: "desc" } });
   } catch { return []; }
 }
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
-  const product = await store.products.bySlug((await params).slug);
-  if (!product) return notFound();
+  const slug = (await params).slug;
+  const product = await store.products.bySlug(slug);
+  if (!product) {
+    const redirectTarget = await redirectStore.resolve(`/products/${slug}`);
+    if (redirectTarget) {
+      permanentRedirect(redirectTarget.destination);
+    }
+    return notFound();
+  }
+
+  // Server-side product_view recording — the previous inline client script
+  // raced hydration and silently dropped every product_view event, leaving
+  // the analytics funnel's "Product View" stage at zero. Fire-and-forget;
+  // dedup (60s per product+visitor) happens inside the API.
+  try {
+    const { headers } = await import("next/headers");
+    const h = await headers();
+    const host = h.get("x-forwarded-host") || h.get("host") || "localhost:3000";
+    const proto = h.get("x-forwarded-proto") || (host.startsWith("localhost") ? "http" : "https");
+    const sessionKey = h.get("x-qc-visitor") || h.get("x-forwarded-for")?.split(",")[0]?.trim() || "anon";
+    void fetch(`${proto}://${host}/api/analytics/product-view`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        productSlug: product.slug,
+        productName: product.name,
+        category: product.category || "",
+        sessionKey,
+      }),
+    }).catch(() => {});
+  } catch {}
 
   const full = await getProductFull(product.slug);
   const rawImages = (product as Record<string, unknown>).images;
@@ -75,6 +119,17 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
     if (Array.isArray(rawSpecs)) fallbackSpecs = rawSpecs.map((s, i) => ({ id: `sp-${i}`, name: s.name, value: s.value }));
     else if (typeof rawSpecs === "string") fallbackSpecs = JSON.parse(rawSpecs).map((s: { name: string; value: string }, i: number) => ({ id: `sp-${i}`, name: s.name, value: s.value }));
   } catch {}
+
+  const rawHighlights = (product as Record<string, unknown>).highlights;
+  const highlights: Array<{ id: string; text: string; icon?: string }> = Array.isArray(rawHighlights)
+    ? rawHighlights
+        .filter((h) => (typeof h === "object" && h !== null ? (h as { active?: boolean; text?: string }).active !== false && Boolean((h as { text?: string }).text) : Boolean(h)))
+        .map((h, i) =>
+          typeof h === "string"
+            ? { id: `hl-${i}`, text: h, icon: "✓" }
+            : { id: ((h as { id?: string }).id as string) || `hl-${i}`, text: String((h as { text?: string }).text), icon: (h as { icon?: string }).icon || "✓" }
+        )
+    : [];
 
   const specs = (full?.specifications && full.specifications.length > 0) ? full.specifications : fallbackSpecs;
   const faqs = full?.productFaqs || [];
@@ -102,11 +157,12 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
       if (Array.isArray(rawRelated) && rawRelated.length > 0) {
         related = (await Promise.all(rawRelated.map(async (ident: string) => {
           const p = await store.products.bySlug(ident) || fileDb.findOne("products", prod => prod.id === ident || prod.slug === ident);
-          return p ? { id: p.id, slug: p.slug, name: p.name, image: p.image, price: p.price } : null;
+          return p ? { id: p.id, slug: p.slug, name: p.name, image: p.image, price: p.price, mrp: (p as Record<string, unknown>).mrp as number || (p as Record<string, unknown>).originalPrice as number || undefined } : null;
         }))).filter(Boolean);
       }
     } catch {}
   }
+  related = related.filter((p) => p && p.slug !== product.slug && p.id !== product.id);
   const aplusData = await aplusStore.getByProduct(product.slug);
   const aplusRaw: Record<string, unknown>[] = aplusData.sections.length > 0 ? aplusData.sections : (full?.aplusSections || []);
   const aplus = aplusData.published ? aplusRaw : [];
@@ -133,7 +189,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
       url: `${origin}/products/${product.slug}`,
       priceCurrency: "INR",
       price: product.price,
-      priceValidUntil: new Date(Date.now() + 365 * 86400000).toISOString().split("T")[0],
+      priceValidUntil: "2027-12-31",
       availability: product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       itemCondition: "https://schema.org/NewCondition",
     },
@@ -154,71 +210,120 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   };
 
   return (
-    <main className="product-detail" style={{ maxWidth: 1240, margin: "0 auto", padding: "0 20px" }}>
+    <div className="qc-page-shell" style={{ overflowX: "clip", width: "100%", maxWidth: "100%" }}>
+      <QueensCareHeader activePage="products" />
+      <main className="product-detail" style={{ maxWidth: 1240, margin: "0 auto", padding: "16px 20px 80px" }}>
       {/* Product Structured Data for SEO */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }} />
       {/* Analytics: product view */}
       <script
         dangerouslySetInnerHTML={{
-          __html: `if(window.__qc_track_product_view){window.__qc_track_product_view(${JSON.stringify(product.slug)},${JSON.stringify(product.name)})}`,
+          __html: `if(window.__qc_track_product_view){window.__qc_track_product_view(${JSON.stringify(product.slug)},${JSON.stringify(product.name)})}
+          try{
+            var rv=JSON.parse(localStorage.getItem('qc_recently_viewed_v1')||'[]');
+            rv=rv.filter(function(p){return p.slug!==${JSON.stringify(product.slug)}});
+            rv.unshift({
+              id:${JSON.stringify(product.id)},
+              slug:${JSON.stringify(product.slug)},
+              name:${JSON.stringify(product.name)},
+              price:${product.price},
+              mrp:${product.mrp || 0},
+              image:${JSON.stringify(product.image || '')},
+              category:${JSON.stringify(product.category || '')}
+            });
+            localStorage.setItem('qc_recently_viewed_v1',JSON.stringify(rv.slice(0,8)));
+          }catch(e){}`,
         }}
       />
-      {/* ─── EDITORIAL MARQUEE RIBBON ─── */}
+      {/* ─── LUXURY TRUST BAR (Calm, Stationary, Verified) ─── */}
       <div
         style={{
-          margin: "12px -20px 24px -20px",
-          background: "linear-gradient(90deg, #2A0F3A 0%, #3e1654 50%, #2A0F3A 100%)",
-          color: "#faf8f5",
-          padding: "8px 0",
-          overflow: "hidden",
-          borderTop: "1px solid #D4AF37",
-          borderBottom: "1px solid #D4AF37",
-          display: "flex",
+          margin: "12px 0 24px 0",
+          background: "#FAF8F5",
+          border: "1px solid #EFEAE3",
+          borderRadius: 8,
+          padding: "12px 18px",
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+          gap: 14,
           alignItems: "center",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            gap: 32,
-            whiteSpace: "nowrap",
-            animation: "marquee-horizontal 45s linear infinite",
-            fontSize: 12,
-            fontWeight: 600,
-            letterSpacing: ".08em",
-            textTransform: "uppercase",
-          }}
-        >
-          <span>✦ Pharmaceutical Rigor</span>
-          <span style={{ color: "#D4AF37" }}>·</span>
-          <span>Micro-Encapsulated Bioavailability</span>
-          <span style={{ color: "#D4AF37" }}>·</span>
-          <span>Dermatologist Formulated</span>
-          <span style={{ color: "#D4AF37" }}>·</span>
-          <span>100% INCI Disclosure</span>
-          <span style={{ color: "#D4AF37" }}>·</span>
-          <span>Zero Harsh Fillers</span>
-          <span style={{ color: "#D4AF37" }}>·</span>
-          <span>Grade-A Bioactives</span>
-          <span style={{ color: "#D4AF37" }}>·</span>
-          <span>✦ Pharmaceutical Rigor</span>
-          <span style={{ color: "#D4AF37" }}>·</span>
-          <span>Batch-Tracked Purity</span>
-          <span style={{ color: "#D4AF37" }}>·</span>
-          <span>Dermatologist Formulated</span>
-          <span style={{ color: "#D4AF37" }}>·</span>
-          <span>Direct Cold Chain</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 16, color: "#D4AF37" }}>✦</span>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#2A0F3A", letterSpacing: ".02em" }}>
+              Formula Transparency
+            </div>
+            <div style={{ fontSize: 11, color: "#776D80" }}>
+              Active bioactives fully disclosed
+            </div>
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 16, color: "#166534" }}>✓</span>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#2A0F3A", letterSpacing: ".02em" }}>
+              Laboratory Batch-Verified
+            </div>
+            <div style={{ fontSize: 11, color: "#776D80" }}>
+              Formulated by Queens Care
+            </div>
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 16, color: "#2A0F3A" }}>🧾</span>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#2A0F3A", letterSpacing: ".02em" }}>
+              Statutory GST Invoice
+            </div>
+            <div style={{ fontSize: 11, color: "#776D80" }}>
+              Official B2C/B2B tax documentation
+            </div>
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 16, color: "#D4AF37" }}>🧪</span>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#2A0F3A", letterSpacing: ".02em" }}>
+              Science-Backed Care
+            </div>
+            <div style={{ fontSize: 11, color: "#776D80" }}>
+              Research-driven formulation
+            </div>
+          </div>
         </div>
       </div>
 
-      <div style={{ marginBottom: 16 }}>
-        <Link href="/shop" className="back" style={{ fontSize: 12, textDecoration: "none", color: "var(--muted)", display: "inline-flex", alignItems: "center", gap: 4 }}>
-          ← Back to Queens Care Shop
-        </Link>
-      </div>
+      {/* ─── CLINICAL BREADCRUMB HIERARCHY ─── */}
+      <nav aria-label="Breadcrumb" style={{ marginBottom: 20, fontSize: 12, color: "var(--muted)" }}>
+        <ol style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, margin: 0, padding: 0, listStyle: "none" }}>
+          <li>
+            <Link href="/" style={{ color: "var(--muted)", textDecoration: "none" }}>Home</Link>
+          </li>
+          <li style={{ color: "#D4AF37", fontSize: 10 }}>/</li>
+          <li>
+            <Link href="/shop" style={{ color: "var(--muted)", textDecoration: "none" }}>Formulations</Link>
+          </li>
+          <li style={{ color: "#D4AF37", fontSize: 10 }}>/</li>
+          {product.category && (
+            <>
+              <li>
+                <Link href={`/shop?category=${encodeURIComponent(product.category)}`} style={{ color: "var(--muted)", textDecoration: "none" }}>
+                  {product.category}
+                </Link>
+              </li>
+              <li style={{ color: "#D4AF37", fontSize: 10 }}>/</li>
+            </>
+          )}
+          <li aria-current="page" style={{ color: "#2A0F3A", fontWeight: 700 }}>
+            {product.name}
+          </li>
+        </ol>
+      </nav>
 
       {/* ─── PRODUCT HERO GRID ─── */}
-      <div className="detail-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 36, alignItems: "start" }}>
+      <div className="detail-grid">
         {/* Gallery Column */}
         <div className="product-gallery">
           <ProductGallery
@@ -226,7 +331,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
             productName={product.name}
             images={images.map(img => ({ id: img.id, url: img.url, alt: img.alt || undefined }))}
             videos={videos.map(v => ({ id: v.id, url: v.url, title: v.title || undefined, posterUrl: v.posterUrl || undefined }))}
-            enable3D={Boolean(model3d?.enabled && model3d?.modelUrl)}
+            enable3D={true}
             model3dPoster={model3d?.posterUrl || product.image}
             modelUrl={model3d?.modelUrl || undefined}
           />
@@ -234,31 +339,70 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
 
         {/* Product Information Column */}
         <div className="product-info" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {/* Universal Slot: Above Product Details */}
+          <UniversalPromoRenderer
+            slot="product_above_info"
+            context={{ pageType: "pdp", productId: product.id, category: product.category }}
+          />
+
           <div>
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                letterSpacing: ".15em",
-                textTransform: "uppercase",
-                color: "#997b4d",
-                display: "block",
-                marginBottom: 4,
-              }}
-            >
-              {product.category || "Clinical Dermatology"}
-            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 800,
+                  letterSpacing: ".16em",
+                  textTransform: "uppercase",
+                  color: "#D4AF37",
+                }}
+              >
+                ✦ {product.category || "Clinical Dermatology"}
+              </span>
+              <span style={{ color: "#E0D7C7" }} aria-hidden="true">·</span>
+              <span
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  letterSpacing: ".06em",
+                  textTransform: "uppercase",
+                  background: "#FAF8F5",
+                  color: "#2A0F3A",
+                  padding: "3px 8px",
+                  borderRadius: 4,
+                  border: "1px solid #E8DFD0",
+                }}
+              >
+                Queens Care Laboratories
+              </span>
+            </div>
             <h1
               style={{
-                fontSize: 32,
+                fontSize: 34,
                 fontFamily: "var(--font-display)",
                 color: "#2A0F3A",
                 margin: "0 0 8px",
-                lineHeight: 1.2,
+                lineHeight: 1.18,
+                letterSpacing: "-0.02em",
+                fontWeight: 600,
               }}
             >
               {product.name}
             </h1>
+
+            {/* Short Value Statement / Subtitle (Amazon-Level Product Clarity) */}
+            {Boolean((product as Record<string, unknown>).shortDescription || (product as Record<string, unknown>).subtitle) && (
+              <p
+                style={{
+                  fontSize: 14.5,
+                  color: "#5B4D68",
+                  lineHeight: 1.55,
+                  margin: "0 0 10px",
+                  fontWeight: 500,
+                }}
+              >
+                {String((product as Record<string, unknown>).shortDescription || (product as Record<string, unknown>).subtitle)}
+              </p>
+            )}
 
             {/* Rating Bar */}
             {reviews.length > 0 ? (
@@ -272,7 +416,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
             ) : (
               <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--muted)" }}>
                 <span style={{ color: "var(--gold)" }}>☆</span>
-                <span>No reviews yet</span>
+                <span>Verified Formulation</span>
                 <span style={{ opacity: 0.5 }}>·</span>
                 <span style={{ color: "var(--ink)", textDecoration: "underline", cursor: "pointer" }}>
                   Be the first to review this formulation
@@ -281,111 +425,53 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
             )}
           </div>
 
-          {/* Pricing Row */}
-          <div
-            style={{
-              padding: "16px 20px",
-              background: "#faf8f5",
-              border: "1px solid var(--line)",
-              borderRadius: 8,
-              display: "flex",
-              alignItems: "baseline",
-              gap: 12,
-              flexWrap: "wrap",
+          {/* ─── INTERACTIVE PURCHASE ZONE (PRICE, PACK SIZE, AVAILABILITY, DELIVERY, QTY, CTAs, TRUST, STICKY MOBILE) ─── */}
+          <ProductPurchaseZone
+            product={{
+              id: product.id,
+              slug: product.slug,
+              name: product.name,
+              sku: (product as Record<string, unknown>).sku as string || product.slug,
+              price: product.price,
+              mrp: product.mrp ?? ((product as Record<string, unknown>).originalPrice as number | undefined),
+              discount: product.discount,
+              stock: product.stock,
+              image: product.image,
+              packSize: product.packSize || specs.find((s) => s.name?.toLowerCase().includes("pack"))?.value,
+              status: (product as Record<string, unknown>).status as string,
+              outOfStockMessage: (product as Record<string, unknown>).outOfStockMessage as string,
+              active: product.active,
+              trackInventory: (product as Record<string, unknown>).trackInventory as boolean,
+              inventoryMessagingEnabled: (product as Record<string, unknown>).inventoryMessagingEnabled as boolean,
+              scarcityThreshold: (product as Record<string, unknown>).scarcityThreshold as number,
+              maxPurchaseQty: (product as Record<string, unknown>).maxPurchaseQty as number,
+              minPurchaseQty: (product as Record<string, unknown>).minPurchaseQty as number,
+              preorderEnabled: (product as Record<string, unknown>).preorderEnabled as boolean,
+              preorderLabel: (product as Record<string, unknown>).preorderLabel as string,
+              preorderMessage: (product as Record<string, unknown>).preorderMessage as string,
+              expectedDispatchDate: (product as Record<string, unknown>).expectedDispatchDate as string,
+              preorderMaxQty: (product as Record<string, unknown>).preorderMaxQty as number,
+              preorderCodAllowed: (product as Record<string, unknown>).preorderCodAllowed as boolean,
             }}
-          >
-            <span style={{ fontSize: 28, fontWeight: 700, color: "#2A0F3A" }}>
-              ₹{product.price.toLocaleString("en-IN")}
-            </span>
-            {product.mrp && product.mrp > product.price && (
-              <span style={{ textDecoration: "line-through", color: "var(--muted)", fontSize: 16 }}>
-                MRP ₹{product.mrp.toLocaleString("en-IN")}
-              </span>
-            )}
-            {product.discount && product.discount > 0 && (
-              <span
-                style={{
-                  background: "#e8f5e9",
-                  color: "#2e7d32",
-                  padding: "2px 8px",
-                  borderRadius: 4,
-                  fontSize: 12,
-                  fontWeight: 700,
-                }}
-              >
-                SAVE {product.discount}%
-              </span>
-            )}
-            <span style={{ fontSize: 11, color: "var(--muted)", width: "100%", marginTop: 2 }}>
-              Inclusive of all taxes · Free delivery on eligible orders
-            </span>
-          </div>
+            variants={variants.map((v) => ({
+              id: v.id,
+              name: v.name,
+              sku: (v as Record<string, unknown>).sku as string || undefined,
+              price: v.price,
+              mrp: (v as Record<string, unknown>).mrp as number || undefined,
+              stock: v.stock,
+            }))}
+            deliveryChecker={<DeliveryCalculator productPrice={product.price} />}
+          />
+
+          {/* ─── AMAZON-STYLE KEY HIGHLIGHTS / BULLETS (RENDER ZERO MARKUP IF EMPTY) ─── */}
+          {highlights.length > 0 && (
+            <HighlightsList highlights={highlights} />
+          )}
 
           <p style={{ fontSize: 14, lineHeight: 1.7, color: "#444", margin: 0 }}>
             {product.description}
           </p>
-
-          {/* ─── FORMULATION NOTES / SENSORY MATRIX (Inspired by Reference) ─── */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 10,
-              padding: "14px 16px",
-              background: "#fcfbfa",
-              border: "1px solid var(--line)",
-              borderRadius: 6,
-            }}
-          >
-            <div>
-              <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "#997b4d", letterSpacing: ".06em", display: "block" }}>
-                Active Concentration
-              </span>
-              <p style={{ margin: "2px 0 0", fontSize: 13, fontWeight: 600, color: "#2A0F3A" }}>
-                Pharma-Grade Bioactive
-              </p>
-            </div>
-            <div>
-              <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "#997b4d", letterSpacing: ".06em", display: "block" }}>
-                Therapeutic Finish
-              </span>
-              <p style={{ margin: "2px 0 0", fontSize: 13, fontWeight: 600, color: "#2A0F3A" }}>
-                Velvet Micro-Absorption
-              </p>
-            </div>
-            <div>
-              <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "#997b4d", letterSpacing: ".06em", display: "block" }}>
-                Formulation Type
-              </span>
-              <p style={{ margin: "2px 0 0", fontSize: 13, fontWeight: 600, color: "#2A0F3A" }}>
-                Micro-Encapsulated
-              </p>
-            </div>
-            <div>
-              <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "#997b4d", letterSpacing: ".06em", display: "block" }}>
-                Safety Profile
-              </span>
-              <p style={{ margin: "2px 0 0", fontSize: 13, fontWeight: 600, color: "#2A0F3A" }}>
-                Hypoallergenic & Non-Comedogenic
-              </p>
-            </div>
-          </div>
-
-          {/* ─── VARIANTS ─── */}
-          {variants.length > 0 && (
-            <div>
-              <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 8, color: "#2A0F3A" }}>
-                Select Formulation Variant:
-              </label>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                {variants.map(v => (
-                  <div key={v.id} style={{ padding: "8px 16px", border: "1px solid var(--line)", borderRadius: 4, background: "#fff", fontSize: 12 }}>
-                    <b>{v.name}</b> — ₹{v.price.toLocaleString("en-IN")} {v.stock > 0 ? `· ${v.stock} in stock` : <span style={{ color: "#b34141" }}>Out of stock</span>}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* ─── KEY BENEFITS ─── */}
           {product.benefits && product.benefits.length > 0 && (
@@ -400,31 +486,6 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
               </ul>
             </div>
           )}
-
-          {/* ─── PRODUCT SAFETY & FORMULATION TRANSPARENCY ─── */}
-          <div style={{ padding: "16px 20px", background: "#fbf9f6", border: "1px solid var(--line)", borderRadius: 6, display: "grid", gap: 10 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, fontWeight: 700, color: "#2A0F3A", textTransform: "uppercase", letterSpacing: ".06em" }}>
-              <span>🛡️ Formulation Safety &amp; Batch Traceability</span>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, fontSize: 12, color: "var(--muted)", lineHeight: 1.5 }}>
-              <div>
-                <b style={{ color: "var(--ink)", display: "block" }}>Storage Integrity</b>
-                <span>Store below 25°C away from direct sunlight. Refrigerate after unsealing if indicated.</span>
-              </div>
-              <div>
-                <b style={{ color: "var(--ink)", display: "block" }}>Quality Testing</b>
-                <span>Every lot undergoes active assay, stability, and microbial limit testing.</span>
-              </div>
-              <div>
-                <b style={{ color: "var(--ink)", display: "block" }}>Safety &amp; Patch Test</b>
-                <span>Conduct a 24-hr epidermal patch test prior to initial application. Topical use only.</span>
-              </div>
-              <div>
-                <b style={{ color: "var(--ink)", display: "block" }}>Pharmacist Inquiries</b>
-                <span>Direct questions to care@queenscare.in or our clinical team.</span>
-              </div>
-            </div>
-          </div>
 
           {/* ─── BADGES ─── */}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -444,73 +505,18 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
               </span>
             )}
           </div>
-
-          {/* ─── DELIVERY CALCULATOR ─── */}
-          <div>
-            <DeliveryCalculator productPrice={product.price} />
-          </div>
-
-          {/* ─── STOCK & CTAs ─── */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 6 }}>
-            {(() => {
-              const status = String((product as Record<string, unknown>).status || (product.active !== false ? 'active' : 'inactive'));
-              const oosMsg = String((product as Record<string, unknown>).outOfStockMessage || '');
-              const isOos = product.stock <= 0 || status === 'out_of_stock' || status === 'inactive';
-
-              if (isOos) {
-                return (
-                  <div style={{ padding: "16px", background: "#fff5f5", border: "1px solid #fed7d7", borderRadius: 6 }}>
-                    <p style={{ color: "#c53030", fontWeight: 700, margin: 0, fontSize: 14 }}>Currently Out of Stock</p>
-                    {oosMsg && <p style={{ color: "var(--muted)", fontSize: 12, margin: "4px 0 0" }}>{oosMsg}</p>}
-                  </div>
-                );
-              }
-
-              return (
-                <>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#2e7d32", fontWeight: 600 }}>
-                    <span>● In Stock ({product.stock} units available)</span>
-                    <span style={{ color: "var(--muted)" }}>·</span>
-                    <span style={{ color: "var(--muted)" }}>SKU: {product.slug}</span>
-                  </div>                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                    <AddToCartButton productId={product.slug} productName={product.name} />
-                    <Link
-                      href="/checkout"
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 6,
-                        padding: "14px 24px",
-                        background: "#2A0F3A",
-                        color: "#D4AF37",
-                        fontWeight: 700,
-                        fontSize: 14,
-                        letterSpacing: ".04em",
-                        textTransform: "uppercase",
-                        textDecoration: "none",
-                        borderRadius: 4,
-                        boxShadow: "0 4px 14px rgba(42, 15, 58, 0.25)",
-                        transition: "all 0.15s ease",
-                      }}
-                    >
-                      Instant Buy Now <span>→</span>
-                    </Link>
-                  </div>
-                  <DownloadPdfButton slug={product.slug} name={product.name} />
-                </>
-              );
-            })()}
-          </div>
         </div>
       </div>
 
       {/* ─── CLINICAL SPECIFICATIONS BREAKDOWN ─── */}
       {specs.length > 0 && (
         <section style={{ marginTop: 56 }}>
-          <h2 style={{ font: "24px var(--font-display)", color: "#2A0F3A", marginBottom: 20 }}>
-            Pharmaceutical Formulation Profile
-          </h2>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
+            <h2 style={{ font: "24px var(--font-display)", color: "#2A0F3A", margin: 0 }}>
+              Pharmaceutical Formulation Profile
+            </h2>
+            <DownloadPdfButton slug={product.slug} name={product.name} />
+          </div>
           <div style={{ border: "1px solid var(--line)", borderRadius: 6, overflow: "hidden" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
               <tbody>
@@ -530,6 +536,56 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
                     {product.name}
                   </td>
                 </tr>
+                {(product.genericName || product.composition) && (
+                  <tr>
+                    <td style={{ padding: "12px 18px", background: "#fbf9f6", fontWeight: 600, borderBottom: "1px solid var(--line)" }}>
+                      Active Composition / Generic
+                    </td>
+                    <td style={{ padding: "12px 18px", borderBottom: "1px solid var(--line)" }}>
+                      {product.genericName || product.composition}
+                    </td>
+                  </tr>
+                )}
+                {product.strength && (
+                  <tr>
+                    <td style={{ padding: "12px 18px", background: "#fbf9f6", fontWeight: 600, borderBottom: "1px solid var(--line)" }}>
+                      Strength / Dosage Form
+                    </td>
+                    <td style={{ padding: "12px 18px", borderBottom: "1px solid var(--line)" }}>
+                      {product.strength}
+                    </td>
+                  </tr>
+                )}
+                {product.packSize && (
+                  <tr>
+                    <td style={{ padding: "12px 18px", background: "#fbf9f6", fontWeight: 600, borderBottom: "1px solid var(--line)" }}>
+                      Pack Presentation
+                    </td>
+                    <td style={{ padding: "12px 18px", borderBottom: "1px solid var(--line)" }}>
+                      {product.packSize}
+                    </td>
+                  </tr>
+                )}
+                {product.storageConditions && (
+                  <tr>
+                    <td style={{ padding: "12px 18px", background: "#fbf9f6", fontWeight: 600, borderBottom: "1px solid var(--line)" }}>
+                      Storage Conditions
+                    </td>
+                    <td style={{ padding: "12px 18px", borderBottom: "1px solid var(--line)" }}>
+                      {product.storageConditions}
+                    </td>
+                  </tr>
+                )}
+                {product.prescriptionStatus && product.prescriptionStatus !== "none" && (
+                  <tr>
+                    <td style={{ padding: "12px 18px", background: "#fbf9f6", fontWeight: 600, borderBottom: "1px solid var(--line)" }}>
+                      Regulatory / Rx Classification
+                    </td>
+                    <td style={{ padding: "12px 18px", borderBottom: "1px solid var(--line)", color: product.prescriptionStatus === "rx_required" ? "#c026d3" : "inherit", fontWeight: 600 }}>
+                      {product.prescriptionStatus === "rx_required" ? "Prescription Required (Schedule Drug)" : "Physician Guidance Recommended"}
+                    </td>
+                  </tr>
+                )}
                 {product.ingredients && (
                   <tr>
                     <td style={{ padding: "12px 18px", background: "#fbf9f6", fontWeight: 600, borderBottom: "1px solid var(--line)" }}>
@@ -606,7 +662,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
                 {(secType === "rich_text" || secType === "richText") && (
                   <div style={{ maxWidth: 880, margin: "0 auto" }}>
                     {secHeading && <h3 style={{ font: "22px var(--font-display)", color: "#2A0F3A", marginBottom: 12 }}>{secHeading}</h3>}
-                    {secText && <div style={{ fontSize: 15, lineHeight: 1.8, color: "#333" }} dangerouslySetInnerHTML={{ __html: secText }} />}
+                    {secText && <div style={{ fontSize: 15, lineHeight: 1.8, color: "#333" }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(secText) }} />}
                     {secImageUrl && <img src={secImageUrl} alt={secImageAlt} style={{ width: "100%", borderRadius: 8, marginTop: 16 }} />}
                   </div>
                 )}
@@ -682,7 +738,69 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
         </section>
       )}
 
-      {/* ─── PRODUCT RANGE HORIZONTAL CAROUSEL (SLIGHT TWIST INSPIRED) ─── */}
+      {/* ─── QUEENS CARE FORMULATION GUIDANCE (AUTHENTIC BRAND IDENTITY) ─── */}
+      <section
+        style={{
+          marginTop: 48,
+          background: "linear-gradient(135deg, #FAF8F5 0%, #F5EFE6 100%)",
+          border: "1px solid #E8DFD0",
+          borderRadius: 12,
+          padding: "24px 28px",
+          display: "flex",
+          alignItems: "center",
+          gap: 24,
+          flexWrap: "wrap",
+        }}
+      >
+        <div style={{ flexShrink: 0 }}>
+          <img
+            src="/images/reference/dr-queens-avatar-hd.webp"
+            alt="Queens Care Formulation Guidance"
+            style={{
+              width: 72,
+              height: 72,
+              borderRadius: "50%",
+              objectFit: "cover",
+              border: "2px solid #D4AF37",
+              boxShadow: "0 4px 12px rgba(42, 15, 58, 0.08)",
+            }}
+          />
+        </div>
+        <div style={{ flex: 1, minWidth: 260 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".12em", textTransform: "uppercase", color: "#D4AF37" }}>
+            ✦ Queens Care Formulation Standards
+          </span>
+          <h3 style={{ margin: "4px 0 6px", fontFamily: "var(--font-display)", fontSize: 20, color: "#2A0F3A" }}>
+            Formulated for Bioavailability &amp; Targeted Absorption
+          </h3>
+          <p style={{ margin: 0, fontSize: 13.5, color: "#554A60", lineHeight: 1.6 }}>
+            Every Queens Care formulation is developed with rigorous ingredient compatibility and quality checks. For questions regarding formulation details, storage, or product specifications, our team is available to assist you.
+          </p>
+        </div>
+        <div style={{ flexShrink: 0 }}>
+          <Link
+            href="/contact"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "10px 18px",
+              background: "#2A0F3A",
+              color: "#D4AF37",
+              borderRadius: 6,
+              fontSize: 12.5,
+              fontWeight: 700,
+              textDecoration: "none",
+              border: "1px solid #D4AF37",
+              transition: "all 0.15s ease",
+            }}
+          >
+            <span>💬 Formulation Inquiries</span>
+          </Link>
+        </div>
+      </section>
+
+      {/* ─── PRODUCT RANGE HORIZONTAL CAROUSEL ─── */}
       <ProductRangeCarousel
         products={rangeProducts}
         currentSlug={product.slug}
@@ -716,26 +834,43 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
         questions={questions.map(q => ({ id: q.id, question: q.question, answer: q.answer || null, createdAt: String(q.createdAt) }))}
       />
 
-      {/* ─── RECOMMENDATIONS ENGINE ─── */}
-      <RecommendationsSection currentSlug={product.slug} title="Complementary Formulations" limit={4} />
-
-      {/* ─── RELATED PRODUCTS ─── */}
-      {related.length > 0 && (
+      {/* ─── RELATED / COMPLEMENTARY FORMULATIONS (NO DUPLICATE STACKING) ─── */}
+      {related.length > 0 ? (
         <section style={{ marginTop: 48, marginBottom: 48 }}>
           <h2 style={{ font: "22px var(--font-display)", color: "#2A0F3A", marginBottom: 20 }}>
-            Related Formulations
+            Complementary Formulations
           </h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 20 }}>
             {related.map(p => (
               <Link href={`/products/${p.slug}`} key={p.id} style={{ textDecoration: "none", color: "inherit", background: "#fff", border: "1px solid var(--line)", padding: 12, borderRadius: 6 }}>
                 <img src={p.image} alt={p.name} style={{ width: "100%", aspectRatio: "1", objectFit: "contain" }} loading="lazy" />
                 <b style={{ display: "block", marginTop: 8, font: "15px var(--font-display)", color: "#2A0F3A" }}>{p.name}</b>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#997b4d" }}>₹{p.price.toLocaleString("en-IN")}</span>
+                <span style={{ display: "inline-flex", alignItems: "baseline", gap: 8 }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "#997b4d" }}>₹{p.price.toLocaleString("en-IN")}</span>
+                  {p.mrp && p.mrp > p.price && (
+                    <span style={{ fontSize: 12, color: "#94A3B8", textDecoration: "line-through" }}>₹{p.mrp.toLocaleString("en-IN")}</span>
+                  )}
+                </span>
               </Link>
             ))}
           </div>
         </section>
+      ) : (
+        <RecommendationsSection currentSlug={product.slug} title="Complementary Formulations" limit={4} />
       )}
+
+      {/* ─── RECENTLY VIEWED FORMULATIONS (SESSION-BASED) ─── */}
+      <RecentlyViewed currentSlug={product.slug} />
+
+      {/* Universal Slot: Bottom of PDP */}
+      <div style={{ marginTop: 32 }}>
+        <UniversalPromoRenderer
+          slot="product_bottom"
+          context={{ pageType: "pdp", productId: product.id, category: product.category }}
+        />
+      </div>
     </main>
-  );
+    <QueensCareFooter />
+  </div>
+);
 }

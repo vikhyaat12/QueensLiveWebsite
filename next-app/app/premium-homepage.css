@@ -3,21 +3,147 @@
    High-impact visual improvements matching reference design quality
    ═══════════════════════════════════════════════════════════════════════ */
 
-/* ── Hero Section Premium ────────────────────────────────────────────── */
+/* ── Hero Section Premium Architectural Studio ──────────────────────── */
 .hero {
-  background: linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 25%, #F0E6FF 50%, #F5F3FF 75%, #FAF5FF 100%) !important;
-  min-height: 580px !important;
-  gap: 0 !important;
+  position: relative !important;
+  overflow: hidden !important;
+  background: 
+    radial-gradient(ellipse 65% 55% at 75% 38%, rgba(212, 175, 55, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 60% at 20% 80%, rgba(139, 92, 246, 0.07) 0%, transparent 50%),
+    linear-gradient(135deg, #FAF9F6 0%, #F6F1EA 45%, #EFEAF8 100%) !important;
+  min-height: 700px !important;
+  height: 700px !important;
+  display: block !important;
+  padding: 0 !important;
+  margin: 0 auto !important;
+  width: 100% !important;
+  border-bottom: 1px solid rgba(30, 22, 56, 0.06) !important;
+}
+
+/* Remove full-width bleaching white fog */
+.hero::before {
+  display: none !important;
 }
 
 .hero-copy {
-  padding: 70px 6% 60px 8% !important;
-  align-self: center !important;
+  position: absolute !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  left: 5% !important;
+  z-index: 10 !important;
+  padding: 0 !important;
+  max-width: 500px !important;
+  width: 500px !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
 }
 
-@media (min-width: 1200px) {
-  .hero { min-height: 640px !important; }
-  .hero-copy { padding: 90px 8% 70px 10% !important; }
+.hero-cinematic-stage-wrap {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  z-index: 4 !important;
+  pointer-events: none !important;
+}
+
+@media (min-width: 1400px) {
+  .hero {
+    min-height: 730px !important;
+    height: 730px !important;
+  }
+  .hero-copy {
+    left: 5.5% !important;
+    max-width: 520px !important;
+    width: 520px !important;
+  }
+}
+
+@media (min-width: 1920px) {
+  .hero {
+    min-height: 780px !important;
+    height: 780px !important;
+  }
+  .hero-copy {
+    left: 7% !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .hero {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    min-height: auto !important;
+    height: auto !important;
+    padding: 32px 5% 0 !important;
+    background: 
+      radial-gradient(circle at 50% 15%, rgba(212, 175, 55, 0.08) 0%, transparent 50%),
+      linear-gradient(180deg, #FAF9F6 0%, #F5F1EB 55%, #EFEBF8 100%) !important;
+  }
+  .hero::before {
+    display: none !important;
+  }
+  .hero-copy {
+    position: relative !important;
+    top: auto !important;
+    transform: none !important;
+    left: auto !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    text-align: center !important;
+    padding: 0 0 20px !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+  .hero-copy .hero-ctas {
+    justify-content: center !important;
+  }
+  .hero-copy .hero-trust-badges {
+    margin: 0 auto !important;
+    max-width: 440px !important;
+    width: 100% !important;
+  }
+  .hero-cinematic-stage-wrap {
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+    height: 480px !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero {
+    padding: 24px 16px 0 !important;
+  }
+  .hero-copy {
+    padding: 0 0 16px !important;
+  }
+  .hero-cinematic-stage-wrap {
+    height: 380px !important;
+  }
+  .hero-trust-badges {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+}
+
+/* ── Container Width Expansion (1400px Desktop Density) ─────────────── */
+.science-section > div,
+.trust-section > div,
+.ritual-reference-section > div,
+.ai-assistant-reference-banner > div,
+.journal-reference-section > div,
+.category-row-wrap {
+  max-width: 1400px !important;
+  width: 94% !important;
+  margin: 0 auto !important;
 }
 
 /* ── Product Cards Premium Hover ─────────────────────────────────────── */
@@ -157,10 +283,10 @@ footer {
 @media (max-width: 650px) {
   .hero {
     min-height: auto !important;
-    padding-bottom: 40px !important;
+    padding-bottom: 20px !important;
   }
   .hero-copy {
-    padding: 60px 6% 40px !important;
+    padding: 24px 5% 16px !important;
   }
   .hero h1 {
     font-size: clamp(32px, 8vw, 48px) !important;
@@ -237,6 +363,20 @@ footer {
   /* Ritual cards mobile */
   .ritual-card-hover {
     border-radius: 12px !important;
+  }
+
+  /* 3D Inspection Section Mobile */
+  .vertical-label {
+    display: none !important;
+  }
+}
+
+/* ── 3D Inspection Section Responsive (Tablet & Below) ──────────────── */
+@media (max-width: 960px) {
+  /* shop-two-column-wrap kept as single full-width catalog container */
+  .shop-two-column-wrap {
+    width: 94% !important;
+    gap: 24px !important;
   }
 }
 

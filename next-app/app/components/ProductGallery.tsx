@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { parseMediaInfo } from "./GlobalMediaUploader";
 import Product3DViewer from "./Product3DViewer";
+import Hero3DProductVisual from "./Hero3DProductVisual";
 
 export type GalleryImage = { id: string; url: string; alt?: string };
 export type GalleryVideo = { id?: string; url: string; title?: string; posterUrl?: string };
@@ -62,13 +63,13 @@ export default function ProductGallery({
         embedUrl: parsed.embedUrl,
       };
     }),
-    ...(enable3D && modelUrl?.trim()
+    ...(enable3D
       ? [
           {
             id: "3d-view",
             url: "#3d",
             type: "3d" as const,
-            title: "Interactive 3D View",
+            title: "360° Interactive 3D Model",
             alt: `${productName} 3D View`,
             posterUrl: model3dPoster || mainImage,
           },
@@ -224,6 +225,7 @@ export default function ProductGallery({
 
       {/* Main Viewport & Thumbnails Grid */}
       <div
+        className="qc-gallery-container"
         style={{
           display: "grid",
           gridTemplateColumns: mediaItems.length > 1 ? "80px 1fr" : "1fr",
@@ -234,6 +236,7 @@ export default function ProductGallery({
         {/* Thumbnails Column (Left Side) */}
         {mediaItems.length > 1 && (
           <div
+            className="qc-gallery-thumbs"
             style={{
               display: "flex",
               flexDirection: "column",
@@ -342,30 +345,106 @@ export default function ProductGallery({
         )}
 
         {/* Main Viewport */}
-        <div style={{ position: "relative", width: "100%" }}>
+        <div className="qc-gallery-main" style={{ position: "relative", width: "100%" }}>
           <div
             style={{
               position: "relative",
               width: "100%",
               aspectRatio: "1 / 1",
-              maxHeight: 520,
+              minHeight: 460,
+              maxHeight: 540,
               overflow: "hidden",
-              borderRadius: 8,
-              border: "1px solid var(--line)",
-              background: "#faf8f5",
+              borderRadius: 16,
+              border: "1.5px solid rgba(226, 232, 240, 0.8)",
+              background: "radial-gradient(circle at 50% 45%, #FFFFFF 0%, #FAF9F6 70%, #F5F0EB 100%)",
               cursor: isCurrentVideo || isCurrent3D ? "default" : zoom ? "zoom-out" : "zoom-in",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               boxShadow: "0 4px 20px rgba(0,0,0,0.03)",
             }}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={() => {
+              if (zoom) setZoom(false);
+            }}
             onClick={() => {
               if (!isCurrentVideo && !isCurrent3D) setZoom(!zoom);
             }}
           >
+            {/* Clinical Trust Badges Watermark Overlay */}
+            <div
+              style={{
+                position: "absolute",
+                top: 14,
+                right: 14,
+                display: "flex",
+                flexDirection: "column",
+                gap: 6,
+                pointerEvents: "none",
+                zIndex: 3,
+              }}
+            >
+              <span
+                style={{
+                  background: "rgba(255, 255, 255, 0.92)",
+                  backdropFilter: "blur(6px)",
+                  color: "#1E1638",
+                  padding: "4px 10px",
+                  borderRadius: 6,
+                  fontSize: 10,
+                  fontWeight: 800,
+                  letterSpacing: "0.06em",
+                  border: "1px solid rgba(226, 232, 240, 0.9)",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                }}
+              >
+                <span style={{ color: "#16A34A" }}>✓</span> Lab-Tested Batches
+              </span>
+              <span
+                style={{
+                  background: "rgba(255, 255, 255, 0.92)",
+                  backdropFilter: "blur(6px)",
+                  color: "#1E1638",
+                  padding: "4px 10px",
+                  borderRadius: 6,
+                  fontSize: 10,
+                  fontWeight: 800,
+                  letterSpacing: "0.06em",
+                  border: "1px solid rgba(226, 232, 240, 0.9)",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                }}
+              >
+                <span style={{ color: "#D4AF37" }}>✦</span> Queens Care Original
+              </span>
+            </div>
+
             {/* If 3D Viewer */}
             {isCurrent3D ? (
-              <Product3DViewer productName={productName} modelUrl={modelUrl} posterUrl={current.posterUrl} height={520} />
+              modelUrl ? (
+                <Product3DViewer productName={productName} modelUrl={modelUrl} posterUrl={current.posterUrl} height={520} />
+              ) : (
+                <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Hero3DProductVisual
+                    productName={productName}
+                    scale={1.0}
+                    autoRotate={true}
+                    rotationSpeed={1.0}
+                    mouseInteraction={true}
+                    lightingIntensity={1.6}
+                    accentColor="#D4AF37"
+                    bgEffect="studio"
+                    customImageUrl=""
+                    height={480}
+                    showInfoPlate={true}
+                  />
+                </div>
+              )
             ) : isCurrentVideo ? (
               /* If Video */
               current.type === "youtube" || current.type === "vimeo" ? (
@@ -394,13 +473,40 @@ export default function ProductGallery({
                   style={{
                     width: "100%",
                     height: "100%",
+                    maxHeight: 500,
                     objectFit: "contain",
-                    transform: zoom ? "scale(2)" : "scale(1)",
-                    transformOrigin: "center center",
-                    transition: "transform 0.3s ease-in-out",
+                    transform: zoom ? "scale(2.2)" : "scale(1)",
+                    transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                    transition: zoom ? "transform 0.08s ease-out" : "transform 0.25s ease-in-out",
+                    pointerEvents: "none",
                   }}
                 />
-
+                {!zoom && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: 14,
+                      left: 14,
+                      background: "rgba(255, 255, 255, 0.92)",
+                      backdropFilter: "blur(6px)",
+                      color: "#2A0F3A",
+                      padding: "4px 10px",
+                      borderRadius: 6,
+                      fontSize: 11,
+                      fontWeight: 600,
+                      border: "1px solid rgba(226, 232, 240, 0.9)",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      pointerEvents: "none",
+                      zIndex: 2,
+                    }}
+                  >
+                    <span>🔍</span>
+                    <span>Click &amp; hover to inspect label</span>
+                  </div>
+                )}
               </>
             )}
           </div>
