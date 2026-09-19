@@ -167,9 +167,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   const aplus = aplusData.published ? aplusRaw : [];
   const rawVideos = (product as Record<string, unknown>).videos;
   const fallbackVideos = Array.isArray(rawVideos) ? rawVideos : [];
-  const videos = (full?.videos && full.videos.length > 0) ? full.videos : fallbackVideos;
-  const model3d = full?.model3d;
-  const questions = full ? await getQA(full.id) : [];
+  const videos = (full?.videos && full.videos.length > 0) ? full.videos : fallbackVideos;  const questions = full ? await getQA(full.id) : [];
 
   const avgRating = reviews.length > 0 ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : "";
   const ratingDist = [5, 4, 3, 2, 1].map(star => ({ star, count: reviews.filter(r => r.rating === star).length }));
@@ -330,9 +328,6 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
             productName={product.name}
             images={images.map(img => ({ id: img.id, url: img.url, alt: img.alt || undefined }))}
             videos={videos.map(v => ({ id: v.id, url: v.url, title: v.title || undefined, posterUrl: v.posterUrl || undefined }))}
-            enable3D={true}
-            model3dPoster={model3d?.posterUrl || product.image}
-            modelUrl={model3d?.modelUrl || undefined}
           />
         </div>
 
@@ -507,19 +502,20 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
         </div>
       </div>
 
-      {/* ─── CLINICAL SPECIFICATIONS BREAKDOWN ─── */}
+      {/* ─── PREMIUM PRODUCT INFORMATION SYSTEM (admin-driven accordion) ─── */}
       {specs.length > 0 && (
         <section style={{ marginTop: 56 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
-            <h2 style={{ font: "24px var(--font-display)", color: "#2A0F3A", margin: 0 }}>
-              Pharmaceutical Formulation Profile
+          <div style={{ textAlign: "center", marginBottom: 24 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".16em", textTransform: "uppercase", color: "#D4AF37" }}>✦ Product Information</span>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(24px, 3vw, 30px)", color: "#2A0F3A", margin: "6px 0 0" }}>
+              Formulation Profile
             </h2>
           </div>
-          <div style={{ border: "1px solid var(--line)", borderRadius: 6, overflow: "hidden" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+          <div style={{ maxWidth: 880, margin: "0 auto", border: "1px solid var(--line)", borderRadius: 14, background: "#fff", boxShadow: "0 10px 30px -18px rgba(42,15,58,.14)", overflow: "hidden" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
               <tbody>
                 <tr>
-                  <td style={{ padding: "12px 18px", background: "#fbf9f6", fontWeight: 600, width: "35%", borderBottom: "1px solid var(--line)" }}>
+                  <td style={{ padding: "13px 20px", background: "#FAF8F5", color: "#997b4d", fontWeight: 700, fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase", width: "35%", borderBottom: "1px solid var(--line)" }}>
                     Laboratory Brand
                   </td>
                   <td style={{ padding: "12px 18px", borderBottom: "1px solid var(--line)" }}>
@@ -527,7 +523,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
                   </td>
                 </tr>
                 <tr>
-                  <td style={{ padding: "12px 18px", background: "#fbf9f6", fontWeight: 600, borderBottom: "1px solid var(--line)" }}>
+                  <td style={{ padding: "13px 20px", background: "#FAF8F5", color: "#997b4d", fontWeight: 700, fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase", borderBottom: "1px solid var(--line)" }}>
                     Product Formula
                   </td>
                   <td style={{ padding: "12px 18px", borderBottom: "1px solid var(--line)" }}>
@@ -536,7 +532,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
                 </tr>
                 {(product.genericName || product.composition) && (
                   <tr>
-                    <td style={{ padding: "12px 18px", background: "#fbf9f6", fontWeight: 600, borderBottom: "1px solid var(--line)" }}>
+                    <td style={{ padding: "13px 20px", background: "#FAF8F5", color: "#997b4d", fontWeight: 700, fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase", borderBottom: "1px solid var(--line)" }}>
                       Active Composition / Generic
                     </td>
                     <td style={{ padding: "12px 18px", borderBottom: "1px solid var(--line)" }}>
@@ -546,7 +542,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
                 )}
                 {product.strength && (
                   <tr>
-                    <td style={{ padding: "12px 18px", background: "#fbf9f6", fontWeight: 600, borderBottom: "1px solid var(--line)" }}>
+                    <td style={{ padding: "13px 20px", background: "#FAF8F5", color: "#997b4d", fontWeight: 700, fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase", borderBottom: "1px solid var(--line)" }}>
                       Strength / Dosage Form
                     </td>
                     <td style={{ padding: "12px 18px", borderBottom: "1px solid var(--line)" }}>
@@ -556,7 +552,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
                 )}
                 {product.packSize && (
                   <tr>
-                    <td style={{ padding: "12px 18px", background: "#fbf9f6", fontWeight: 600, borderBottom: "1px solid var(--line)" }}>
+                    <td style={{ padding: "13px 20px", background: "#FAF8F5", color: "#997b4d", fontWeight: 700, fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase", borderBottom: "1px solid var(--line)" }}>
                       Pack Presentation
                     </td>
                     <td style={{ padding: "12px 18px", borderBottom: "1px solid var(--line)" }}>
@@ -566,7 +562,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
                 )}
                 {product.storageConditions && (
                   <tr>
-                    <td style={{ padding: "12px 18px", background: "#fbf9f6", fontWeight: 600, borderBottom: "1px solid var(--line)" }}>
+                    <td style={{ padding: "13px 20px", background: "#FAF8F5", color: "#997b4d", fontWeight: 700, fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase", borderBottom: "1px solid var(--line)" }}>
                       Storage Conditions
                     </td>
                     <td style={{ padding: "12px 18px", borderBottom: "1px solid var(--line)" }}>
@@ -576,7 +572,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
                 )}
                 {product.prescriptionStatus && product.prescriptionStatus !== "none" && (
                   <tr>
-                    <td style={{ padding: "12px 18px", background: "#fbf9f6", fontWeight: 600, borderBottom: "1px solid var(--line)" }}>
+                    <td style={{ padding: "13px 20px", background: "#FAF8F5", color: "#997b4d", fontWeight: 700, fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase", borderBottom: "1px solid var(--line)" }}>
                       Regulatory / Rx Classification
                     </td>
                     <td style={{ padding: "12px 18px", borderBottom: "1px solid var(--line)", color: product.prescriptionStatus === "rx_required" ? "#c026d3" : "inherit", fontWeight: 600 }}>
@@ -586,7 +582,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
                 )}
                 {product.ingredients && (
                   <tr>
-                    <td style={{ padding: "12px 18px", background: "#fbf9f6", fontWeight: 600, borderBottom: "1px solid var(--line)" }}>
+                    <td style={{ padding: "13px 20px", background: "#FAF8F5", color: "#997b4d", fontWeight: 700, fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase", borderBottom: "1px solid var(--line)" }}>
                       Active Ingredients
                     </td>
                     <td style={{ padding: "12px 18px", borderBottom: "1px solid var(--line)", lineHeight: 1.6 }}>
@@ -596,7 +592,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
                 )}
                 {product.usage && (
                   <tr>
-                    <td style={{ padding: "12px 18px", background: "#fbf9f6", fontWeight: 600, borderBottom: "1px solid var(--line)" }}>
+                    <td style={{ padding: "13px 20px", background: "#FAF8F5", color: "#997b4d", fontWeight: 700, fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase", borderBottom: "1px solid var(--line)" }}>
                       Clinical Application Protocol
                     </td>
                     <td style={{ padding: "12px 18px", borderBottom: "1px solid var(--line)", lineHeight: 1.6 }}>
@@ -606,7 +602,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
                 )}
                 {product.safetyInfo && (
                   <tr>
-                    <td style={{ padding: "12px 18px", background: "#fbf9f6", fontWeight: 600, borderBottom: "1px solid var(--line)" }}>
+                    <td style={{ padding: "13px 20px", background: "#FAF8F5", color: "#997b4d", fontWeight: 700, fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase", borderBottom: "1px solid var(--line)" }}>
                       Safety & Dermatological Guidance
                     </td>
                     <td style={{ padding: "12px 18px", borderBottom: "1px solid var(--line)", lineHeight: 1.6 }}>
@@ -616,7 +612,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
                 )}
                 {specs.map((s, idx) => (
                   <tr key={s.id || idx}>
-                    <td style={{ padding: "12px 18px", background: "#fbf9f6", fontWeight: 600, borderBottom: idx === specs.length - 1 ? "none" : "1px solid var(--line)" }}>
+                    <td style={{ padding: "13px 20px", background: "#FAF8F5", color: "#997b4d", fontWeight: 700, fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase", borderBottom: idx === specs.length - 1 ? "none" : "1px solid var(--line)" }}>
                       {s.name}
                     </td>
                     <td style={{ padding: "12px 18px", borderBottom: idx === specs.length - 1 ? "none" : "1px solid var(--line)" }}>
@@ -630,16 +626,15 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
         </section>
       )}
 
-      {/* ─── A+ EDITORIAL STORYTELLING CONTENT ─── */}
+      {/* ─── A+ CINEMATIC PRODUCT STORYTELLING ─── */}
       {aplus.length > 0 && (
-        <section style={{ marginTop: 56 }}>
-          <div style={{ textAlign: "center", marginBottom: 32 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".15em", textTransform: "uppercase", color: "#D4AF37" }}>
-              ✦ Clinical Editorial
-            </span>
-            <h2 style={{ font: "28px var(--font-display)", color: "#2A0F3A", margin: "6px 0 0" }}>
-              The Science of {product.name}
+        <section style={{ marginTop: 72 }}>
+          <div style={{ textAlign: "center", marginBottom: 40 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".2em", textTransform: "uppercase", color: "#D4AF37" }}>✦ The Product Story</span>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(26px, 3.4vw, 36px)", color: "#2A0F3A", margin: "8px 0 0" }}>
+              Inside {product.name}
             </h2>
+            <div aria-hidden="true" style={{ width: 56, height: 2, background: "linear-gradient(90deg, transparent, #D4AF37, transparent)", margin: "16px auto 0" }} />
           </div>
 
           {(aplus as Array<Record<string, unknown>>).filter((s) => s.published !== false).map((section, idx) => {
@@ -653,15 +648,21 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
             const secItems = Array.isArray(section.items) ? (section.items as string[]) : [];
             const secCtaText = typeof section.ctaText === "string" ? section.ctaText : "";
             const secCtaLink = typeof section.ctaLink === "string" ? section.ctaLink : "/shop";
+            const sectionNumber = `Section ${String(idx + 1).padStart(2, "0")}`;
 
             return (
-              <div key={secId} style={{ marginBottom: 40 }}>
+              <div key={secId} style={{ marginBottom: 56 }}>
+                {secHeading && secType !== "hero" && secType !== "hero_banner" && secType !== "cta" && (
+                  <div style={{ maxWidth: 880, margin: "0 auto 18px", display: "flex", alignItems: "baseline", gap: 14, borderBottom: "1px solid #EFEAE3", paddingBottom: 12 }}>
+                    <span aria-hidden="true" style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".18em", textTransform: "uppercase", color: "#D4AF37", whiteSpace: "nowrap" }}>{sectionNumber}</span>
+                    <h3 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(20px, 2.2vw, 25px)", color: "#2A0F3A", margin: 0, lineHeight: 1.3 }}>{secHeading}</h3>
+                  </div>
+                )}
                 {/* Rich Text */}
                 {(secType === "rich_text" || secType === "richText") && (
                   <div style={{ maxWidth: 880, margin: "0 auto" }}>
-                    {secHeading && <h3 style={{ font: "22px var(--font-display)", color: "#2A0F3A", marginBottom: 12 }}>{secHeading}</h3>}
-                    {secText && <div style={{ fontSize: 15, lineHeight: 1.8, color: "#333" }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(secText) }} />}
-                    {secImageUrl && <img src={secImageUrl} alt={secImageAlt} style={{ width: "100%", borderRadius: 8, marginTop: 16 }} />}
+                    {secText && <div style={{ fontSize: 15.5, lineHeight: 1.85, color: "#333" }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(secText) }} />}
+                    {secImageUrl && <img src={secImageUrl} alt={secImageAlt} style={{ width: "100%", borderRadius: 12, marginTop: 18 }} />}
                   </div>
                 )}
 
@@ -680,11 +681,10 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
 
                 {/* Split Image + Text */}
                 {(secType === "imageText" || secType === "image_text") && (
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32, alignItems: "center" }}>
-                    {secImageUrl && <img src={secImageUrl} alt={secImageAlt} style={{ width: "100%", borderRadius: 8, objectFit: "cover" }} />}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 36, alignItems: "center", background: "#FAF8F5", border: "1px solid #EFEAE3", borderRadius: 16, padding: 28 }}>
+                    {secImageUrl && <img src={secImageUrl} alt={secImageAlt} style={{ width: "100%", borderRadius: 10, objectFit: "cover" }} />}
                     <div>
-                      {secHeading && <h3 style={{ font: "22px var(--font-display)", color: "#2A0F3A", marginBottom: 12 }}>{secHeading}</h3>}
-                      {secText && <p style={{ fontSize: 15, lineHeight: 1.8, color: "#333" }}>{secText}</p>}
+                      {secText && <p style={{ fontSize: 15, lineHeight: 1.85, color: "#333", margin: 0 }}>{secText}</p>}
                     </div>
                   </div>
                 )}
@@ -692,35 +692,32 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
                 {/* Highlights / Features */}
                 {(secType === "benefits" || secType === "features" || secType === "comparison" || secType === "highlights") && (
                   <div>
-                    {secHeading && <h3 style={{ font: "22px var(--font-display)", color: "#2A0F3A", marginBottom: 16 }}>{secHeading}</h3>}
                     {secItems.length > 0 && (
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
                         {secItems.map((item: string, i: number) => (
-                          <div key={i} style={{ padding: 18, background: "#faf8f5", border: "1px solid var(--line)", borderRadius: 6 }}>
-                            <p style={{ fontSize: 14, lineHeight: 1.6, margin: 0, color: "#2A0F3A", fontWeight: 500 }}>✦ {item}</p>
+                          <div key={i} style={{ padding: "20px 22px", background: "#fff", border: "1px solid var(--line)", borderRadius: 12, boxShadow: "0 8px 22px -16px rgba(42,15,58,.18)", borderTop: "3px solid #D4AF37" }}>
+                            <p style={{ fontSize: 14, lineHeight: 1.65, margin: 0, color: "#2A0F3A", fontWeight: 500 }}>✦ {item}</p>
                           </div>
                         ))}
                       </div>
                     )}
-                    {secImageUrl && <img src={secImageUrl} alt="" style={{ width: "100%", borderRadius: 8, marginTop: 16 }} />}
+                    {secImageUrl && <img src={secImageUrl} alt="" style={{ width: "100%", borderRadius: 12, marginTop: 18 }} />}
                   </div>
                 )}
 
                 {/* Video */}
                 {secType === "video" && (
                   <div>
-                    {secHeading && <h3 style={{ font: "22px var(--font-display)", color: "#2A0F3A", marginBottom: 12 }}>{secHeading}</h3>}
                     {secVideoUrl && (
-                      <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, overflow: "hidden", borderRadius: 8 }}>
+                      <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, overflow: "hidden", borderRadius: 12 }}>
                         <iframe src={secVideoUrl.includes("youtube") ? secVideoUrl.replace("watch?v=", "embed/").replace("youtu.be/", "youtube.com/embed/") : secVideoUrl} style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: 0 }} allowFullScreen loading="lazy" title={secHeading || "Product video"} />
                       </div>
                     )}
                   </div>
                 )}
 
-                {/* CTA */}
                 {secType === "cta" && (
-                  <div style={{ textAlign: "center", padding: "48px 24px", background: "linear-gradient(135deg, #2A0F3A 0%, #190924 100%)", borderRadius: 8, color: "#fff" }}>
+                  <div style={{ textAlign: "center", padding: "52px 24px", background: "linear-gradient(135deg, #2A0F3A 0%, #190924 100%)", borderRadius: 16, color: "#fff", boxShadow: "0 24px 50px -24px rgba(42,15,58,.4)" }}>
                     {secHeading && <h3 style={{ font: "26px var(--font-display)", color: "#D4AF37", marginBottom: 8 }}>{secHeading}</h3>}
                     {secText && <p style={{ fontSize: 15, color: "#f0ede8", marginBottom: 24, maxWidth: 640, margin: "0 auto 24px" }}>{secText}</p>}
                     {secCtaText && (
@@ -835,19 +832,36 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
       {/* ─── RELATED / COMPLEMENTARY FORMULATIONS (NO DUPLICATE STACKING) ─── */}
       {related.length > 0 ? (
         <section style={{ marginTop: 48, marginBottom: 48 }}>
-          <h2 style={{ font: "22px var(--font-display)", color: "#2A0F3A", marginBottom: 20 }}>
-            Complementary Formulations
-          </h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 20 }}>
+          <div style={{ textAlign: "center", marginBottom: 24 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".16em", textTransform: "uppercase", color: "#D4AF37" }}>✦ Complete Your Routine</span>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(22px, 2.6vw, 28px)", color: "#2A0F3A", margin: "6px 0 0" }}>
+              Complementary Formulations
+            </h2>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 18 }}>
             {related.map(p => (
-              <Link href={`/products/${p.slug}`} key={p.id} style={{ textDecoration: "none", color: "inherit", background: "#fff", border: "1px solid var(--line)", padding: 12, borderRadius: 6 }}>
-                <img src={p.image} alt={p.name} style={{ width: "100%", aspectRatio: "1", objectFit: "contain" }} loading="lazy" />
-                <b style={{ display: "block", marginTop: 8, font: "15px var(--font-display)", color: "#2A0F3A" }}>{p.name}</b>
-                <span style={{ display: "inline-flex", alignItems: "baseline", gap: 8 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#997b4d" }}>₹{p.price.toLocaleString("en-IN")}</span>
-                  {p.mrp && p.mrp > p.price && (
-                    <span style={{ fontSize: 12, color: "#94A3B8", textDecoration: "line-through" }}>₹{p.mrp.toLocaleString("en-IN")}</span>
-                  )}
+              <Link
+                href={`/products/${p.slug}`}
+                key={p.id}
+                className="qc-related-card"
+                style={{ textDecoration: "none", color: "inherit", background: "#fff", border: "1px solid var(--line)", borderRadius: 14, overflow: "hidden", display: "flex", flexDirection: "column" }}
+              >
+                <span className="qc-related-media">
+                  { }
+                  <img src={p.image} alt={p.name} loading="lazy" />
+                </span>
+                <span style={{ display: "flex", flexDirection: "column", gap: 6, padding: "14px 16px 16px" }}>
+                  <b style={{ font: "15px var(--font-display)", color: "#2A0F3A", lineHeight: 1.35 }}>{p.name}</b>
+                  <span style={{ display: "inline-flex", alignItems: "baseline", gap: 8 }}>
+                    <span style={{ fontSize: 15, fontWeight: 800, color: "#2A0F3A" }}>₹{p.price.toLocaleString("en-IN")}</span>
+                    {p.mrp && p.mrp > p.price && (
+                      <>
+                        <span style={{ fontSize: 12.5, color: "#94A3B8", textDecoration: "line-through" }}>₹{p.mrp.toLocaleString("en-IN")}</span>
+                        <span style={{ fontSize: 11, fontWeight: 800, color: "#166534" }}>{Math.round(((p.mrp - p.price) / p.mrp) * 100)}% off</span>
+                      </>
+                    )}
+                  </span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#997b4d", letterSpacing: ".04em" }}>View Details →</span>
                 </span>
               </Link>
             ))}

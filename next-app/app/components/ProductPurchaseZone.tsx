@@ -201,7 +201,7 @@ export default function ProductPurchaseZone({
           <span>Statutory GST Invoice</span>
           <span>·</span>
           <span style={{ color: "#15803D", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}>
-            <span>🚚</span> Fast Pan-India Dispatch
+            <span>🚚</span> Check delivery estimate below
           </span>
         </div>
       </div>
