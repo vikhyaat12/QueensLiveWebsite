@@ -1,6 +1,8 @@
 import { json, requireUser } from "@/lib/http";
 import { readdirSync, statSync, existsSync, unlinkSync } from "fs";
-import { join } from "path";
+import { join, resolve, normalize } from "path";
+import { fileDb } from "@/lib/commerce/file-db";
+import { mediaStore } from "@/lib/commerce/store-extensions";
 
 export async function GET() {
   const user = await requireUser(["admin", "employee"]);
@@ -49,15 +51,70 @@ export async function DELETE(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const url = searchParams.get("url");
+  const force = searchParams.get("force") === "true";
+
   if (!url || !url.startsWith("/uploads/")) {
     return json({ error: "Valid /uploads/ URL is required" }, 400);
   }
 
+  const uploadDir = resolve(process.cwd(), "public", "uploads");
+  const safeRelative = normalize(url.replace(/^\/uploads\//, "")).replace(/^(\.\.[\/\\])+/, "");
+  const filePath = resolve(uploadDir, safeRelative);
+
+  // Prevent path traversal outside public/uploads
+  if (!filePath.startsWith(uploadDir)) {
+    return json({ error: "Access denied: Invalid file path." }, 403);
+  }
+
+  // Check references across CMS before deletion unless force=true
+  if (!force) {
+    const references: string[] = [];
+    try {
+      const products = fileDb.findMany("products");
+      products.forEach((p) => {
+        if (p.image === url || p.thumbnail === url || (Array.isArray(p.images) && p.images.includes(url))) {
+          references.push(`Product: ${p.name || p.slug}`);
+        }
+      });
+
+      const sections = fileDb.findMany("homepageSections");
+      sections.forEach((s) => {
+        const str = JSON.stringify(s.content || "");
+        if (str.includes(url)) {
+          references.push(`Homepage Section: ${s.title || s.type}`);
+        }
+      });
+
+      const employees = fileDb.findMany("employees");
+      employees.forEach((e) => {
+        if (e.photo === url || e.image === url) {
+          references.push(`Team Member: ${e.name}`);
+        }
+      });
+
+      const blogPosts = fileDb.findMany("blogPosts");
+      blogPosts.forEach((b) => {
+        if (b.image === url) {
+          references.push(`Blog Post: ${b.title}`);
+        }
+      });
+    } catch { /* proceed if reference check fails */ }
+
+    if (references.length > 0) {
+      return json({
+        error: `Asset is currently in use by ${references.length} item(s): ${references.slice(0, 3).join(", ")}${references.length > 3 ? "..." : ""}. Remove references first or pass force=true to delete.`,
+        inUse: true,
+        references,
+      }, 409);
+    }
+  }
+
   try {
-    const relativePath = url.replace(/^\//, "").replace(/\//g, "\\");
-    const filePath = join(process.cwd(), "public", relativePath);
     if (existsSync(filePath)) {
       unlinkSync(filePath);
+      try {
+        await mediaStore.delete(url);
+      } catch {}
       return json({ success: true, message: "File deleted successfully" });
     }
     return json({ error: "File not found" }, 404);
@@ -65,3 +122,4 @@ export async function DELETE(request: Request) {
     return json({ error: e instanceof Error ? e.message : "Failed to delete file" }, 500);
   }
 }
+

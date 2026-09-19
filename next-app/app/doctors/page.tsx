@@ -2,6 +2,8 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
+import QueensCareHeader from "@/app/components/QueensCareHeader";
+import QueensCareFooter from "@/app/components/QueensCareFooter";
 
 interface DoctorRecord {
   id: string;
@@ -59,19 +61,27 @@ export default function DoctorsPage() {
   };
 
   return (
-    <main className="portal" style={{ maxWidth: 960, margin: "0 auto", padding: "40px 20px" }}>
-      <Link href="/" className="back" style={{ display: "inline-block", marginBottom: 16, color: "var(--purple)", fontSize: 13, textDecoration: "none" }}>
-        ← Back to Queens Care
-      </Link>
-      <p className="eyebrow" style={{ fontSize: 12, fontWeight: 700, letterSpacing: ".15em", textTransform: "uppercase", color: "var(--gold)", margin: "0 0 6px" }}>
-        For Healthcare Professionals
-      </p>
-      <h1 style={{ font: "36px var(--font-display)", color: "#2A0F3A", marginBottom: 12 }}>
-        Doctor &amp; Clinical Advisory Network
-      </h1>
-      <p style={{ color: "var(--muted)", fontSize: 15, lineHeight: 1.8, marginBottom: 36, maxWidth: 760 }}>
-        Queens Care Laboratories collaborates with certified medical practitioners, dermatologists, and clinical pharmacologists to ensure formulations adhere to pharmaceutical rigor, physiological bioavailability, and barrier safety standards.
-      </p>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#fbf9f6" }}>
+      <QueensCareHeader />
+
+      {/* ─── LUXURY CLINICAL HERO BANNER ─── */}
+      <section style={{ background: "linear-gradient(135deg, #180524 0%, #2A0F3A 100%)", color: "#fff", padding: "48px 20px 52px", borderBottom: "1px solid rgba(212,175,55,0.2)" }}>
+        <div style={{ maxWidth: 1120, margin: "0 auto" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "4px 12px", background: "rgba(212,175,55,0.12)", border: "1px solid rgba(212,175,55,0.3)", borderRadius: 20, marginBottom: 14 }}>
+            <span style={{ color: "var(--primary-gold, #D4AF37)", fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+              ✦ Clinical &amp; Medical Affairs Division
+            </span>
+          </div>
+          <h1 style={{ font: "38px var(--font-display, serif)", color: "#fff", letterSpacing: "-0.02em", margin: "0 0 12px" }}>
+            Doctor &amp; Clinical Advisory Network
+          </h1>
+          <p style={{ color: "rgba(255,255,255,0.85)", fontSize: 15, lineHeight: 1.7, maxWidth: 760, margin: 0 }}>
+            Queens Care Laboratories collaborates with certified medical practitioners, dermatologists, and clinical pharmacologists to ensure formulations adhere to pharmaceutical rigor, physiological bioavailability, and barrier safety standards.
+          </p>
+        </div>
+      </section>
+
+      <main style={{ maxWidth: 1120, margin: "0 auto", padding: "36px 20px 60px", width: "100%", boxSizing: "border-box", flex: 1 }}>
 
       {/* ─── PROFESSIONAL COLLABORATION PILLARS ─── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16, marginBottom: 48 }}>
@@ -246,6 +256,8 @@ export default function DoctorsPage() {
           Visit Queens Care Trust Center →
         </Link>
       </div>
-    </main>
+      </main>
+      <QueensCareFooter />
+    </div>
   );
 }

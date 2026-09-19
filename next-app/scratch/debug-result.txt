@@ -1,0 +1,21 @@
+STDOUT:
+==================================================================
+QUEENS CARE — 10-TEST UNIVERSAL MERCHANDISING & CMS ENGINE SUITE
+==================================================================
+✅ PASS: 1. Component Creation, Retrieval, and Updates
+✅ PASS: 2. State Machine: draft/paused components excluded from public customer feed
+✅ PASS: 3. Scheduling: Time-window filtering works authoritatively
+✅ PASS: 4. Targeting Engine: Device and Route filtering
+✅ PASS: 5. Priority Ordering: Highest priority renders first
+✅ PASS: 6. Authoritative Free Shipping: Correct calculation from shipping rules, zero client trust
+✅ PASS: 7. Global Emergency Kill Switches: Master and component toggles work immediately
+✅ PASS: 8. Duplication: Cloning creates independent draft with '(Copy)' suffix
+✅ PASS: 9. Affiliate CMS: Campaign creation, retrieval, and partner attribution
+✅ PASS: 10. Analytics: Impression and click tracking increment counters
+==================================================================
+TEST RUN COMPLETE: 10 PASSED, 0 FAILED
+==================================================================
+
+STDERR:
+
+EXIT: 0

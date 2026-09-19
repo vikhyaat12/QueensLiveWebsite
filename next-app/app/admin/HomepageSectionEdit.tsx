@@ -346,7 +346,7 @@ export default function HomepageSectionEdit({ item, onSave }: Props) {
           </div>
         </div>
 
-        <div style={{ display: "flex", gap: 24, fontSize: 13, alignItems: "center", marginTop: 12 }}>
+        <div style={{ display: "flex", gap: 24, fontSize: 13, alignItems: "center", marginTop: 12, flexWrap: "wrap" }}>
           <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontWeight: 600 }}>
             <input
               type="checkbox"
@@ -355,6 +355,12 @@ export default function HomepageSectionEdit({ item, onSave }: Props) {
             />
             <span>Enable Subtle Motion / Scroll Reveal</span>
           </label>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--muted)" }}>
+            <span>✦ Cursor Mode:</span>
+            <span style={{ fontWeight: 600, color: "#166534", background: "#dcfce7", padding: "2px 8px", borderRadius: 4 }}>
+              Native Browser Cursor (Default)
+            </span>
+          </div>
         </div>
       </div>
 
@@ -683,46 +689,245 @@ export default function HomepageSectionEdit({ item, onSave }: Props) {
       {/* ═══════════════════════════════════════════════════════════════════════ */}
       {form.type === "hero" && (
         <div style={{ marginBottom: 24, padding: 20, background: "#faf8f5", border: "1px solid var(--line)", borderRadius: 6 }}>
-          <h4 style={{ font: "14px var(--font-display)", marginBottom: 14, color: "var(--purple)" }}>Hero Background Image</h4>
-          <GlobalMediaUploader
-            label="Hero Image (optional — if set, replaces the 3D product visual)"
-            preset="banner_desktop"
-            value={String(content.heroImage || "")}
-            onChange={(url) => updateContent("heroImage", url)}
-            folder="homepage"
-          />
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
             <div>
-              <label style={labelStyle}>Or Paste Image URL</label>
-              <input
-                style={inputStyle}
-                value={String(content.heroImage || "")}
-                onChange={(e) => updateContent("heroImage", e.target.value)}
-                placeholder="https://..."
+              <span style={{ fontSize: 10, fontWeight: 700, color: "#D4AF37", textTransform: "uppercase" }}>
+                Cinematic Hero Stage CMS
+              </span>
+              <h4 style={{ font: "16px var(--font-display)", margin: 0, color: "#2A0F3A" }}>
+                Dr. Queens 2.5D Character &amp; 3D Product Controls
+              </h4>
+            </div>
+          </div>
+
+          {/* DR. QUEENS CHARACTER CONTROLS */}
+          <div style={{ background: "#FFFFFF", border: "1px solid var(--line)", borderRadius: 8, padding: 16, marginBottom: 16 }}>
+            <h5 style={{ fontSize: 13, fontWeight: 700, color: "#6D28D9", margin: "0 0 12px", display: "flex", alignItems: "center", gap: 6 }}>
+              <span>🩺</span> Dr. Queens Character Controls
+            </h5>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <GlobalMediaUploader
+                label="Dr. Queens Desktop Cutout (PNG / WebP with transparency)"
+                preset="product_image"
+                value={String(content.doctorImage || "/images/hero/dr-queens-hd.webp")}
+                onChange={(url) => updateContent("doctorImage", url)}
+                folder="hero"
+              />
+              <GlobalMediaUploader
+                label="Dr. Queens Mobile Hero (portrait fallback for small screens)"
+                preset="banner_mobile"
+                value={String(content.mobileDoctorImage || "/images/hero/dr-queens-hd.webp")}
+                onChange={(url) => updateContent("mobileDoctorImage", url)}
+                folder="hero"
               />
             </div>
-            <div>
-              <label style={labelStyle}>Hero Background Color</label>
-              <div style={{ display: "flex", gap: 8 }}>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginTop: 14 }}>
+              <div>
+                <label style={labelStyle}>Doctor Scale: {Number(content.doctorSize || 1.0).toFixed(2)}x</label>
                 <input
-                  type="color"
-                  value={String(content.heroBackground || "#FAF8F5").startsWith("#") ? String(content.heroBackground) : "#FAF8F5"}
-                  onChange={(e) => updateContent("heroBackground", e.target.value)}
-                  style={{ width: 38, height: 38, padding: 0, border: "1px solid var(--line)", borderRadius: 4, cursor: "pointer" }}
+                  type="range"
+                  min="0.6"
+                  max="1.5"
+                  step="0.05"
+                  style={{ width: "100%" }}
+                  value={Number(content.doctorSize || 1.0)}
+                  onChange={(e) => updateContent("doctorSize", parseFloat(e.target.value))}
                 />
+              </div>
+              <div>
+                <label style={labelStyle}>Horizontal Offset: {Number(content.doctorPositionX || 0)}%</label>
                 <input
-                  style={inputStyle}
-                  value={String(content.heroBackground || "")}
-                  onChange={(e) => updateContent("heroBackground", e.target.value)}
-                  placeholder="#FAF8F5"
+                  type="range"
+                  min="-20"
+                  max="30"
+                  step="1"
+                  style={{ width: "100%" }}
+                  value={Number(content.doctorPositionX || 0)}
+                  onChange={(e) => updateContent("doctorPositionX", parseInt(e.target.value, 10))}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Vertical Offset: {Number(content.doctorPositionY || 0)}px</label>
+                <input
+                  type="range"
+                  min="-40"
+                  max="40"
+                  step="2"
+                  style={{ width: "100%" }}
+                  value={Number(content.doctorPositionY || 0)}
+                  onChange={(e) => updateContent("doctorPositionY", parseInt(e.target.value, 10))}
                 />
               </div>
             </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginTop: 14 }}>
+              <div>
+                <label style={labelStyle}>Animation Intensity: {Number(content.doctorAnimIntensity || 1.0).toFixed(1)}x</label>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="2.0"
+                  step="0.1"
+                  style={{ width: "100%" }}
+                  value={Number(content.doctorAnimIntensity || 1.0)}
+                  onChange={(e) => updateContent("doctorAnimIntensity", parseFloat(e.target.value))}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Mouse Parallax Amount: {Number(content.parallaxAmount || 14)}px</label>
+                <input
+                  type="range"
+                  min="0"
+                  max="30"
+                  step="2"
+                  style={{ width: "100%" }}
+                  value={Number(content.parallaxAmount || 14)}
+                  onChange={(e) => updateContent("parallaxAmount", parseInt(e.target.value, 10))}
+                />
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, paddingTop: 18 }}>
+                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 700, cursor: "pointer", color: "#1E1638" }}>
+                  <input
+                    type="checkbox"
+                    checked={content.doctorAnimEnabled !== false}
+                    onChange={(e) => updateContent("doctorAnimEnabled", e.target.checked)}
+                  />
+                  <span>Lifelike Motion &amp; Eye Blinking Active</span>
+                </label>
+              </div>
+            </div>
           </div>
-          <div style={{ marginTop: 8, padding: 10, background: content.heroImage ? "#e9f7e9" : "#fff7e6", border: "1px solid " + (content.heroImage ? "#c3e6cb" : "#f5d6a0"), borderRadius: 4, fontSize: 12, color: content.heroImage ? "#2e7d32" : "#92400e" }}>
-            {content.heroImage ? "Image set — will display instead of 3D product visual. Clear the field to restore 3D visual." : "No hero image set — the 3D product visual (LUMINE-C) is shown by default."}
+
+          {/* FLAGSHIP PRODUCT BOTTLE CONTROLS */}
+          <div style={{ background: "#FFFFFF", border: "1px solid var(--line)", borderRadius: 8, padding: 16, marginBottom: 16 }}>
+            <h5 style={{ fontSize: 13, fontWeight: 700, color: "#D4AF37", margin: "0 0 12px", display: "flex", alignItems: "center", gap: 6 }}>
+              <span>💊</span> Flagship Product 2.5D / 3D Stage Controls
+            </h5>
+            <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr 1fr", gap: 12 }}>
+              <GlobalMediaUploader
+                label="Product Bottle Cutout (PNG / WebP transparent)"
+                preset="product_image"
+                value={String(content.heroProductImage || "/images/hero/immune-support-bottle-hd.webp")}
+                onChange={(url) => updateContent("heroProductImage", url)}
+                folder="hero"
+              />
+              <div>
+                <label style={labelStyle}>Product Display Title</label>
+                <input
+                  style={inputStyle}
+                  value={String(content.productName || "Immune Support+")}
+                  onChange={(e) => updateContent("productName", e.target.value)}
+                  placeholder="Immune Support+"
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Product Link Slug</label>
+                <input
+                  style={inputStyle}
+                  value={String(content.productSlug || "immune-care-plus")}
+                  onChange={(e) => updateContent("productSlug", e.target.value)}
+                  placeholder="immune-care-plus"
+                />
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12, marginTop: 14 }}>
+              <div>
+                <label style={labelStyle}>Product Scale: {Number(content.productScale || 1.0).toFixed(2)}x</label>
+                <input
+                  type="range"
+                  min="0.6"
+                  max="1.5"
+                  step="0.05"
+                  style={{ width: "100%" }}
+                  value={Number(content.productScale || 1.0)}
+                  onChange={(e) => updateContent("productScale", parseFloat(e.target.value))}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Rotation Angle: {Number(content.productRotation || 0)}°</label>
+                <input
+                  type="range"
+                  min="-30"
+                  max="30"
+                  step="2"
+                  style={{ width: "100%" }}
+                  value={Number(content.productRotation || 0)}
+                  onChange={(e) => updateContent("productRotation", parseInt(e.target.value, 10))}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Horizontal Offset: {Number(content.productPositionX || 0)}%</label>
+                <input
+                  type="range"
+                  min="-20"
+                  max="20"
+                  step="1"
+                  style={{ width: "100%" }}
+                  value={Number(content.productPositionX || 0)}
+                  onChange={(e) => updateContent("productPositionX", parseInt(e.target.value, 10))}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Vertical Offset: {Number(content.productPositionY || 0)}px</label>
+                <input
+                  type="range"
+                  min="-40"
+                  max="40"
+                  step="2"
+                  style={{ width: "100%" }}
+                  value={Number(content.productPositionY || 0)}
+                  onChange={(e) => updateContent("productPositionY", parseInt(e.target.value, 10))}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 20, fontSize: 12, alignItems: "center", marginTop: 14 }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 700, cursor: "pointer", color: "#1E1638" }}>
+                <input
+                  type="checkbox"
+                  checked={content.product3DEnabled !== false}
+                  onChange={(e) => updateContent("product3DEnabled", e.target.checked)}
+                />
+                <span>3D Perspective Tilt, Specular Sheen &amp; Vitamin Orbit</span>
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 700, cursor: "pointer", color: "#1E1638" }}>
+                <input
+                  type="checkbox"
+                  checked={content.particleCanvasEnabled !== false}
+                  onChange={(e) => updateContent("particleCanvasEnabled", e.target.checked)}
+                />
+                <span>Three.js Sparkling Ambient Particle Canvas</span>
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 700, cursor: "pointer", color: "#6D28D9" }}>
+                <input
+                  type="checkbox"
+                  checked={content.introAnimationEnabled !== false}
+                  onChange={(e) => updateContent("introAnimationEnabled", e.target.checked)}
+                />
+                <span>5-Phase Cinematic Intro Sequence (Awaken → Speak)</span>
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 700, cursor: "pointer", color: "#6D28D9" }}>
+                <input
+                  type="checkbox"
+                  checked={content.idleAnimationEnabled !== false}
+                  onChange={(e) => updateContent("idleAnimationEnabled", e.target.checked)}
+                />
+                <span>Subtle Lifelike Idle Animation (Breathing &amp; Tablet)</span>
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 700, cursor: "pointer", color: "#6D28D9" }}>
+                <input
+                  type="checkbox"
+                  checked={content.speechBubbleEnabled !== false}
+                  onChange={(e) => updateContent("speechBubbleEnabled", e.target.checked)}
+                />
+                <span>Dr. Queens Interactive Speech Bubble</span>
+              </label>
+            </div>
           </div>
-          <h4 style={{ font: "14px var(--font-display)", marginTop: 20, marginBottom: 14, color: "var(--purple)" }}>Hero Copy & Calls to Action</h4>
+
+          <h4 style={{ font: "14px var(--font-display)", marginTop: 20, marginBottom: 14, color: "var(--purple)" }}>Hero Copy &amp; Calls to Action</h4>
           <div style={{ display: "grid", gap: 12 }}>
             <div>
               <label style={labelStyle}>Eyebrow Subheading</label>
@@ -778,17 +983,185 @@ export default function HomepageSectionEdit({ item, onSave }: Props) {
                   style={inputStyle}
                   value={String(content.secondaryText || "")}
                   onChange={(e) => updateContent("secondaryText", e.target.value)}
-                  placeholder="How we formulate"
+                  placeholder="Watch Our Story"
                 />
               </div>
               <div>
-                <label style={labelStyle}>Secondary Link Destination</label>
+                <label style={labelStyle}>Secondary Link Destination / Video URL</label>
                 <input
                   style={inputStyle}
-                  value={String(content.secondaryLink || "")}
-                  onChange={(e) => updateContent("secondaryLink", e.target.value)}
-                  placeholder="/#science"
+                  value={String(content.heroVideoUrl || content.videoUrl || content.secondaryLink || "")}
+                  onChange={(e) => {
+                    updateContent("heroVideoUrl", e.target.value);
+                    updateContent("secondaryLink", e.target.value);
+                  }}
+                  placeholder="https://www.youtube.com/watch?v=... or /#science"
                 />
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div>
+                <label style={labelStyle}>Watch Our Story Video URL</label>
+                <input
+                  style={inputStyle}
+                  value={String(content.heroVideoUrl || content.videoUrl || "")}
+                  onChange={(e) => updateContent("heroVideoUrl", e.target.value)}
+                  placeholder="https://www.youtube.com/watch?v=... or .mp4"
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Video Modal Title</label>
+                <input
+                  style={inputStyle}
+                  value={String(content.heroVideoTitle || "")}
+                  onChange={(e) => updateContent("heroVideoTitle", e.target.value)}
+                  placeholder="Queens Care Laboratories — Our Story"
+                />
+              </div>
+            </div>
+
+            {/* HERO TRUST BADGES (4 PILLS UNDER CTAS) */}
+            <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--line)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <label style={{ ...labelStyle, margin: 0 }}>
+                  Hero Trust Badges (4 Pills Under CTAs)
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const curr = Array.isArray(content.trustBadges) && content.trustBadges.length > 0
+                      ? [...content.trustBadges]
+                      : [
+                          { icon: "🔬", label: "Clinically Inspired" },
+                          { icon: "🛡️", label: "Safe & Effective" },
+                          { icon: "👥", label: "Trusted by Millions" },
+                          { icon: "🩺", label: "Doctor Recommended" },
+                        ];
+                    curr.push({ icon: "✦", label: "New Trust Signal" });
+                    updateContent("trustBadges", curr);
+                  }}
+                  style={{ padding: "3px 8px", fontSize: 11, background: "var(--purple)", color: "#fff", border: "none", borderRadius: 3, cursor: "pointer" }}
+                >
+                  + Add Badge
+                </button>
+              </div>
+              {((Array.isArray(content.trustBadges) && content.trustBadges.length > 0
+                ? content.trustBadges
+                : [
+                    { icon: "🔬", label: "Clinically Inspired" },
+                    { icon: "🛡️", label: "Safe & Effective" },
+                    { icon: "👥", label: "Trusted by Millions" },
+                    { icon: "🩺", label: "Doctor Recommended" },
+                  ]
+              ) as Array<{ icon: string; label: string }>).map((b, bIdx) => (
+                <div key={bIdx} style={{ display: "grid", gridTemplateColumns: "60px 1fr 30px", gap: 8, marginBottom: 6, alignItems: "center" }}>
+                  <input
+                    style={inputStyle}
+                    value={b.icon || ""}
+                    onChange={(e) => {
+                      const curr = Array.isArray(content.trustBadges) && content.trustBadges.length > 0
+                        ? [...content.trustBadges]
+                        : [
+                            { icon: "🔬", label: "Clinically Inspired" },
+                            { icon: "🛡️", label: "Safe & Effective" },
+                            { icon: "👥", label: "Trusted by Millions" },
+                            { icon: "🩺", label: "Doctor Recommended" },
+                          ];
+                      curr[bIdx] = { ...curr[bIdx], icon: e.target.value };
+                      updateContent("trustBadges", curr);
+                    }}
+                    placeholder="🔬"
+                  />
+                  <input
+                    style={inputStyle}
+                    value={b.label || ""}
+                    onChange={(e) => {
+                      const curr = Array.isArray(content.trustBadges) && content.trustBadges.length > 0
+                        ? [...content.trustBadges]
+                        : [
+                            { icon: "🔬", label: "Clinically Inspired" },
+                            { icon: "🛡️", label: "Safe & Effective" },
+                            { icon: "👥", label: "Trusted by Millions" },
+                            { icon: "🩺", label: "Doctor Recommended" },
+                          ];
+                      curr[bIdx] = { ...curr[bIdx], label: e.target.value };
+                      updateContent("trustBadges", curr);
+                    }}
+                    placeholder="Badge Label"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const curr = (Array.isArray(content.trustBadges) && content.trustBadges.length > 0
+                        ? content.trustBadges
+                        : [
+                            { icon: "🔬", label: "Clinically Inspired" },
+                            { icon: "🛡️", label: "Safe & Effective" },
+                            { icon: "👥", label: "Trusted by Millions" },
+                            { icon: "🩺", label: "Doctor Recommended" },
+                          ]
+                      ).filter((_, i) => i !== bIdx);
+                      updateContent("trustBadges", curr);
+                    }}
+                    style={{ padding: "4px 6px", fontSize: 10, background: "#ffebee", color: "#c62828", border: "1px solid #ffcdd2", cursor: "pointer" }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* BRAND CURSIVE SIGNATURE */}
+            <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--line)" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div>
+                  <label style={labelStyle}>Brand Cursive Script Message</label>
+                  <textarea
+                    style={{ ...inputStyle, minHeight: 60 }}
+                    value={String(
+                      typeof content.brandSignature === "object" && (content.brandSignature as any)?.text !== undefined
+                        ? (content.brandSignature as any).text
+                        : "Care\nToday ✦\nBrighter\nTomorrows 💖"
+                    )}
+                    onChange={(e) =>
+                      updateContent("brandSignature", {
+                        ...(typeof content.brandSignature === "object" ? content.brandSignature : {}),
+                        text: e.target.value,
+                        visible: true,
+                      })
+                    }
+                    placeholder="Care Today ✦ Brighter Tomorrows 💖"
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>Cursive Script Color</label>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <input
+                      type="color"
+                      value={String((content.brandSignature as any)?.color || "#BE185D").startsWith("#") ? String((content.brandSignature as any)?.color || "#BE185D") : "#BE185D"}
+                      onChange={(e) =>
+                        updateContent("brandSignature", {
+                          ...(typeof content.brandSignature === "object" ? content.brandSignature : {}),
+                          color: e.target.value,
+                          visible: true,
+                        })
+                      }
+                      style={{ width: 44, height: 38, padding: 0, border: "1px solid var(--line)", cursor: "pointer", borderRadius: 4 }}
+                    />
+                    <input
+                      style={inputStyle}
+                      value={String((content.brandSignature as any)?.color || "#BE185D")}
+                      onChange={(e) =>
+                        updateContent("brandSignature", {
+                          ...(typeof content.brandSignature === "object" ? content.brandSignature : {}),
+                          color: e.target.value,
+                          visible: true,
+                        })
+                      }
+                    />
+                  </div>
+                </div>
               </div>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
@@ -1161,6 +1534,119 @@ export default function HomepageSectionEdit({ item, onSave }: Props) {
                   onChange={(e) => updateContent("ctaLink", e.target.value)}
                   placeholder="/about"
                 />
+              </div>
+            </div>
+
+            {/* SCIENCE RESULTS CARD & VIDEO CONTROLS */}
+            <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--line)" }}>
+              <h5 style={{ fontSize: 13, fontWeight: 700, color: "#4338CA", margin: "0 0 10px" }}>
+                Interactive Science Documentary Card &amp; Badges
+              </h5>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div>
+                  <label style={labelStyle}>Documentary Video URL (Play Button)</label>
+                  <input
+                    style={inputStyle}
+                    value={String(content.scienceVideoUrl || content.videoUrl || "")}
+                    onChange={(e) => updateContent("scienceVideoUrl", e.target.value)}
+                    placeholder="https://www.youtube.com/watch?v=... or .mp4"
+                  />
+                </div>
+                <div>
+                  <GlobalMediaUploader
+                    label="Laboratory Visual Image (Right Column)"
+                    preset="product_image"
+                    value={String(content.labImage || "/images/reference/science-lab-hd.webp")}
+                    onChange={(url) => updateContent("labImage", url)}
+                    folder="science"
+                  />
+                </div>
+              </div>
+
+              {/* Science Card Badges */}
+              <div style={{ marginTop: 10 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                  <label style={{ ...labelStyle, margin: 0 }}>
+                    Science Benefit Badges
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const curr = Array.isArray(content.badges) && content.badges.length > 0
+                        ? [...content.badges]
+                        : [
+                            { icon: "🛡️", text: "Transparent Ingredients" },
+                            { icon: "🔬", text: "Clinically Researched" },
+                            { icon: "✦", text: "Quality Assured" },
+                          ];
+                      curr.push({ icon: "✦", text: "New Benefit" });
+                      updateContent("badges", curr);
+                    }}
+                    style={{ padding: "3px 8px", fontSize: 11, background: "var(--purple)", color: "#fff", border: "none", borderRadius: 3, cursor: "pointer" }}
+                  >
+                    + Add Badge
+                  </button>
+                </div>
+                {((Array.isArray(content.badges) && content.badges.length > 0
+                  ? content.badges
+                  : [
+                      { icon: "🛡️", text: "Transparent Ingredients" },
+                      { icon: "🔬", text: "Clinically Researched" },
+                      { icon: "✦", text: "Quality Assured" },
+                    ]
+                ) as Array<{ icon: string; text: string }>).map((b, bIdx) => (
+                  <div key={bIdx} style={{ display: "grid", gridTemplateColumns: "60px 1fr 30px", gap: 8, marginBottom: 6, alignItems: "center" }}>
+                    <input
+                      style={inputStyle}
+                      value={b.icon || ""}
+                      onChange={(e) => {
+                        const curr = Array.isArray(content.badges) && content.badges.length > 0
+                          ? [...content.badges]
+                          : [
+                              { icon: "🛡️", text: "Transparent Ingredients" },
+                              { icon: "🔬", text: "Clinically Researched" },
+                              { icon: "✦", text: "Quality Assured" },
+                            ];
+                        curr[bIdx] = { ...curr[bIdx], icon: e.target.value };
+                        updateContent("badges", curr);
+                      }}
+                      placeholder="🔬"
+                    />
+                    <input
+                      style={inputStyle}
+                      value={b.text || ""}
+                      onChange={(e) => {
+                        const curr = Array.isArray(content.badges) && content.badges.length > 0
+                          ? [...content.badges]
+                          : [
+                              { icon: "🛡️", text: "Transparent Ingredients" },
+                              { icon: "🔬", text: "Clinically Researched" },
+                              { icon: "✦", text: "Quality Assured" },
+                            ];
+                        curr[bIdx] = { ...curr[bIdx], text: e.target.value };
+                        updateContent("badges", curr);
+                      }}
+                      placeholder="Badge Text"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const curr = (Array.isArray(content.badges) && content.badges.length > 0
+                          ? content.badges
+                          : [
+                              { icon: "🛡️", text: "Transparent Ingredients" },
+                              { icon: "🔬", text: "Clinically Researched" },
+                              { icon: "✦", text: "Quality Assured" },
+                            ]
+                        ).filter((_, i) => i !== bIdx);
+                        updateContent("badges", curr);
+                      }}
+                      style={{ padding: "4px 6px", fontSize: 10, background: "#ffebee", color: "#c62828", border: "1px solid #ffcdd2", cursor: "pointer" }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -1613,6 +2099,75 @@ export default function HomepageSectionEdit({ item, onSave }: Props) {
             <div>
               <label style={labelStyle}>Success Message</label>
               <input style={inputStyle} value={String(content.successMessage || "")} onChange={(e) => updateContent("successMessage", e.target.value)} placeholder="Welcome to the care letter." />
+            </div>
+
+            {/* JOURNAL ARTICLE GRID OVERRIDE */}
+            <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--line)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <label style={{ ...labelStyle, margin: 0 }}>
+                  Journal Cards ({(Array.isArray(content.articles) ? content.articles : []).length} Custom Articles — defaults to Blog if empty)
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const curr = Array.isArray(content.articles) ? [...content.articles] : [];
+                    curr.push({
+                      tag: "SCIENCE",
+                      title: "New Article Title",
+                      slug: "article-slug",
+                      img: "/images/reference/blog-science-hd.jpg",
+                    });
+                    updateContent("articles", curr);
+                  }}
+                  style={{ padding: "3px 8px", fontSize: 11, background: "var(--purple)", color: "#fff", border: "none", borderRadius: 3, cursor: "pointer" }}
+                >
+                  + Add Article
+                </button>
+              </div>
+              {(Array.isArray(content.articles) ? content.articles : []).map((art: any, artIdx: number) => (
+                <div key={artIdx} style={{ display: "grid", gridTemplateColumns: "100px 1fr 120px 30px", gap: 8, marginBottom: 8, alignItems: "center" }}>
+                  <input
+                    style={inputStyle}
+                    value={art.tag || ""}
+                    onChange={(e) => {
+                      const curr = [...(content.articles as any[])];
+                      curr[artIdx] = { ...curr[artIdx], tag: e.target.value };
+                      updateContent("articles", curr);
+                    }}
+                    placeholder="TAG"
+                  />
+                  <input
+                    style={inputStyle}
+                    value={art.title || ""}
+                    onChange={(e) => {
+                      const curr = [...(content.articles as any[])];
+                      curr[artIdx] = { ...curr[artIdx], title: e.target.value };
+                      updateContent("articles", curr);
+                    }}
+                    placeholder="Article Headline"
+                  />
+                  <input
+                    style={inputStyle}
+                    value={art.slug || ""}
+                    onChange={(e) => {
+                      const curr = [...(content.articles as any[])];
+                      curr[artIdx] = { ...curr[artIdx], slug: e.target.value };
+                      updateContent("articles", curr);
+                    }}
+                    placeholder="slug"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const curr = (content.articles as any[]).filter((_, i) => i !== artIdx);
+                      updateContent("articles", curr);
+                    }}
+                    style={{ padding: "4px 6px", fontSize: 10, background: "#ffebee", color: "#c62828", border: "1px solid #ffcdd2", cursor: "pointer" }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
         </div>

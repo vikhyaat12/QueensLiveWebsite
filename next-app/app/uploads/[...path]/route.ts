@@ -35,11 +35,12 @@ export async function GET(
     // Sanitize path to prevent directory traversal
     const safeSubPath = normalize(pathSegments.join("/")).replace(/^(\.\.[\/\\])+/, "");
 
-    // Search locations: 1) public/uploads, 2) data/uploads, 3) public
+    // Search locations strictly scoped to uploads directories
+    const uploadsDir = join(/*turbopackIgnore: true*/ process.cwd(), "public", "uploads");
+    const dataUploadsDir = join(/*turbopackIgnore: true*/ process.cwd(), "data", "uploads");
     const candidatePaths = [
-      join(/*turbopackIgnore: true*/ process.cwd(), "public", "uploads", safeSubPath),
-      join(/*turbopackIgnore: true*/ process.cwd(), "data", "uploads", safeSubPath),
-      join(/*turbopackIgnore: true*/ process.cwd(), "public", safeSubPath),
+      join(uploadsDir, safeSubPath),
+      join(dataUploadsDir, safeSubPath),
     ];
 
     let foundPath = "";

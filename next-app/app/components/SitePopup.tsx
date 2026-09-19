@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { addToCart } from "@/lib/client-cart";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 export type PopupButton = {
   id: string;
@@ -211,9 +212,6 @@ export default function SitePopup() {
   const popupRef = useRef<HTMLDivElement>(null);
   const hasLoggedImpression = useRef(false);
 
-  // Skip admin pages entirely
-  if (pathname?.startsWith("/admin")) return null;
-
   // Track event helper
   const trackAction = useCallback((id: string, action: "impression" | "click" | "close") => {
     try {
@@ -388,6 +386,7 @@ export default function SitePopup() {
 
   // Main loader and trigger evaluator
   useEffect(() => {
+    if (pathname?.startsWith("/admin")) return;
     let cancelled = false;
     let cleanupTrigger: (() => void) | null = null;
     hasLoggedImpression.current = false;
@@ -566,12 +565,12 @@ export default function SitePopup() {
     }
 
     if (btn.actionType === "phone" && btn.url) {
-      window.location.href = `tel:${btn.url}`;
+      window.location.assign(`tel:${btn.url}`);
       return;
     }
 
     if (btn.actionType === "email" && btn.url) {
-      window.location.href = `mailto:${btn.url}`;
+      window.location.assign(`mailto:${btn.url}`);
       return;
     }
 
@@ -612,7 +611,7 @@ export default function SitePopup() {
     }
   };
 
-  if (!popup || !visible) return null;
+  if (pathname?.startsWith("/admin") || !popup || !visible) return null;
 
   // Resolve active media
   const mediaUrl = popup.mediaType === "video" ? (popup.videoUrl || "") : (popup.imageUrl || "");
@@ -938,7 +937,7 @@ export default function SitePopup() {
               {/* Heading */}
               {popup.heading && (
                 <h3
-                  dangerouslySetInnerHTML={{ __html: popup.heading }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(popup.heading) }}
                   style={{
                     margin: "0 0 10px",
                     fontSize: popup.headingSize || 24,

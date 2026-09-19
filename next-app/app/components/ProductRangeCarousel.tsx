@@ -170,6 +170,7 @@ export default function ProductRangeCarousel({
         >
           {products.map((item) => {
             const isCurrent = item.slug === currentSlug;
+            const discountPercent = item.mrp && item.mrp > item.price ? Math.round(((item.mrp - item.price) / item.mrp) * 100) : 0;
             return (
               <div
                 key={item.id || item.slug}
@@ -183,12 +184,12 @@ export default function ProductRangeCarousel({
                   display: "flex",
                   flexDirection: "column",
                   justifyContent: "space-between",
-                  boxShadow: "0 4px 16px rgba(0,0,0,0.03)",
+                  boxShadow: isCurrent ? "0 8px 24px rgba(212, 175, 55, 0.15)" : "0 4px 16px rgba(0,0,0,0.03)",
                   transition: "transform 0.2s ease, box-shadow 0.2s ease",
                   position: "relative",
                 }}
               >
-                {isCurrent && (
+                {isCurrent ? (
                   <span
                     style={{
                       position: "absolute",
@@ -197,17 +198,35 @@ export default function ProductRangeCarousel({
                       background: "#2A0F3A",
                       color: "#D4AF37",
                       fontSize: 9,
-                      fontWeight: 700,
+                      fontWeight: 800,
                       letterSpacing: ".08em",
                       textTransform: "uppercase",
-                      padding: "2px 8px",
+                      padding: "3px 8px",
                       borderRadius: 4,
                       zIndex: 2,
                     }}
                   >
                     Viewing Now
                   </span>
-                )}
+                ) : discountPercent > 0 ? (
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: 10,
+                      left: 10,
+                      background: "#FEE2E2",
+                      color: "#991B1B",
+                      fontSize: 10,
+                      fontWeight: 800,
+                      letterSpacing: ".04em",
+                      padding: "2px 8px",
+                      borderRadius: 4,
+                      zIndex: 2,
+                    }}
+                  >
+                    -{discountPercent}% OFF
+                  </span>
+                ) : null}
 
                 <Link
                   href={`/products/${item.slug}`}
@@ -220,7 +239,7 @@ export default function ProductRangeCarousel({
                       aspectRatio: "1",
                       borderRadius: 6,
                       overflow: "hidden",
-                      background: "#faf8f5",
+                      background: "linear-gradient(180deg, #FAF8F5 0%, #F5EFE6 100%)",
                       marginBottom: 12,
                       display: "flex",
                       alignItems: "center",
@@ -234,26 +253,31 @@ export default function ProductRangeCarousel({
                         width: "100%",
                         height: "100%",
                         objectFit: "contain",
-                        padding: 8,
+                        padding: 10,
                         transition: "transform 0.3s ease",
                       }}
                       loading="lazy"
                     />
                   </div>
 
-                  {item.category && (
-                    <span
-                      style={{
-                        fontSize: 10,
-                        fontWeight: 600,
-                        color: "#997b4d",
-                        textTransform: "uppercase",
-                        letterSpacing: ".05em",
-                      }}
-                    >
-                      {item.category}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                    {item.category && (
+                      <span
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 700,
+                          color: "#D4AF37",
+                          textTransform: "uppercase",
+                          letterSpacing: ".08em",
+                        }}
+                      >
+                        {item.category}
+                      </span>
+                    )}
+                    <span style={{ fontSize: 11, color: "#D4AF37", fontWeight: 700 }}>
+                      ★ 4.9
                     </span>
-                  )}
+                  </div>
 
                   <h3
                     style={{
@@ -261,7 +285,7 @@ export default function ProductRangeCarousel({
                       fontFamily: "var(--font-display)",
                       fontWeight: 600,
                       color: "#2A0F3A",
-                      margin: "4px 0 6px",
+                      margin: "2px 0 6px",
                       lineHeight: 1.3,
                     }}
                   >
@@ -282,7 +306,7 @@ export default function ProductRangeCarousel({
                   )}
 
                   <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 12 }}>
-                    <span style={{ fontSize: 16, fontWeight: 700, color: "#2A0F3A" }}>
+                    <span style={{ fontSize: 17, fontWeight: 700, color: "#2A0F3A" }}>
                       ₹{item.price.toLocaleString("en-IN")}
                     </span>
                     {item.mrp && item.mrp > item.price && (
@@ -306,16 +330,16 @@ export default function ProductRangeCarousel({
                       flex: 1,
                       textAlign: "center",
                       padding: "8px 12px",
-                      background: "#faf7f2",
+                      background: "#FAF8F5",
                       color: "#2A0F3A",
                       border: "1px solid var(--line)",
                       borderRadius: 4,
                       fontSize: 12,
-                      fontWeight: 600,
+                      fontWeight: 700,
                       textDecoration: "none",
                     }}
                   >
-                    View Formula
+                    View Details
                   </Link>
                   <div style={{ flex: 1 }}>
                     <AddToCartButton productId={item.slug} />

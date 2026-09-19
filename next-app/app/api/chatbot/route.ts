@@ -1,6 +1,7 @@
 import { json } from "@/lib/http";
 import { store } from "@/lib/commerce/store";
 import { fileDb } from "@/lib/commerce/file-db";
+import { supportStore } from "@/lib/support/support-store";
 
 /* ═══════════════════════════════════════════════════════════════
    CHATBOT API — Product-aware assistant using site data
@@ -126,6 +127,20 @@ export async function POST(request: Request) {
         response: "I'm sorry, but I cannot provide medical diagnoses, prescriptions, or clinical advice. Please consult a qualified healthcare professional for medical concerns.\n\nI can help you with product information, ingredients, benefits, and website navigation.",
         products: [],
       });
+    }
+
+    // If conversationId is provided, integrate with supportStore
+    const conversationId = body.conversationId ? String(body.conversationId) : null;
+    if (conversationId) {
+      const conv = supportStore.getConversation(conversationId);
+      if (conv) {
+        const result = await supportStore.addCustomerMessage(conversationId, message);
+        return json({
+          response: result.assistantMsg?.content || "Message received by our support team.",
+          products: result.assistantMsg?.products || [],
+          conversation: result.conversation,
+        });
+      }
     }
 
     // Load product data

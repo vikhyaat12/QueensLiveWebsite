@@ -194,8 +194,8 @@ export default function Hero3DProductVisual({
   lightingIntensity = 1.6,
   accentColor = "#D4AF37",
   bgEffect = "studio",
-  customImageUrl = "/uploads/liko-q-suspension.png",
-  customModelUrl = "",
+  customImageUrl = "",
+  customModelUrl,
   height = 480,
   showInfoPlate = false,
 }: Hero3DProductVisualProps) {
@@ -205,7 +205,7 @@ export default function Hero3DProductVisual({
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
 
-  const isImageMode = Boolean(customImageUrl && !customModelUrl);
+  const isImageMode = Boolean(customImageUrl && customImageUrl.trim() && !customModelUrl);
 
   useEffect(() => {
     if (isImageMode) return;
@@ -226,7 +226,7 @@ export default function Hero3DProductVisual({
     try {
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setSize(width, h);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
       renderer.shadowMap.enabled = true;
       mount.appendChild(renderer.domElement);
     } catch {
@@ -525,20 +525,23 @@ export default function Hero3DProductVisual({
 
     const handleResize = () => {
       if (!mount) return;
-      const newW = mount.clientWidth;
-      camera.aspect = newW / h;
+      const newW = mount.clientWidth || 420;
+      const newH = typeof height === "number" ? height : (mount.clientHeight || 480);
+      camera.aspect = newW / newH;
       camera.updateProjectionMatrix();
-      renderer.setSize(newW, h);
+      renderer.setSize(newW, newH);
     };
     window.addEventListener("resize", handleResize);
 
-    // Animation Loop
+    // Animation Loop with Viewport Visibility Observer
     let animationFrameId: number;
-    const clock = new THREE.Clock();
+    const startTime = performance.now();
+    let isVisible = true;
 
     const animate = () => {
+      if (!isVisible || isDisposed) return;
       animationFrameId = requestAnimationFrame(animate);
-      const t = clock.getElapsedTime();
+      const t = (performance.now() - startTime) * 0.001;
 
       if (autoRotate && !isDragging && !prefersReducedMotion) {
         targetRotationY += 0.005 * (Number(rotationSpeed) || 1.0);
@@ -557,10 +560,37 @@ export default function Hero3DProductVisual({
       renderer.render(scene, camera);
     };
 
+    // Render initial frame immediately
+    renderer.render(scene, camera);
+
+    let observer: IntersectionObserver | null = null;
+    if (typeof IntersectionObserver !== "undefined") {
+      observer = new IntersectionObserver(
+        (entries) => {
+          const entry = entries[0];
+          const rect = entry ? entry.boundingClientRect : null;
+          const isNearViewport = rect ? (rect.bottom > -200 && rect.top < ((typeof window !== "undefined" ? window.innerHeight : 900) + 200)) : true;
+          const visible = (entry ? entry.isIntersecting : true) || isNearViewport;
+          if (visible && !isVisible) {
+            isVisible = true;
+            animate();
+          } else if (!visible && isVisible) {
+            isVisible = false;
+            cancelAnimationFrame(animationFrameId);
+          }
+        },
+        { rootMargin: "200px" }
+      );
+      observer.observe(mount);
+    }
+
     animate();
 
     return () => {
       isDisposed = true;
+      if (observer) {
+        observer.disconnect();
+      }
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener("resize", handleResize);
       domElement.removeEventListener("mousedown", onMouseDown);
@@ -643,13 +673,18 @@ export default function Hero3DProductVisual({
           ref={mountRef}
           style={{ width: "100%", height: "100%", cursor: isInteracting ? "grabbing" : "grab" }}
         />
-      ) : customImageUrl ? (
+      ) : (
         <img
-          src={customImageUrl}
+          src={customImageUrl || "/images/hero/likoq-bottle-clean.png"}
           alt={productName}
-          style={{ maxHeight: "80%", objectFit: "contain" }}
+          style={{
+            maxHeight: typeof height === "number" ? height : 440,
+            maxWidth: "90%",
+            objectFit: "contain",
+            filter: "drop-shadow(0 18px 36px rgba(42, 15, 58, 0.18))",
+          }}
         />
-      ) : null}
+      )}
 
       {/* Floating Clinical Product Label Overlay - only when requested */}
       {showInfoPlate && (

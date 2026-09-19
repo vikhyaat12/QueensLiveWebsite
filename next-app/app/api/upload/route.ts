@@ -1,16 +1,14 @@
 import { json, requireUser } from "@/lib/http";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
-import { existsSync, statSync } from "fs";
 import { mediaStore } from "@/lib/commerce/store-extensions";
-
-const UPLOAD_DIR = join(process.cwd(), "public", "uploads");
+import { storageProvider } from "@/lib/storage/storage-provider";
 
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml", "image/avif"];
 const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime", "video/x-matroska"];
-const ALLOWED_TYPES = [...ALLOWED_IMAGE_TYPES, ...ALLOWED_VIDEO_TYPES];
+const ALLOWED_3D_TYPES = ["model/gltf-binary", "model/gltf+json", "application/octet-stream", "application/json"];
+const ALLOWED_TYPES = [...ALLOWED_IMAGE_TYPES, ...ALLOWED_VIDEO_TYPES, ...ALLOWED_3D_TYPES];
 const MAX_IMAGE_SIZE = 15 * 1024 * 1024; // 15MB
 const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
+const MAX_3D_SIZE = 50 * 1024 * 1024; // 50MB
 
 function detectImageDimensions(buffer: Buffer, ext: string): { width: number; height: number } | null {
   try {
@@ -93,6 +91,23 @@ function isGifAnimated(buffer: Buffer): boolean {
   return false;
 }
 
+function sanitizeSvg(buffer: Buffer): boolean {
+  const content = buffer.toString("utf8");
+  const dangerousPatterns = [
+    /<script/i,
+    /javascript:/i,
+    /data:text\/html/i,
+    /<foreignObject/i,
+    /on\w+\s*=/i,
+    /<!ENTITY/i,
+    /<!DOCTYPE/i,
+    /<iframe/i,
+    /<object/i,
+    /<embed/i,
+  ];
+  return !dangerousPatterns.some((pattern) => pattern.test(content));
+}
+
 export async function POST(request: Request) {
   const user = await requireUser(["admin", "employee"]);
   if (!user) return json({ error: "Unauthorized" }, 401);
@@ -100,15 +115,11 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData();
     const files = formData.getAll("files") as File[];
-    const folder = (formData.get("folder") as string) || "general";
+    const rawFolder = (formData.get("folder") as string) || "general";
+    const folder = rawFolder.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 40) || "general";
 
     if (!files || files.length === 0) {
       return json({ error: "No files provided" }, 400);
-    }
-
-    const folderPath = join(UPLOAD_DIR, folder);
-    if (!existsSync(folderPath)) {
-      await mkdir(folderPath, { recursive: true });
     }
 
     const results: Array<{
@@ -120,25 +131,34 @@ export async function POST(request: Request) {
     for (const file of files) {
       const ext = file.name.split(".").pop()?.toLowerCase() || "";
       const mime = file.type || "";
-      const isImage = ALLOWED_IMAGE_TYPES.includes(mime) || ["jpg", "jpeg", "png", "gif", "webp"].includes(ext);
+      const isImage = ALLOWED_IMAGE_TYPES.includes(mime) || ["jpg", "jpeg", "png", "gif", "webp", "svg"].includes(ext);
       const isVideo = ALLOWED_VIDEO_TYPES.includes(mime) || ["mp4", "webm"].includes(ext);
+      const is3D = ALLOWED_3D_TYPES.includes(mime) || ["glb", "gltf"].includes(ext);
 
       // Validate file type
-      if (!isImage && !isVideo) {
-        results.push({ url: "", name: file.name, size: file.size, type: mime, error: `Unsupported file type: ${mime || ext}. Supported: JPG, PNG, WEBP, GIF, MP4, WEBM` });
+      if (!isImage && !isVideo && !is3D) {
+        results.push({ url: "", name: file.name, size: file.size, type: mime, error: `Unsupported file type: ${mime || ext}. Supported: JPG, PNG, WEBP, GIF, SVG, MP4, WEBM, GLB, GLTF` });
         continue;
       }
 
       // Validate file size
-      const maxSize = isVideo ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
+      const maxSize = is3D ? MAX_3D_SIZE : isVideo ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
       if (file.size > maxSize) {
-        const maxMB = isVideo ? 100 : 10;
+        const maxMB = is3D ? 50 : isVideo ? 100 : 15;
         results.push({ url: "", name: file.name, size: file.size, type: mime, error: `File too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Max: ${maxMB}MB` });
         continue;
       }
 
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
+
+      // Sanitize SVG against Stored XSS
+      if (ext === "svg" || mime === "image/svg+xml") {
+        if (!sanitizeSvg(buffer)) {
+          results.push({ url: "", name: file.name, size: file.size, type: mime, error: "SVG rejected: Disallowed scripts or insecure elements detected" });
+          continue;
+        }
+      }
 
       // Generate safe filename with timestamp
       const baseName = file.name
@@ -149,11 +169,14 @@ export async function POST(request: Request) {
         .slice(0, 60);
       const filename = `${baseName}-${Date.now()}.${ext}`;
 
-      const filePath = join(folderPath, filename);
-      await writeFile(filePath, buffer);
+      const uploadResult = await storageProvider.uploadFile({
+        buffer,
+        filename,
+        folder,
+        mimeType: mime || (is3D ? "model/gltf-binary" : isVideo ? "video/mp4" : "image/jpeg"),
+      });
 
-      const url = `/uploads/${folder}/${filename}`;
-      const fileStat = statSync(filePath);
+      const url = uploadResult.url;
 
       // Detect dimensions for images
       let width: number | undefined;
@@ -170,9 +193,9 @@ export async function POST(request: Request) {
       try {
         await mediaStore.create({
           filename: filename,
-          type: isVideo ? "video" : "image",
+          type: is3D ? "model3d" : isVideo ? "video" : "image",
           url,
-          mimeType: mime || (isVideo ? "video/mp4" : "image/jpeg"),
+          mimeType: mime || (is3D ? "model/gltf-binary" : isVideo ? "video/mp4" : "image/jpeg"),
           size: file.size,
           alt: file.name.replace(/\.[^.]+$/, ""),
           title: file.name,

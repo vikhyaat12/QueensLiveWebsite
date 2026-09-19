@@ -1,5 +1,8 @@
+import "server-only";
 import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync } from "fs";
 import { join, resolve } from "path";
+
+import { DEFAULT_FOOTER_CONFIG } from "./footer-schema";
 
 const DATA_DIR = resolve(process.cwd(), "data");
 const DB_FILE = join(DATA_DIR, "local-db.json");
@@ -54,6 +57,30 @@ export interface LocalDbSchema {
   auditLogs: Array<Record<string, unknown>>;
   orderStatusHistory: Array<Record<string, unknown>>;
   sitePopups: Array<Record<string, unknown>>;
+  models3d: Array<Record<string, unknown>>;
+  addresses: Array<Record<string, unknown>>;
+  passwordResets: Array<Record<string, unknown>>;
+  emailTemplates: Array<Record<string, unknown>>;
+  emailLogs: Array<Record<string, unknown>>;
+  inventoryTransactions: Array<Record<string, unknown>>;
+  backInStockSubscriptions: Array<Record<string, unknown>>;
+  promotions: Array<Record<string, unknown>>;
+  affiliateCampaigns: Array<Record<string, unknown>>;
+  promotionSettings: Array<Record<string, unknown>>;
+  promotionAnalytics: Array<Record<string, unknown>>;
+  supportConversations: Array<Record<string, unknown>>;
+  supportMessages: Array<Record<string, unknown>>;
+  supportSettings: Record<string, unknown>;
+  supportAuditLogs: Array<Record<string, unknown>>;
+  supportTickets: Array<Record<string, unknown>>;
+  supportTicketTimeline: Array<Record<string, unknown>>;
+  supportAttachments: Array<Record<string, unknown>>;
+  bulkProductSnapshots: Array<Record<string, unknown>>;
+  footerConfig: Record<string, unknown>;
+  footerSnapshots: Array<Record<string, unknown>>;
+  publishedHeaderNav: Array<Record<string, unknown>>;
+  navigationSnapshots: Array<Record<string, unknown>>;
+  redirects: Array<Record<string, unknown>>;
 }
 
 const now = () => new Date().toISOString();
@@ -569,7 +596,7 @@ const initialSeedData: LocalDbSchema = {
     { key: "site_name", value: "Queens Care Laboratories", group: "general", updatedAt: now() },
     { key: "site_tagline", value: "Science, made personal.", group: "general", updatedAt: now() },
     { key: "contact_email", value: "care@queenscare.in", group: "contact", updatedAt: now() },
-    { key: "contact_phone", value: "+91 (0) 11 4050 8800", group: "contact", updatedAt: now() },
+    { key: "contact_phone", value: "", group: "contact", updatedAt: now() },
     { key: "theme_primary", value: "#2d1b4e", group: "theme", updatedAt: now() },
     { key: "theme_gold", value: "#d4ad65", group: "theme", updatedAt: now() },
     { key: "header_nav", value: JSON.stringify([
@@ -1051,13 +1078,6 @@ const initialSeedData: LocalDbSchema = {
   ],
   pushSubscriptions: [],
   pushNotificationHistory: [],
-  socialMediaLinks: [
-    { id: "sml-instagram", platform: "instagram", label: "Instagram", url: "https://instagram.com/queenscare", icon: "instagram", visible: true, iconSize: 20, sortOrder: 0, createdAt: now(), updatedAt: now() },
-    { id: "sml-facebook", platform: "facebook", label: "Facebook", url: "https://facebook.com/queenscare", icon: "facebook", visible: true, iconSize: 20, sortOrder: 1, createdAt: now(), updatedAt: now() },
-    { id: "sml-youtube", platform: "youtube", label: "YouTube", url: "https://youtube.com/@queenscare", icon: "youtube", visible: true, iconSize: 20, sortOrder: 2, createdAt: now(), updatedAt: now() },
-    { id: "sml-linkedin", platform: "linkedin", label: "LinkedIn", url: "https://linkedin.com/company/queenscare", icon: "linkedin", visible: true, iconSize: 20, sortOrder: 3, createdAt: now(), updatedAt: now() },
-    { id: "sml-twitter", platform: "twitter", label: "X / Twitter", url: "https://x.com/queenscare", icon: "twitter", visible: true, iconSize: 20, sortOrder: 4, createdAt: now(), updatedAt: now() },
-  ],
   pageSettings: [
     { id: "pg-home", slug: "", title: "Home", label: "Home", headerVisible: true, footerVisible: true, sortOrder: 0, active: true, createdAt: "2026-07-30T00:00:00.000Z", updatedAt: "2026-07-30T00:00:00.000Z" },
     { id: "pg-about", slug: "about", title: "About", label: "About", headerVisible: true, footerVisible: true, sortOrder: 1, active: true, createdAt: "2026-07-30T00:00:00.000Z", updatedAt: "2026-07-30T00:00:00.000Z" },
@@ -1084,6 +1104,449 @@ const initialSeedData: LocalDbSchema = {
   analyticsSessions: [],
   auditLogs: [],    orderStatusHistory: [],
     sitePopups: [],
+    models3d: [],
+    addresses: [],
+    passwordResets: [],
+    emailTemplates: [],
+    emailLogs: [],
+    inventoryTransactions: [],
+    backInStockSubscriptions: [],
+    promotions: [
+      {
+        id: "promo-global-announcement",
+        name: "Global Header Announcement Ticker",
+        type: "ticker",
+        status: "published",
+        enabled: true,
+        placement: {
+          slot: "global_announcement",
+          priority: 100,
+        },
+        targeting: {
+          pageType: ["all"],
+          devices: ["desktop", "tablet", "mobile"],
+          userAudience: "all",
+        },
+        content: {
+          headline: "Storewide Clinical Announcement",
+          items: [
+            { id: "t1", text: "✦ Free Express Shipping on Orders Above ₹1,500" },
+            { id: "t2", text: "✦ 100% Original Direct From Certified Laboratories" },
+            { id: "t3", text: "✦ Formulated with Practicing Physicians & Dermatologists" },
+            { id: "t4", text: "✦ Batch-Tested Bioactives & High-Absorption Minerals" },
+            { id: "t5", text: "✦ Easy 7-Day Hassle-Free Returns" },
+          ],
+          tickerSpeed: 28,
+          tickerMobileSpeed: 18,
+          tickerDirection: "rtl",
+          tickerSeparator: "•",
+          pauseOnHover: true,
+          styling: {
+            backgroundColor: "#1A0D28",
+            textColor: "#F7F1EB",
+            accentColor: "#E9CA91",
+            fontSize: "11px",
+            fontWeight: 500,
+            letterSpacing: "0.04em",
+            padding: "8px 16px",
+          },
+        },
+        analytics: { impressions: 0, clicks: 0 },
+        createdAt: now(),
+        updatedAt: now(),
+      },
+      {
+        id: "promo-hero-marquee",
+        name: "Homepage Hero Trust & Science Marquee",
+        type: "ticker",
+        status: "published",
+        enabled: true,
+        placement: {
+          slot: "home_hero_bottom",
+          priority: 95,
+        },
+        targeting: {
+          pageType: ["home"],
+          devices: ["desktop", "tablet", "mobile"],
+          userAudience: "all",
+        },
+        content: {
+          headline: "Trust & Science Pillars",
+          items: [
+            { id: "h1", text: "Clinical Rigor" },
+            { id: "h2", text: "Traceable Bioactives" },
+            { id: "h3", text: "Physician Formulated" },
+            { id: "h4", text: "Zero Added Toxins" },
+            { id: "h5", text: "GMP Certified Purity" },
+            { id: "h6", text: "Independent Batch Testing" },
+          ],
+          tickerSpeed: 22,
+          tickerMobileSpeed: 15,
+          tickerDirection: "rtl",
+          tickerSeparator: "✦",
+          pauseOnHover: true,
+          styling: {
+            backgroundColor: "linear-gradient(90deg, rgba(42,15,58,0.03) 0%, rgba(212,175,55,0.06) 50%, rgba(42,15,58,0.03) 100%)",
+            textColor: "#2A0F3A",
+            accentColor: "#D4AF37",
+            fontSize: "12px",
+            fontWeight: 700,
+            letterSpacing: "0.06em",
+            padding: "10px 0",
+            border: "1px solid rgba(212,175,55,0.18)",
+          },
+        },
+        analytics: { impressions: 0, clicks: 0 },
+        createdAt: now(),
+        updatedAt: now(),
+      },
+      {
+        id: "promo-free-shipping-progress",
+        name: "Authoritative Free Shipping Progress Bar",
+        type: "gamification",
+        status: "published",
+        enabled: true,
+        placement: {
+          slot: "cart_top",
+          priority: 100,
+        },
+        targeting: {
+          pageType: ["cart"],
+          devices: ["desktop", "tablet", "mobile"],
+          userAudience: "all",
+        },
+        content: {
+          headline: "Free Shipping Milestone",
+          gamification: {
+            gameType: "free_shipping_progress",
+            thresholdType: "server_free_shipping",
+            progressLabelFormat: "Add {remaining} more to unlock FREE express delivery",
+            successTitle: "🎉 You have qualified for FREE Express Shipping!",
+            barHeight: 8,
+            barFillColor: "linear-gradient(90deg, #D4AF37 0%, #10B981 100%)",
+            barBgColor: "#E5E7EB",
+            animated: true,
+          },
+          styling: {
+            backgroundColor: "#FDFBF7",
+            textColor: "#2A0F3A",
+            accentColor: "#D4AF37",
+            padding: "14px 18px",
+            borderRadius: "12px",
+            border: "1px solid #EAE6DF",
+          },
+        },
+        analytics: { impressions: 0, clicks: 0 },
+        createdAt: now(),
+        updatedAt: now(),
+      },
+      {
+        id: "promo-lab-verification-banner",
+        name: "HPLC Certified Lab Verification Strip",
+        type: "media_block",
+        status: "published",
+        enabled: true,
+        placement: {
+          slot: "home_before_testimonials",
+          priority: 80,
+        },
+        targeting: {
+          pageType: ["home"],
+          devices: ["desktop", "tablet", "mobile"],
+          userAudience: "all",
+        },
+        content: {
+          headline: "Lab-Verified HPLC Purity in Every Batch",
+          subheadline: "Every raw botanical and mineral is verified by high-performance liquid chromatography before release.",
+          mediaType: "none",
+          cta: {
+            enabled: true,
+            text: "Read Our Verification Protocol →",
+            destination: "/#science",
+            style: "pill",
+            backgroundColor: "#2A0F3A",
+            textColor: "#FFFFFF",
+          },
+          styling: {
+            backgroundColor: "linear-gradient(135deg, #FAF8F5 0%, #F5F0E8 100%)",
+            textColor: "#2A0F3A",
+            padding: "24px 32px",
+            borderRadius: "16px",
+            border: "1px solid #EAE6DF",
+            textAlign: "center",
+          },
+        },
+        analytics: { impressions: 0, clicks: 0 },
+        createdAt: now(),
+        updatedAt: now(),
+      },
+    ],
+    affiliateCampaigns: [
+      {
+        id: "camp-physician-wellness",
+        slug: "physician-wellness-collective",
+        name: "Physician & Practitioner Wellness Collective",
+        partnerId: "aff-dr-singhania",
+        partnerName: "Dr. Vikram Singhania",
+        status: "active",
+        enabled: true,
+        heroTitle: "Clinical Formulations Curated by Medical Practitioners",
+        heroSubtitle: "Evidence-based wellness prescribed by leading clinical specialists for everyday vitality.",
+        heroDescription: "Access physician-tested bioactive formulations with special partner privilege.",
+        trackingKey: "dr-singhania",
+        commissionRate: 15,
+        couponCode: "DRSINGHANIA10",
+        ctaText: "Explore Curated Formulations",
+        ctaLink: "/shop",
+        featuredProductIds: ["p-lumine", "p-biome", "p-nocturne", "p-sculpture"],
+        trustBullets: [
+          "Physician-developed clinical protocols",
+          "Third-party batch chromatographic verification",
+          "Exclusive partner privilege discount applied at checkout",
+        ],
+        faqs: [
+          {
+            question: "How do I ensure physician attribution?",
+            answer: "Attribution is secured through your unique partner link or promo code DRSINGHANIA10 at checkout.",
+          },
+          {
+            question: "Are these formulations identical to clinical lab batches?",
+            answer: "Yes. All products originate directly from Queens Care certified GMP laboratories.",
+          },
+        ],
+        seoTitle: "Physician Wellness Collective | Queens Care Laboratories",
+        seoDescription: "Curated clinical formulations endorsed by medical practitioners.",
+        createdAt: now(),
+        updatedAt: now(),
+      },
+    ],
+    promotionSettings: [
+      {
+        id: "settings-promotions-global",
+        globalEnabled: true,
+        tickersEnabled: true,
+        mediaEnabled: true,
+        gamificationEnabled: true,
+        affiliatePromosEnabled: true,
+        auditLog: [
+          {
+            action: "INITIALIZE_PROMOTIONS_CMS",
+            performedBy: "system",
+            timestamp: now(),
+            notes: "Zero-hardcode universal merchandising engine initialized.",
+          },
+        ],
+        updatedAt: now(),
+      },
+    ],
+    promotionAnalytics: [],
+    socialMediaLinks: [
+      {
+        id: "sml-instagram",
+        platform: "instagram",
+        category: "social",
+        label: "Instagram",
+        tooltip: "Follow Queens Care on Instagram for clinical research insights",
+        url: "https://instagram.com/queenscarelab",
+        icon: "instagram",
+        iconVariant: "official",
+        visible: true,
+        desktopVisible: true,
+        mobileVisible: true,
+        placements: ["header", "footer", "homepage", "contact", "about", "people", "blog", "affiliate", "all"],
+        sortOrder: 1,
+        desktopIconSize: 20,
+        mobileIconSize: 18,
+      },
+      {
+        id: "sml-linkedin",
+        platform: "linkedin",
+        category: "social",
+        label: "LinkedIn",
+        tooltip: "Connect with Queens Care Laboratories on LinkedIn",
+        url: "https://linkedin.com/company/queenscare",
+        icon: "linkedin",
+        iconVariant: "official",
+        visible: true,
+        desktopVisible: true,
+        mobileVisible: true,
+        placements: ["header", "footer", "contact", "about", "people", "careers", "all"],
+        sortOrder: 2,
+        desktopIconSize: 20,
+        mobileIconSize: 18,
+      },
+      {
+        id: "sml-youtube",
+        platform: "youtube",
+        category: "social",
+        label: "YouTube",
+        tooltip: "Watch clinical trial overviews and formulation science on YouTube",
+        url: "https://youtube.com/@queenscarelab",
+        icon: "youtube",
+        iconVariant: "official",
+        visible: true,
+        desktopVisible: true,
+        mobileVisible: true,
+        placements: ["footer", "homepage", "science", "about", "all"],
+        sortOrder: 3,
+        desktopIconSize: 20,
+        mobileIconSize: 18,
+      },
+      {
+        id: "sml-twitter",
+        platform: "twitter",
+        category: "social",
+        label: "X (Twitter)",
+        tooltip: "Follow clinical pharmacology updates on X",
+        url: "https://x.com/queenscarelab",
+        icon: "twitter",
+        iconVariant: "official",
+        visible: true,
+        desktopVisible: true,
+        mobileVisible: false,
+        placements: ["header", "footer", "all"],
+        sortOrder: 4,
+        desktopIconSize: 20,
+        mobileIconSize: 18,
+      },
+      {
+        id: "sml-whatsapp",
+        platform: "whatsapp",
+        category: "social",
+        label: "WhatsApp Clinical Desk",
+        tooltip: "Consult with a certified clinical pharmacist on WhatsApp",
+        url: "https://wa.me/919876543210?text=Hello%20Queens%20Care%20Pharmacist",
+        icon: "whatsapp",
+        iconVariant: "official",
+        visible: true,
+        desktopVisible: true,
+        mobileVisible: true,
+        placements: ["header", "footer", "contact", "homepage", "all"],
+        sortOrder: 5,
+        desktopIconSize: 20,
+        mobileIconSize: 18,
+      },
+      {
+        id: "sml-facebook",
+        platform: "facebook",
+        category: "social",
+        label: "Facebook",
+        tooltip: "Join our patient healthcare community on Facebook",
+        url: "https://facebook.com/queenscarelab",
+        icon: "facebook",
+        iconVariant: "official",
+        visible: true,
+        desktopVisible: true,
+        mobileVisible: true,
+        placements: ["footer", "all"],
+        sortOrder: 6,
+        desktopIconSize: 20,
+        mobileIconSize: 18,
+      },
+    ],
+  supportSettings: {
+    chatEnabled: true,
+    aiEnabled: true,
+    humanSupportEnabled: true,
+    humanHandoffEnabled: true,
+    isOnline: true,
+    supportHours: {
+      enabled: false,
+      start: "09:00",
+      end: "20:00",
+      timezone: "Asia/Kolkata",
+      days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+    },
+    welcomeMessage: "Hello! 👋 Welcome to Queens Care Laboratories. I'm your clinical care assistant. How can I help you today?",
+    offlineMessage: "Our clinical support team is currently away. Please leave a message, and our pharmacists will respond promptly during operational hours.",
+    humanHandoffMessage: "Connecting you with our support team. An agent will join shortly.",
+    resolutionMessage: "This support conversation has been resolved. If you need any further clinical assistance, feel free to message us anytime.",
+    awayMessage: "All specialists are currently assisting other patients. We will respond shortly.",
+    csatEnabled: true,
+    reopenOnCustomerMessage: true,
+  },
+  supportConversations: [
+    {
+      id: "conv-demo-customer-1",
+      visitorId: "vis-demo-1",
+      customerId: "usr-customer-1",
+      customerName: "Demo Customer",
+      customerEmail: "customer@queenscare.in",
+      customerPhone: "+91 98765 43210",
+      channel: "website_chat",
+      status: "open",
+      handlingMode: "ai",
+      humanRequested: false,
+      assignedTo: null,
+      priority: "normal",
+      relevantOrderId: "ORD-QC-74391",
+      unreadAdminCount: 1,
+      unreadCustomerCount: 0,
+      lastMessage: {
+        text: "Could you tell me if Liko Q suspension can be taken after meals?",
+        sender: "customer",
+        timestamp: "2026-09-15T06:30:00.000Z",
+      },
+      createdAt: "2026-09-15T06:28:00.000Z",
+      updatedAt: "2026-09-15T06:30:00.000Z",
+      tags: ["Dosage", "Liko Q"],
+      metadata: {
+        currentUrl: "/products/liko-q-suspension",
+      },
+    },
+  ],
+  supportMessages: [
+    {
+      id: "msg-demo-1",
+      conversationId: "conv-demo-customer-1",
+      sender: "customer",
+      senderName: "Demo Customer",
+      content: "Hello! I received my order of Liko Q suspension.",
+      isInternal: false,
+      deliveryStatus: "delivered",
+      createdAt: "2026-09-15T06:28:00.000Z",
+    },
+    {
+      id: "msg-demo-2",
+      conversationId: "conv-demo-customer-1",
+      sender: "ai",
+      senderName: "Dr. Queens AI",
+      content: "Hello! Thank you for choosing Queens Care Laboratories. How can I assist you with your Liko Q suspension today?",
+      isInternal: false,
+      deliveryStatus: "delivered",
+      createdAt: "2026-09-15T06:28:05.000Z",
+    },
+    {
+      id: "msg-demo-3",
+      conversationId: "conv-demo-customer-1",
+      sender: "customer",
+      senderName: "Demo Customer",
+      content: "Could you tell me if Liko Q suspension can be taken after meals?",
+      isInternal: false,
+      deliveryStatus: "delivered",
+      createdAt: "2026-09-15T06:30:00.000Z",
+    },
+  ],
+  supportAuditLogs: [
+    {
+      id: "audit-demo-1",
+      conversationId: "conv-demo-customer-1",
+      actor: { id: "system", name: "System", role: "system" },
+      action: "status_changed",
+      oldValue: "new",
+      newValue: "open",
+      createdAt: "2026-09-15T06:28:00.000Z",
+    },
+  ],
+  supportTickets: [],
+  supportTicketTimeline: [],
+  supportAttachments: [],
+  bulkProductSnapshots: [],
+  footerConfig: DEFAULT_FOOTER_CONFIG as unknown as Record<string, unknown>,
+  footerSnapshots: [],
+  publishedHeaderNav: [],
+  navigationSnapshots: [],
+  redirects: [],
 };
 
 /**
@@ -1120,6 +1583,24 @@ function readFromDisk(): LocalDbSchema {
           ...initialSeedData,
           ...parsed,
         };
+        if (!Array.isArray(merged.socialMediaLinks) || merged.socialMediaLinks.length < 5) {
+          merged.socialMediaLinks = initialSeedData.socialMediaLinks;
+        }
+        if (!merged.footerConfig || typeof merged.footerConfig !== "object" || Object.keys(merged.footerConfig).length === 0) {
+          merged.footerConfig = structuredClone(initialSeedData.footerConfig);
+        }
+        if (!Array.isArray(merged.footerSnapshots)) {
+          merged.footerSnapshots = [];
+        }
+        if (!Array.isArray(merged.publishedHeaderNav)) {
+          merged.publishedHeaderNav = [];
+        }
+        if (!Array.isArray(merged.navigationSnapshots)) {
+          merged.navigationSnapshots = [];
+        }
+        if (!Array.isArray(merged.redirects)) {
+          merged.redirects = [];
+        }
         return merged;
       }
     }

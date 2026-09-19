@@ -425,5 +425,179 @@ export async function POST(request: Request) {
     });
   }
 
+  // 5. BULK MULTI-SELECT UPDATE
+  if (action === "bulk_update") {
+    const { productIds, updates } = body;
+    if (!Array.isArray(productIds) || productIds.length === 0) {
+      return json({ error: "productIds must be a non-empty array" }, 400);
+    }
+    if (!updates || typeof updates !== "object") {
+      return json({ error: "updates must be a valid object" }, 400);
+    }
+
+    const validatedPatch: Record<string, unknown> = {};
+
+    if (updates.active !== undefined) {
+      validatedPatch.active = Boolean(updates.active);
+    }
+    if (updates.visible !== undefined) {
+      validatedPatch.visible = Boolean(updates.visible);
+      // Sync active if not explicitly specified
+      if (updates.active === undefined) {
+        validatedPatch.active = Boolean(updates.visible);
+      }
+    }
+    if (updates.price !== undefined) {
+      const price = parseFloat(String(updates.price));
+      if (isNaN(price) || price < 0) {
+        return json({ error: "Price must be a valid non-negative number" }, 400);
+      }
+      validatedPatch.price = price;
+    }
+    if (updates.mrp !== undefined) {
+      const mrp = parseFloat(String(updates.mrp));
+      if (isNaN(mrp) || mrp < 0) {
+        return json({ error: "MRP must be a valid non-negative number" }, 400);
+      }
+      validatedPatch.mrp = mrp;
+      validatedPatch.originalPrice = mrp;
+    }
+    if (updates.stock !== undefined) {
+      const stock = parseInt(String(updates.stock), 10);
+      if (isNaN(stock) || stock < 0) {
+        return json({ error: "Stock must be a valid non-negative integer" }, 400);
+      }
+      validatedPatch.stock = stock;
+    }
+    if (updates.gstRate !== undefined) {
+      const gst = parseFloat(String(updates.gstRate));
+      if (isNaN(gst) || gst < 0 || gst > 100) {
+        return json({ error: "GST rate must be between 0% and 100%" }, 400);
+      }
+      validatedPatch.gstRate = gst;
+    }
+    if (updates.hsn !== undefined) {
+      validatedPatch.hsn = String(updates.hsn).trim();
+    }
+    if (updates.category !== undefined) {
+      const cat = String(updates.category).trim();
+      if (!cat) {
+        return json({ error: "Category cannot be empty" }, 400);
+      }
+      validatedPatch.category = cat;
+    }
+    if (updates.lowStockThreshold !== undefined) {
+      const thresh = parseInt(String(updates.lowStockThreshold), 10);
+      if (isNaN(thresh) || thresh < 0) {
+        return json({ error: "Low stock threshold must be a non-negative integer" }, 400);
+      }
+      validatedPatch.lowStockThreshold = thresh;
+    }
+
+    let priceAdj: { operation: string; value: number } | null = null;
+    if (updates.priceAdjustment && typeof updates.priceAdjustment === "object") {
+      const { operation, value } = updates.priceAdjustment as { operation: string; value: number };
+      const numVal = parseFloat(String(value));
+      if (!isNaN(numVal)) {
+        priceAdj = { operation, value: numVal };
+      }
+    }
+
+    let stockAdj: { operation: string; value: number } | null = null;
+    if (updates.stockAdjustment && typeof updates.stockAdjustment === "object") {
+      const { operation, value } = updates.stockAdjustment as { operation: string; value: number };
+      const numVal = parseInt(String(value), 10);
+      if (!isNaN(numVal)) {
+        stockAdj = { operation, value: numVal };
+      }
+    }
+
+    if (Object.keys(validatedPatch).length === 0 && !priceAdj && !stockAdj) {
+      return json({ error: "No valid fields to update" }, 400);
+    }
+
+    const currentProducts = (await store.products.all()) || [];
+    const idSet = new Set(productIds.map(String));
+
+    const targets = currentProducts.filter(
+      (p) => idSet.has(String(p.id)) || (p.slug && idSet.has(String(p.slug)))
+    );
+
+    if (targets.length === 0) {
+      return json({ error: "No matching products found for the provided IDs" }, 404);
+    }
+
+    // Save snapshot before mutating
+    const snapshotId = `SNAP-${Date.now()}`;
+    const opDesc = [
+      ...Object.keys(validatedPatch),
+      priceAdj ? `priceAdj(${priceAdj.operation}: ${priceAdj.value})` : null,
+      stockAdj ? `stockAdj(${stockAdj.operation}: ${stockAdj.value})` : null,
+    ].filter(Boolean).join(", ");
+
+    fileDb.insert("bulkProductSnapshots", {
+      id: snapshotId,
+      timestamp: new Date().toISOString(),
+      actorId: user.id,
+      actorEmail: user.email,
+      itemCount: currentProducts.length,
+      reason: `Bulk Update on ${targets.length} products (${opDesc})`,
+      catalog: currentProducts,
+    });
+
+    let updatedCount = 0;
+    for (const p of targets) {
+      const rec = p as Record<string, unknown>;
+      const itemPatch: Record<string, unknown> = { ...validatedPatch };
+
+      if (priceAdj) {
+        const curPrice = Number(rec.price || 0);
+        let newPrice = curPrice;
+        if (priceAdj.operation === "percentage_increase") newPrice = Math.round(curPrice * (1 + priceAdj.value / 100));
+        else if (priceAdj.operation === "percentage_decrease") newPrice = Math.max(1, Math.round(curPrice * (1 - priceAdj.value / 100)));
+        else if (priceAdj.operation === "flat_increase") newPrice = curPrice + priceAdj.value;
+        else if (priceAdj.operation === "flat_decrease") newPrice = Math.max(1, curPrice - priceAdj.value);
+        else if (priceAdj.operation === "set_value") newPrice = Math.max(0, priceAdj.value);
+        itemPatch.price = newPrice;
+      }
+
+      if (stockAdj) {
+        const curStock = Number(rec.stock || 0);
+        let newStock = curStock;
+        if (stockAdj.operation === "add") newStock = curStock + stockAdj.value;
+        else if (stockAdj.operation === "subtract") newStock = Math.max(0, curStock - stockAdj.value);
+        else if (stockAdj.operation === "set_value") newStock = Math.max(0, stockAdj.value);
+        itemPatch.stock = newStock;
+      }
+
+      await store.products.save({
+        ...p,
+        ...itemPatch,
+      });
+      updatedCount++;
+    }
+
+    await logAccessAuditEvent({
+      action: "bulk_product_update",
+      actorId: user.id,
+      actorName: user.name || "Admin",
+      actorEmail: user.email,
+      targetId: snapshotId,
+      targetName: "Product Catalog",
+      targetEmail: "catalog@queenscare.in",
+      details: `Bulk updated ${updatedCount} products with fields: ${JSON.stringify(validatedPatch)}. Snapshot: ${snapshotId}`,
+      status: "success",
+      ip: clientMeta.ip,
+      userAgent: clientMeta.userAgent,
+    });
+
+    return json({
+      ok: true,
+      snapshotId,
+      updatedCount,
+      modifiedFields: Object.keys(validatedPatch),
+    });
+  }
+
   return json({ error: "Unknown action" }, 400);
 }

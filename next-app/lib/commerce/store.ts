@@ -1,4 +1,5 @@
-import { randomUUID } from "crypto";
+import "server-only";
+import { randomUUID, randomBytes } from "crypto";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { fileDb } from "./file-db";
@@ -139,6 +140,40 @@ export const store = {
 			}
 			return fileDb.collection("users").length > 0;
 		},
+		list: async (query?: { search?: string; status?: string; role?: string }): Promise<AuthUser[]> => {
+			if (usePrisma) {
+				try {
+					const where: Prisma.UserWhereInput = {};
+					if (query?.role) where.role = query.role as Prisma.EnumRoleFilter;
+					if (query?.status === "active") where.isActive = true;
+					else if (query?.status === "disabled" || query?.status === "deactivated") where.isActive = false;
+					if (query?.search) {
+						where.OR = [
+							{ name: { contains: query.search, mode: "insensitive" } },
+							{ email: { contains: query.search, mode: "insensitive" } },
+							{ phone: { contains: query.search, mode: "insensitive" } },
+						];
+					}
+					const users = await prisma.user.findMany({ where, orderBy: { createdAt: "desc" } });
+					return users as unknown as AuthUser[];
+				} catch {}
+			}
+			const all = (fileDb.collection("users") || []) as unknown as AuthUser[];
+			return all.filter((u) => {
+				if (query?.role && u.role !== query.role) return false;
+				const currentStatus = u.status || (u.isActive === false ? "disabled" : "active");
+				if (query?.status && currentStatus !== query.status) return false;
+				if (query?.search) {
+					const s = query.search.toLowerCase();
+					const matchName = (u.name || "").toLowerCase().includes(s);
+					const matchEmail = (u.email || "").toLowerCase().includes(s);
+					const matchPhone = (u.phone || "").toLowerCase().includes(s);
+					const matchId = (u.id || "").toLowerCase().includes(s);
+					if (!matchName && !matchEmail && !matchPhone && !matchId) return false;
+				}
+				return true;
+			});
+		},
 		findEmail: async (email: string): Promise<AuthUser | null> => {
 			if (usePrisma) {
 				try {
@@ -160,18 +195,31 @@ export const store = {
 			return item as unknown as AuthUser | null;
 		},
 		create: async (input: Partial<User> & { passwordHash: string }): Promise<AuthUser> => {
+			const status = input.status || "active";
+			const isActive = status !== "disabled" && status !== "deactivated";
+			const tokenVersion = input.tokenVersion || 1;
 			if (usePrisma) {
 				try {
-					const user = await prisma.user.create({ data: input as unknown as Prisma.UserCreateInput });
-					fileDb.insert("users", user as unknown as Record<string, unknown>);
-					return user as unknown as AuthUser;
+					const user = await prisma.user.create({
+						data: {
+							...input,
+							phone: input.phone || null,
+							isActive,
+						} as unknown as Prisma.UserCreateInput
+					});
+					fileDb.insert("users", { ...user, status, tokenVersion } as unknown as Record<string, unknown>);
+					return { ...user, status, tokenVersion } as unknown as AuthUser;
 				} catch {}
 			}
 			const user = {
 				id: input.id || `usr-${randomUUID().slice(0, 8)}`,
 				email: input.email || "",
 				name: input.name || "",
+				phone: input.phone || "",
 				role: input.role || "customer",
+				status,
+				isActive,
+				tokenVersion,
 				createdAt: now(),
 				updatedAt: now(),
 				...input,
@@ -180,15 +228,74 @@ export const store = {
 			return user as unknown as AuthUser;
 		},
 		update: async (id: string, patch: Record<string, unknown>): Promise<AuthUser | null> => {
+			const sanitizedPatch = { ...patch };
+			if (patch.status !== undefined) {
+				sanitizedPatch.isActive = patch.status !== "disabled" && patch.status !== "deactivated";
+			}
 			if (usePrisma) {
 				try {
-					const u = await prisma.user.update({ where: { id }, data: patch as never });
-					fileDb.update("users", id, u as unknown as Record<string, unknown>);
-					return u as unknown as AuthUser;
+					const u = await prisma.user.update({ where: { id }, data: sanitizedPatch as never });
+					fileDb.update("users", id, { ...u, ...sanitizedPatch, updatedAt: now() } as unknown as Record<string, unknown>);
+					return { ...u, ...sanitizedPatch } as unknown as AuthUser;
 				} catch {}
 			}
-			const updated = fileDb.update("users", id, patch);
+			const updated = fileDb.update("users", id, { ...sanitizedPatch, updatedAt: now() });
 			return updated as unknown as AuthUser | null;
+		},
+	},
+	passwordReset: {
+		createToken: async (userId: string, email: string): Promise<string> => {
+			const token = randomBytes(32).toString("hex");
+			const expiresAt = new Date(Date.now() + 3600000).toISOString(); // 1 hour
+			if (usePrisma) {
+				try {
+					await prisma.emailToken.deleteMany({ where: { userId, type: "reset" } });
+					await prisma.emailToken.create({ data: { userId, token, type: "reset", expiresAt: new Date(expiresAt) } });
+				} catch {}
+			}
+			const existing = fileDb.findMany("passwordResets", r => r.userId === userId || r.email === email);
+			for (const r of existing) {
+				if (r.id) fileDb.remove("passwordResets", String(r.id));
+			}
+			fileDb.insert("passwordResets", {
+				id: `rst-${Date.now().toString(36)}-${randomBytes(4).toString("hex")}`,
+				userId,
+				email,
+				token,
+				expiresAt,
+				used: false,
+				createdAt: now(),
+			});
+			return token;
+		},
+		verifyToken: async (token: string): Promise<{ userId: string; email: string } | null> => {
+			if (usePrisma) {
+				try {
+					const emailToken = await prisma.emailToken.findUnique({ where: { token } });
+					if (emailToken && emailToken.type === "reset" && !emailToken.used && emailToken.expiresAt > new Date()) {
+						const user = await prisma.user.findUnique({ where: { id: emailToken.userId } });
+						return user ? { userId: user.id, email: user.email } : null;
+					}
+				} catch {}
+			}
+			const record = fileDb.findOne("passwordResets", r => r.token === token);
+			if (!record) return null;
+			if (record.used) return null;
+			if (new Date(String(record.expiresAt)).getTime() <= Date.now()) return null;
+			return { userId: String(record.userId), email: String(record.email) };
+		},
+		consumeToken: async (token: string): Promise<boolean> => {
+			if (usePrisma) {
+				try {
+					await prisma.emailToken.update({ where: { token }, data: { used: true } });
+				} catch {}
+			}
+			const record = fileDb.findOne("passwordResets", r => r.token === token);
+			if (record && record.id) {
+				fileDb.update("passwordResets", String(record.id), { used: true, consumedAt: now() });
+				return true;
+			}
+			return false;
 		},
 	},
 	orders: {
@@ -210,15 +317,38 @@ export const store = {
 				} catch {}
 			}
 			const found = fileDb.findOne("orders", o => o.id === id);
-			return found as unknown as Order | null;
+			if (found) {
+				const allProducts = fileDb.findMany("products");
+				const rawLines = Array.isArray(found.lines) ? found.lines : [];
+				const enriched = rawLines.map((l: Record<string, unknown>) => {
+					const pid = String(l.productId || "");
+					const p = allProducts.find((x: Record<string, unknown>) => x.id === pid || x.slug === pid);
+					return {
+						...l,
+						product: p || {
+							id: pid,
+							name: String(l.name || "Queens Care Formulation"),
+							image: String(l.image || "/uploads/logos/queens-care-official-original.png"),
+							price: Number(l.unitPrice || 0),
+							slug: pid,
+						},
+					};
+				});
+				return { ...found, lines: enriched } as unknown as Order;
+			}
+			return null;
 		},
-		create: async (userId: string, lines: OrderLineInput[], total: number, shipping?: ShippingDetails, details?: { subtotal?: number; discount?: number; shippingFee?: number; couponCode?: string; paymentMethod?: string; paymentStatus?: PaymentStatus; trackingCode?: string; courier?: string; notes?: string }) => {
+		create: async (userId: string, lines: OrderLineInput[], total: number, shipping?: ShippingDetails, details?: { subtotal?: number; discount?: number; shippingFee?: number; couponCode?: string; paymentMethod?: string; paymentStatus?: PaymentStatus; trackingCode?: string; courier?: string; notes?: string; prescriptionKey?: string; prescriptionFilename?: string; prescriptionStatus?: string; prescriptionNotes?: string; donationAmount?: number; invoiceNo?: string }) => {
 			const trackingCode = details?.trackingCode || `QC${Math.floor(100000 + Math.random() * 899999)}`;
 			const subtotal = details?.subtotal !== undefined ? details.subtotal : total;
 			const discount = details?.discount || 0;
 			const shippingFee = details?.shippingFee || 0;
 			const paymentMethod = details?.paymentMethod || "cod";
 			const paymentStatus = details?.paymentStatus || (paymentMethod === "cod" ? "cod_pending" : "pending");
+			const prescriptionKey = details?.prescriptionKey;
+			const prescriptionFilename = details?.prescriptionFilename;
+			const prescriptionStatus = details?.prescriptionStatus || (prescriptionKey ? "submitted" : "not_submitted");
+			const prescriptionNotes = details?.prescriptionNotes;
 
 			if (usePrisma) {
 				try {
@@ -238,8 +368,9 @@ export const store = {
 					};
 					if (shipping) data.shipping = shipping;
 					const order = await prisma.order.create({ data: data as unknown as Prisma.OrderCreateInput, include: { lines: true } });
-					fileDb.insert("orders", order as unknown as Record<string, unknown>);
-					return order as unknown as Order;
+					const orderWithRx = { ...order, prescriptionKey, prescriptionFilename, prescriptionStatus, prescriptionNotes };
+					fileDb.insert("orders", orderWithRx as unknown as Record<string, unknown>);
+					return orderWithRx as unknown as Order;
 				} catch {}
 			}
 			const item: Order = {
@@ -256,6 +387,10 @@ export const store = {
 				paymentStatus,
 				paymentMethod,
 				trackingCode,
+				prescriptionKey,
+				prescriptionFilename,
+				prescriptionStatus,
+				prescriptionNotes,
 				createdAt: now(),
 				shipping,
 				notes: details?.notes,
@@ -627,6 +762,53 @@ export const store = {
 			}
 			return fileDb.findMany("wishlistItems", w => w.userId === userId).map(w => String(w.productId));
 		},
+		getItemsWithProducts: async (userId: string): Promise<Product[]> => {
+			const ids = await store.wishlist.get(userId);
+			const all = await store.products.all();
+			return ids
+				.map(id => all.find(p => p.id === id || p.slug === id))
+				.filter(Boolean) as Product[];
+		},
+		add: async (userId: string, productId: string): Promise<string[]> => {
+			if (usePrisma) {
+				try {
+					const existing = await prisma.wishlistItem.findUnique({
+						where: { userId_productId: { userId, productId } }
+					});
+					if (!existing) {
+						await prisma.wishlistItem.create({ data: { userId, productId } });
+					}
+					const items = await prisma.wishlistItem.findMany({ where: { userId } });
+					return items.map((w: { productId: string }) => w.productId);
+				} catch {}
+			}
+			const existing = fileDb.findOne("wishlistItems", w => w.userId === userId && w.productId === productId);
+			if (!existing) {
+				fileDb.insert("wishlistItems", {
+					id: `wl-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+					userId,
+					productId,
+					createdAt: now(),
+				});
+			}
+			return fileDb.findMany("wishlistItems", w => w.userId === userId).map(w => String(w.productId));
+		},
+		remove: async (userId: string, productId: string): Promise<string[]> => {
+			if (usePrisma) {
+				try {
+					await prisma.wishlistItem.deleteMany({
+						where: { userId, productId }
+					});
+					const items = await prisma.wishlistItem.findMany({ where: { userId } });
+					return items.map((w: { productId: string }) => w.productId);
+				} catch {}
+			}
+			const existing = fileDb.findOne("wishlistItems", w => w.userId === userId && w.productId === productId);
+			if (existing) {
+				fileDb.remove("wishlistItems", String(existing.id));
+			}
+			return fileDb.findMany("wishlistItems", w => w.userId === userId).map(w => String(w.productId));
+		},
 		toggle: async (userId: string, productId: string): Promise<string[]> => {
 			if (usePrisma) {
 				try {
@@ -646,7 +828,12 @@ export const store = {
 			if (existing) {
 				fileDb.remove("wishlistItems", String(existing.id));
 			} else {
-				fileDb.insert("wishlistItems", { userId, productId });
+				fileDb.insert("wishlistItems", {
+					id: `wl-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+					userId,
+					productId,
+					createdAt: now(),
+				});
 			}
 			return fileDb.findMany("wishlistItems", w => w.userId === userId).map(w => String(w.productId));
 		},

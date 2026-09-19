@@ -1,6 +1,7 @@
 # Tooling
 .continue/
 .freebuff/
+.ox/
 .reticle.json
 
 # Secrets

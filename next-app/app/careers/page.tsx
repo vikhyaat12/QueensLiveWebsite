@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef, FormEvent } from "react";
 import Link from "next/link";
 import type { CareerJob, CareerPageConfig } from "@/lib/commerce/store-extensions";
+import QueensCareHeader from "@/app/components/QueensCareHeader";
+import QueensCareFooter from "@/app/components/QueensCareFooter";
 
 export default function CareersPage() {
   const [pageConfig, setPageConfig] = useState<CareerPageConfig | null>(null);
@@ -187,21 +189,8 @@ export default function CareersPage() {
 
   return (
     <div style={{ background: "#faf8f5", minHeight: "100vh", color: "var(--ink)", paddingBottom: 80 }}>
-      {/* Editorial Header */}
-      <header style={{ borderBottom: "1px solid var(--line)", background: "#fff", padding: "16px 5%" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <Link href="/" className="brand" aria-label="Queens Care home" style={{ textDecoration: "none" }}>
-            <i>Q</i>
-            <span>
-              QUEENS<br />
-              <b>CARE</b>
-            </span>
-          </Link>
-          <Link href="/" style={{ fontSize: 12, textDecoration: "none", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".08em", fontWeight: 600 }}>
-            ← Return to Storefront
-          </Link>
-        </div>
-      </header>
+      {/* Global Header */}
+      <QueensCareHeader activePage="careers" />
 
       {/* Hero Section */}
       <section style={{ maxWidth: 1200, margin: "0 auto", padding: "60px 20px 40px" }}>
@@ -788,6 +777,7 @@ export default function CareersPage() {
           </div>
         </div>
       </section>
+      <QueensCareFooter />
     </div>
   );
 }

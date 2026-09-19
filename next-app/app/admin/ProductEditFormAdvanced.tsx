@@ -1,11 +1,30 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import GlobalMediaUploader, { MediaItem } from "../components/GlobalMediaUploader";
 
-/* ─── ENHANCED PRODUCT EDIT FORM — TABBED ──────────────────────────────── */
+/* ─── 15-TAB ENTERPRISE PRODUCT EDIT FORM ──────────────────────────────── */
 
 type SpecRow = { name: string; value: string };
+
+type HighlightItem = {
+  id: string;
+  text: string;
+  icon?: string;
+  active?: boolean;
+};
+
+type VariantItem = {
+  id: string;
+  name: string;
+  sku?: string;
+  price: number;
+  mrp?: number;
+  stock: number;
+  active: boolean;
+  sort: number;
+};
+
 type APlusSection = {
   id?: string;
   type: string;
@@ -21,7 +40,22 @@ type APlusSection = {
   published?: boolean;
 };
 
-type EditTab = "info" | "images" | "media" | "pricing" | "specs" | "aplus" | "seo";
+type EditTab =
+  | "overview"
+  | "pricing"
+  | "inventory"
+  | "variants"
+  | "media"
+  | "highlights"
+  | "description"
+  | "specs"
+  | "pharma"
+  | "tax"
+  | "shipping"
+  | "aplus"
+  | "seo"
+  | "cross_sell"
+  | "advanced";
 
 const APLUS_TYPES: { value: string; label: string; icon: string }[] = [
   { value: "hero", label: "Hero Banner", icon: "🖼️" },
@@ -37,8 +71,54 @@ const APLUS_TYPES: { value: string; label: string; icon: string }[] = [
 ];
 
 export function ProductEditFormAdvanced({ item, onSave }: { item: Record<string, unknown>; onSave: () => void }) {
-  const [activeTab, setActiveTab] = useState<EditTab>("info");
-  const [form, setForm] = useState(item);
+  const [activeTab, setActiveTab] = useState<EditTab>("overview");
+  const [form, setForm] = useState<Record<string, unknown>>(item);
+  const [showSeoModal, setShowSeoModal] = useState(false);
+
+  // Highlights state
+  const [highlights, setHighlights] = useState<HighlightItem[]>(() => {
+    try {
+      const raw = form.highlights;
+      if (Array.isArray(raw)) {
+        return raw.map((h, i) => {
+          if (typeof h === "string") return { id: `hl-${i}`, text: h, active: true, icon: "✓" };
+          return {
+            id: (h.id as string) || `hl-${i}`,
+            text: String(h.text || ""),
+            icon: h.icon ? String(h.icon) : "✓",
+            active: h.active !== false,
+          };
+        });
+      }
+      return [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Variants state
+  const [variants, setVariants] = useState<VariantItem[]>(() => {
+    try {
+      const raw = form.variants;
+      if (Array.isArray(raw)) {
+        return (raw as Record<string, unknown>[]).map((v, i) => ({
+          id: String(v.id || `var-${i}`),
+          name: String(v.name || ""),
+          sku: v.sku ? String(v.sku) : "",
+          price: Number(v.price || form.price || 0),
+          mrp: v.mrp ? Number(v.mrp) : Number(form.mrp || 0),
+          stock: Number(v.stock || 0),
+          active: v.active !== false,
+          sort: Number(v.sort ?? i),
+        }));
+      }
+      return [];
+    } catch {
+      return [];
+    }
+  });
+
+  // A+ Content sections state
   const [aplusSections, setAplusSections] = useState<APlusSection[]>(() => {
     try {
       if (Array.isArray(form.aplusContent)) return form.aplusContent as APlusSection[];
@@ -46,6 +126,8 @@ export function ProductEditFormAdvanced({ item, onSave }: { item: Record<string,
       return [];
     } catch { return []; }
   });
+
+  // Specifications state
   const [specs, setSpecs] = useState<SpecRow[]>(() => {
     try {
       if (Array.isArray(form.specifications)) return form.specifications as SpecRow[];
@@ -53,11 +135,15 @@ export function ProductEditFormAdvanced({ item, onSave }: { item: Record<string,
       return [];
     } catch { return []; }
   });
+
+  // Images state
   const [images, setImages] = useState<string[]>(() => {
     const img = form.images || form.gallery;
     if (Array.isArray(img)) return img.map(String);
     return form.image ? [String(form.image)] : [];
   });
+
+  // Videos state
   const [videos, setVideos] = useState<MediaItem[]>(() => {
     if (Array.isArray(form.videos)) {
       return (form.videos as Record<string, unknown>[]).map((v, i) => ({
@@ -72,68 +158,94 @@ export function ProductEditFormAdvanced({ item, onSave }: { item: Record<string,
     }
     return [];
   });
+
+  // Cross-sell lists
+  const [relatedProducts, setRelatedProducts] = useState<string[]>(() => {
+    if (Array.isArray(form.relatedProductIds)) return form.relatedProductIds.map(String);
+    return [];
+  });
+  const [fbtProducts, setFbtProducts] = useState<string[]>(() => {
+    if (Array.isArray(form.frequentlyBoughtTogetherIds)) return form.frequentlyBoughtTogetherIds.map(String);
+    return [];
+  });
+
+  // All catalog products for cross-sell selectors
+  const [allCatalogProducts, setAllCatalogProducts] = useState<Array<{ id: string; name: string; slug: string }>>([]);
+
   const [aplusTemplatesList, setAplusTemplatesList] = useState<Array<{ id: string; title: string; sections: APlusSection[] }>>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>(String(form.aplusTemplateId || ""));
-  const [newImageUrl, setNewImageUrl] = useState("");
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
   const [isError, setIsError] = useState(false);
   const [aplusExpanded, setAplusExpanded] = useState<number | null>(null);
   const [aplusPublished, setAplusPublished] = useState<boolean>(() => !!form.aplusPublished);
   const [aplusSavedMsg, setAplusSavedMsg] = useState("");
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState("");
+  const [taxRules, setTaxRules] = useState<Array<{ id: string; name: string; gstRate: number; hsnCodes?: string[]; isDefault?: boolean }>>([]);
 
   useEffect(() => {
     fetch("/api/admin/aplus")
       .then(r => r.json())
+      .then(d => { if (d.templates) setAplusTemplatesList(d.templates); })
+      .catch(() => {});
+
+    fetch("/api/admin/tax")
+      .then(r => r.json())
+      .then(d => { if (d.rules) setTaxRules(d.rules); })
+      .catch(() => {});
+
+    fetch("/api/products?all=true")
+      .then(r => r.json())
       .then(d => {
-        if (d.templates) setAplusTemplatesList(d.templates);
+        if (d.products) {
+          setAllCatalogProducts(d.products.map((p: Record<string, unknown>) => ({
+            id: String(p.id || p.slug),
+            name: String(p.name || ""),
+            slug: String(p.slug || ""),
+          })));
+        }
       })
       .catch(() => {});
   }, []);
 
-  /* ── FILE UPLOAD HELPER ── */
-  const uploadFiles = useCallback(async (files: FileList | File[], folder = "products"): Promise<string[]> => {
-    setUploading(true); setUploadProgress("Uploading...");
-    const formData = new FormData();
-    Array.from(files).forEach(f => formData.append("files", f));
-    formData.append("folder", folder);
-    try {
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      const data = await res.json();
-      if (res.ok && data.files) {
-        const urls = data.files.map((f: { url: string }) => f.url);
-        setUploadProgress(`Uploaded ${urls.length} file(s) successfully!`);
-        setTimeout(() => setUploadProgress(""), 3000);
-        return urls;
-      }
-      setUploadProgress("Upload failed: " + (data.error || "Unknown error"));
-      return [];
-    } catch {
-      setUploadProgress("Upload failed: network error");
-      return [];
-    } finally { setUploading(false); }
-  }, []);
+  const inputStyle = { width: "100%", padding: "9px 12px", border: "1px solid var(--line)", fontSize: 13, background: "#fff", color: "var(--foreground)" };
+  const labelStyle = { fontSize: 11, fontWeight: 600 as const, display: "block" as const, marginBottom: 4, color: "var(--foreground)" };
 
-  const inputStyle = { width: "100%", padding: "10px 14px", border: "1px solid var(--line)", fontSize: 14 };
-  const labelStyle = { fontSize: 11, fontWeight: 600 as const, display: "block" as const, marginBottom: 4 };
-
-  /* ── IMAGE HELPERS ── */
-  const addImage = () => {
-    if (newImageUrl.trim()) {
-      setImages([...images, newImageUrl.trim()]);
-      setNewImageUrl("");
-    }
+  /* ── HIGHLIGHTS HELPERS ── */
+  const addHighlight = () => {
+    setHighlights([...highlights, { id: `hl-${Date.now()}`, text: "", icon: "✓", active: true }]);
   };
-  const removeImage = (idx: number) => setImages(images.filter((_, i) => i !== idx));
-  const moveImage = (idx: number, dir: number) => {
-    const arr = [...images];
-    const swap = idx + dir;
+  const updateHighlight = (idx: number, patch: Partial<HighlightItem>) => {
+    const arr = [...highlights]; arr[idx] = { ...arr[idx], ...patch }; setHighlights(arr);
+  };
+  const removeHighlight = (idx: number) => setHighlights(highlights.filter((_, i) => i !== idx));
+  const moveHighlight = (idx: number, dir: number) => {
+    const arr = [...highlights]; const swap = idx + dir;
     if (swap < 0 || swap >= arr.length) return;
-    [arr[idx], arr[swap]] = [arr[swap], arr[idx]];
-    setImages(arr);
+    [arr[idx], arr[swap]] = [arr[swap], arr[idx]]; setHighlights(arr);
   };
+  const duplicateHighlight = (idx: number) => {
+    const src = highlights[idx];
+    const dup = { ...src, id: `hl-${Date.now()}` };
+    const arr = [...highlights]; arr.splice(idx + 1, 0, dup); setHighlights(arr);
+  };
+
+  /* ── VARIANTS HELPERS ── */
+  const addVariant = () => {
+    setVariants([...variants, {
+      id: `var-${Date.now()}`,
+      name: "",
+      sku: `${form.sku || form.slug || "QC"}-${variants.length + 1}`,
+      price: Number(form.price || 0),
+      mrp: Number(form.mrp || 0),
+      stock: 10,
+      active: true,
+      sort: variants.length,
+    }]);
+  };
+  const updateVariant = (idx: number, patch: Partial<VariantItem>) => {
+    const arr = [...variants]; arr[idx] = { ...arr[idx], ...patch }; setVariants(arr);
+  };
+  const removeVariant = (idx: number) => setVariants(variants.filter((_, i) => i !== idx));
 
   /* ── SPEC HELPERS ── */
   const addSpec = () => setSpecs([...specs, { name: "", value: "" }]);
@@ -163,12 +275,24 @@ export function ProductEditFormAdvanced({ item, onSave }: { item: Record<string,
   };
 
   /* ── SAVE ── */
-  const save = async () => {
+  const handleSaveClick = () => {
+    const isNew = Boolean(form.isNew);
+    const oldSlug = String(item.slug || "").trim().toLowerCase();
+    const newSlug = String(form.slug || "").trim().toLowerCase();
+    if (!isNew && oldSlug && newSlug && oldSlug !== newSlug) {
+      setShowSeoModal(true);
+      return;
+    }
+    executeSave();
+  };
+
+  const executeSave = async () => {
     setSaving(true); setIsError(false); setMsg("");
     const isNew = Boolean(form.isNew);
-    const identifier = String(form.slug || form.id || "");
+    const identifier = String(item.id || item.slug || form.id || form.slug || "");
     const endpoint = isNew ? "/api/products" : `/api/products/${encodeURIComponent(identifier)}`;
     const method = isNew ? "POST" : "PATCH";
+
     const payload = {
       ...form,
       images: images,
@@ -177,15 +301,50 @@ export function ProductEditFormAdvanced({ item, onSave }: { item: Record<string,
       video: videos[0]?.url || form.video || "",
       videoPoster: videos[0]?.posterUrl || form.videoPoster || "",
       specifications: specs,
+      highlights: highlights,
+      variants: variants,
       aplusContent: aplusSections,
       aplusTemplateId: selectedTemplateId || null,
       aplusPublished: aplusPublished,
       price: Number(form.price || 0),
       mrp: form.mrp ? Number(form.mrp) : undefined,
       discount: form.discount ? Number(form.discount) : undefined,
+      costPrice: form.costPrice !== undefined && form.costPrice !== "" ? Number(form.costPrice) : undefined,
       stock: Number(form.stock || 0),
       lowStockThreshold: Number(form.lowStockThreshold || 10),
+      scarcityThreshold: Number(form.scarcityThreshold ?? 5),
+      minPurchaseQty: Number(form.minPurchaseQty ?? 1),
+      maxPurchaseQty: Number(form.maxPurchaseQty ?? 10),
+      trackInventory: form.trackInventory !== false,
+      inventoryMessagingEnabled: form.inventoryMessagingEnabled !== false,
+      preorderEnabled: Boolean(form.preorderEnabled),
+      preorderLabel: form.preorderLabel || "Pre-Order Now",
+      preorderMessage: form.preorderMessage || "",
+      expectedDispatchDate: form.expectedDispatchDate || "",
+      preorderMaxQty: form.preorderMaxQty ? Number(form.preorderMaxQty) : undefined,
+      preorderCodAllowed: Boolean(form.preorderCodAllowed),
+      outOfStockMessage: form.outOfStockMessage || "",
+      status: String(form.status || (Number(form.stock || 0) <= 0 ? "out_of_stock" : "active")),
+      taxRate: Number(form.taxRate || form.gstRate || 12),
+      gstRate: form.gstRate !== undefined && form.gstRate !== "" ? Number(form.gstRate) : Number(form.taxRate || 12),
+      taxMode: form.taxMode || "taxable",
+      taxInclusive: form.taxInclusive !== false,
+      taxRuleId: form.taxRuleId ? String(form.taxRuleId) : undefined,
+      hsnCode: String(form.hsnCode || "3004"),
+      taxCategory: String(form.taxCategory || "pharmaceuticals"),
+      weightGrams: form.weightGrams ? Number(form.weightGrams) : undefined,
+      dimensions: {
+        length: form.dimLength ? Number(form.dimLength) : undefined,
+        width: form.dimWidth ? Number(form.dimWidth) : undefined,
+        height: form.dimHeight ? Number(form.dimHeight) : undefined,
+        unit: String(form.dimUnit || "cm"),
+      },
+      coldChainRequired: Boolean(form.coldChainRequired),
+      relatedProductIds: relatedProducts,
+      frequentlyBoughtTogetherIds: fbtProducts,
+      adminNotes: String(form.adminNotes || ""),
     };
+
     try {
       const res = await fetch(endpoint, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       const data = await res.json().catch(() => ({}));
@@ -195,68 +354,102 @@ export function ProductEditFormAdvanced({ item, onSave }: { item: Record<string,
     setSaving(false);
   };
 
-  /* ── TAB CONFIG ── */
+  /* ── 15 ENTERPRISE TABS CONFIG ── */
   const tabs: { id: EditTab; label: string; icon: string; badge?: number }[] = [
-    { id: "info", label: "Basic Info", icon: "📋" },
-    { id: "images", label: "Images", icon: "🖼️", badge: images.length || undefined },
-    { id: "media", label: "Media & Content", icon: "🎬" },
+    { id: "overview", label: "Overview", icon: "📋" },
     { id: "pricing", label: "Pricing", icon: "💰" },
+    { id: "inventory", label: "Inventory & Pre-order", icon: "📦" },
+    { id: "variants", label: "Variants & SKUs", icon: "🔀", badge: variants.length || undefined },
+    { id: "media", label: "Media & 3D", icon: "🎬", badge: images.length + videos.length || undefined },
+    { id: "highlights", label: "Key Highlights", icon: "💡", badge: highlights.length || undefined },
+    { id: "description", label: "Description", icon: "📝" },
     { id: "specs", label: "Specifications", icon: "📐", badge: specs.length || undefined },
+    { id: "pharma", label: "Pharma & Clinical", icon: "💊" },
+    { id: "tax", label: "Tax & GST", icon: "⚖️" },
+    { id: "shipping", label: "Shipping", icon: "🚚" },
     { id: "aplus", label: "A+ Content", icon: "✨", badge: aplusSections.length || undefined },
     { id: "seo", label: "SEO", icon: "🔍" },
+    { id: "cross_sell", label: "Cross-Sell", icon: "🎯", badge: relatedProducts.length + fbtProducts.length || undefined },
+    { id: "advanced", label: "Advanced", icon: "⚙️" },
   ];
 
   return (
-    <div style={{ maxWidth: 900 }}>
-      {/* ── UPLOAD PROGRESS ── */}
-      {(uploading || uploadProgress) && (
-        <div style={{ padding: "10px 14px", marginBottom: 16, fontSize: 12, fontWeight: 500,
-          background: uploading ? "#e3f2fd" : "#e9f7e9", color: uploading ? "#1565c0" : "#2e7d32",
-          border: `1px solid ${uploading ? "#90caf9" : "#c3e6cb"}`, display: "flex", alignItems: "center", gap: 8 }}>
-          {uploading && <span style={{ display: "inline-block", width: 14, height: 14, border: "2px solid #1565c0", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }} />}
-          {uploadProgress}
+    <div style={{ maxWidth: 1020, margin: "0 auto" }}>
+      {/* ── TOP ACTION HEADER ── */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18, flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <h3 style={{ font: "22px var(--font-display)", margin: 0, color: "var(--foreground)" }}>
+              {form.isNew ? "Create Formulation" : `Edit: ${String(form.name || "Product")}`}
+            </h3>
+            <span style={{
+              fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 4,
+              background: form.status === "out_of_stock" ? "#fff3cd" : form.status === "inactive" ? "#eee" : "#e9f7e9",
+              color: form.status === "out_of_stock" ? "#8a6d3b" : form.status === "inactive" ? "#666" : "#2e7d32",
+              textTransform: "uppercase", letterSpacing: ".05em",
+            }}>
+              {String(form.status || "active")}
+            </span>
+          </div>
+          <p style={{ fontSize: 12, color: "var(--muted)", margin: "4px 0 0" }}>
+            SKU: <code>{String(form.sku || form.slug || "QC-FORMULATION")}</code> · Route: <code>/products/{String(form.slug || "")}</code>
+          </p>
         </div>
-      )}
-      {/* ── HEADER ── */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-        <h3 style={{ font: "20px var(--font-display)", margin: 0 }}>
-          {form.isNew ? "New Product" : `Edit: ${String(form.name || "Product")}`}
-        </h3>
-        <button onClick={save} disabled={saving}
-          style={{ padding: "10px 24px", background: "var(--purple)", color: "#fff", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>
-          {saving ? "Saving…" : "💾 Save Product"}
-        </button>
+        <div style={{ display: "flex", gap: 8 }}>
+          {!form.isNew && (
+            <a
+              href={`/products/${String(form.slug || "")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ padding: "9px 16px", background: "#fff", border: "1px solid var(--purple)", color: "var(--purple)", fontSize: 13, fontWeight: 600, textDecoration: "none", borderRadius: 4 }}
+            >
+              👁️ View Live PDP
+            </a>
+          )}
+          <button
+            onClick={handleSaveClick}
+            disabled={saving}
+            style={{ padding: "9px 24px", background: "var(--purple)", color: "#fff", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, borderRadius: 4 }}
+          >
+            {saving ? "Saving…" : "💾 Save Changes"}
+          </button>
+        </div>
       </div>
 
       {/* ── STATUS MESSAGE ── */}
       {msg && (
         <p style={{
-          padding: "10px 14px", marginBottom: 16, fontSize: 12, fontWeight: 500,
+          padding: "10px 14px", marginBottom: 16, fontSize: 12, fontWeight: 600, borderRadius: 4,
           background: isError ? "#fde8e8" : "#e9f7e9", color: isError ? "#b34141" : "#2e7d32",
           border: `1px solid ${isError ? "#f8b4b4" : "#c3e6cb"}`,
         }}>{msg}</p>
       )}
 
-      {/* ── TAB BAR ── */}
+      {/* ── 15-TAB SCROLLABLE NAVIGATION ── */}
       <div style={{
-        display: "flex", gap: 0, borderBottom: "2px solid var(--line)", marginBottom: 24,
-        overflowX: "auto", scrollbarWidth: "thin",
+        display: "flex", gap: 2, borderBottom: "2px solid var(--line)", marginBottom: 20,
+        overflowX: "auto", scrollbarWidth: "thin", paddingBottom: 1,
       }}>
         {tabs.map(t => (
-          <button key={t.id} onClick={() => setActiveTab(t.id)}
+          <button
+            key={t.id}
+            onClick={() => setActiveTab(t.id)}
             style={{
-              padding: "12px 18px", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600,
-              display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap",
+              padding: "10px 14px", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600,
+              display: "flex", alignItems: "center", gap: 5, whiteSpace: "nowrap",
               background: activeTab === t.id ? "#fff" : "transparent",
               color: activeTab === t.id ? "var(--purple)" : "var(--muted)",
               borderBottom: activeTab === t.id ? "2px solid var(--purple)" : "2px solid transparent",
               marginBottom: "-2px",
-            }}>
+              borderRadius: "4px 4px 0 0",
+              transition: "all 0.15s ease",
+            }}
+          >
             <span>{t.icon}</span> {t.label}
             {t.badge !== undefined && (
               <span style={{
                 fontSize: 10, padding: "1px 6px", borderRadius: 10,
-                background: activeTab === t.id ? "var(--purple)" : "#e0d8e3",
+                background: activeTab === t.id ? "var(--purple)" : "#e8e1eb",
                 color: activeTab === t.id ? "#fff" : "var(--purple)",
               }}>{t.badge}</span>
             )}
@@ -265,38 +458,87 @@ export function ProductEditFormAdvanced({ item, onSave }: { item: Record<string,
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════════════ */}
-      {/* TAB: BASIC INFO */}
+      {/* TAB 1: OVERVIEW */}
       {/* ═══════════════════════════════════════════════════════════════════════ */}
-      {activeTab === "info" && (
-        <div style={{ padding: 20, background: "#faf9f7", border: "1px solid var(--line)" }}>
-          <h4 style={{ font: "14px var(--font-display)", marginBottom: 14, color: "var(--purple)" }}>Basic Information</h4>
-          <div style={{ display: "grid", gap: 12 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <div><label style={labelStyle}>Product Name *</label><input style={inputStyle} value={String(form.name || "")} onChange={e => setForm({ ...form, name: e.target.value })} /></div>
-              <div><label style={labelStyle}>Slug</label><input style={inputStyle} value={String(form.slug || "")} onChange={e => setForm({ ...form, slug: e.target.value })} /></div>
+      {activeTab === "overview" && (
+        <div style={{ padding: 22, background: "#faf9f7", border: "1px solid var(--line)", borderRadius: 6 }}>
+          <h4 style={{ font: "15px var(--font-display)", marginBottom: 14, color: "var(--purple)" }}>Formulation Identity & Overview</h4>
+          <div style={{ display: "grid", gap: 14 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 12 }}>
+              <div>
+                <label style={labelStyle}>Product Formulation Name *</label>
+                <input style={inputStyle} value={String(form.name || "")} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Lumine-C 15% Vitamin C Daily Glow Serum" />
+              </div>
+              <div>
+                <label style={labelStyle}>URL Slug (Editable Public Route) *</label>
+                <input
+                  style={inputStyle}
+                  value={String(form.slug || "")}
+                  onChange={e => setForm({
+                    ...form,
+                    slug: e.target.value.toLowerCase().replace(/[^a-z0-9-/]/g, "-").replace(/-+/g, "-")
+                  })}
+                  placeholder="e.g. lumine-c"
+                />
+                <div style={{ marginTop: 4, fontSize: 11, color: "var(--muted)" }}>
+                  Preview: <code>/products/{String(form.slug || "")}</code>
+                </div>
+                {Boolean(!form.isNew && item.slug && String(form.slug || "").toLowerCase() !== String(item.slug).toLowerCase()) && (
+                  <div style={{ marginTop: 6, padding: "5px 8px", background: "#fef3c7", border: "1px solid #fde68a", borderRadius: 4, fontSize: 11, color: "#92400e" }}>
+                    🔄 URL modified. Saving will auto-create 301 redirect: <code>/products/{String(item.slug)}</code> → <code>/products/{String(form.slug)}</code>
+                  </div>
+                )}
+              </div>
             </div>
+
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-              <div><label style={labelStyle}>Category</label><input style={inputStyle} value={String(form.category || "")} onChange={e => setForm({ ...form, category: e.target.value })} /></div>
-              <div><label style={labelStyle}>Brand</label><input style={inputStyle} value={String(form.brand || "Queens Care")} onChange={e => setForm({ ...form, brand: e.target.value })} /></div>
-              <div><label style={labelStyle}>SKU</label><input style={inputStyle} value={String(form.sku || form.slug || "")} onChange={e => setForm({ ...form, sku: e.target.value })} /></div>
+              <div>
+                <label style={labelStyle}>Primary Category *</label>
+                <input style={inputStyle} value={String(form.category || "")} onChange={e => setForm({ ...form, category: e.target.value })} placeholder="e.g. Dermatological / Serums" />
+              </div>
+              <div>
+                <label style={labelStyle}>Subcategory (Optional)</label>
+                <input style={inputStyle} value={String(form.subcategory || "")} onChange={e => setForm({ ...form, subcategory: e.target.value })} placeholder="e.g. Vitamin C / Brightening" />
+              </div>
+              <div>
+                <label style={labelStyle}>Brand / Division</label>
+                <input style={inputStyle} value={String(form.brand || "Queens Care")} onChange={e => setForm({ ...form, brand: e.target.value })} />
+              </div>
             </div>
-            <div><label style={labelStyle}>Short Description</label><input style={inputStyle} value={String(form.shortDescription || "")} onChange={e => setForm({ ...form, shortDescription: e.target.value })} /></div>
-            <div><label style={labelStyle}>Full Description</label><textarea style={{ ...inputStyle, minHeight: 100 }} value={String(form.description || "")} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
-            <div><label style={labelStyle}>Benefits (comma separated)</label><textarea style={{ ...inputStyle, minHeight: 60 }} value={Array.isArray(form.benefits) ? form.benefits.join(", ") : String(form.benefits || "")} onChange={e => setForm({ ...form, benefits: e.target.value.split(",").map(s => s.trim()).filter(Boolean) })} placeholder="Visible radiance, Antioxidant shield..." /></div>
-            <div><label style={labelStyle}>Ingredients</label><textarea style={{ ...inputStyle, minHeight: 60 }} value={String(form.ingredients || "")} onChange={e => setForm({ ...form, ingredients: e.target.value })} /></div>
-            <div><label style={labelStyle}>Usage / Directions</label><textarea style={{ ...inputStyle, minHeight: 60 }} value={String(form.usage || "")} onChange={e => setForm({ ...form, usage: e.target.value })} /></div>
-            <div><label style={labelStyle}>Safety / Warnings</label><textarea style={{ ...inputStyle, minHeight: 60 }} value={String(form.safetyInfo || "")} onChange={e => setForm({ ...form, safetyInfo: e.target.value })} /></div>
-            <div><label style={labelStyle}>Tags</label><input style={inputStyle} value={String(form.tags || "")} onChange={e => setForm({ ...form, tags: e.target.value })} placeholder="serum, vitamin c, skincare (comma separated)" /></div>
-            {/* ── BADGES ── */}
-            <div style={{ borderTop: "1px solid var(--line)", paddingTop: 12, marginTop: 4 }}>
-              <label style={{ ...labelStyle, marginBottom: 8, display: "block", fontSize: 12 }}>Product Badges</label>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+              <div>
+                <label style={labelStyle}>Master SKU</label>
+                <input style={inputStyle} value={String(form.sku || form.slug || "")} onChange={e => setForm({ ...form, sku: e.target.value })} placeholder="e.g. QC-LUM-01" />
+              </div>
+              <div>
+                <label style={labelStyle}>Lifecycle Status</label>
+                <select style={inputStyle} value={String(form.status || "active")} onChange={e => setForm({ ...form, status: e.target.value })}>
+                  <option value="active">Active (Live in Catalog)</option>
+                  <option value="inactive">Inactive (Hidden from Shop)</option>
+                  <option value="out_of_stock">Out of Stock (View-Only)</option>
+                  <option value="hidden">Draft / Hidden</option>
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Prescription Classification</label>
+                <select style={inputStyle} value={String(form.prescriptionStatus || "none")} onChange={e => setForm({ ...form, prescriptionStatus: e.target.value })}>
+                  <option value="none">OTC / Wellness Formulation</option>
+                  <option value="rx_required">Rx Required (Schedule H / H1)</option>
+                  <option value="rx_optional">Physician Recommended</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Visual Merchandising Badges */}
+            <div style={{ borderTop: "1px solid var(--line)", paddingTop: 14 }}>
+              <label style={{ ...labelStyle, fontSize: 12, marginBottom: 8 }}>Merchandising Badges</label>
               <div style={{ display: "flex", gap: 16, flexWrap: "wrap", fontSize: 13 }}>
                 <label><input type="checkbox" checked={!!form.bestSeller} onChange={e => setForm({ ...form, bestSeller: e.target.checked })} /> 🏆 Best Seller</label>
                 <label><input type="checkbox" checked={!!form.newArrival} onChange={e => setForm({ ...form, newArrival: e.target.checked })} /> 🆕 New Arrival</label>
                 <label><input type="checkbox" checked={!!form.featured} onChange={e => setForm({ ...form, featured: e.target.checked })} /> ⭐ Featured</label>
                 <label><input type="checkbox" checked={!!form.trending} onChange={e => setForm({ ...form, trending: e.target.checked })} /> 📈 Trending</label>
-                <label><input type="checkbox" checked={!!form.recommended} onChange={e => setForm({ ...form, recommended: e.target.checked })} /> 👍 Recommended</label>
-                <label><input type="checkbox" checked={!!form.limitedStock} onChange={e => setForm({ ...form, limitedStock: e.target.checked })} /> ⚡ Limited Stock</label>
+                <label><input type="checkbox" checked={!!form.recommended} onChange={e => setForm({ ...form, recommended: e.target.checked })} /> 👍 Physician Recommended</label>
               </div>
             </div>
           </div>
@@ -304,18 +546,331 @@ export function ProductEditFormAdvanced({ item, onSave }: { item: Record<string,
       )}
 
       {/* ═══════════════════════════════════════════════════════════════════════ */}
-      {/* TAB: IMAGES */}
+      {/* TAB 2: PRICING */}
       {/* ═══════════════════════════════════════════════════════════════════════ */}
-      {activeTab === "images" && (
-        <div style={{ padding: 20, background: "#faf9f7", border: "1px solid var(--line)" }}>
-          <h4 style={{ font: "14px var(--font-display)", marginBottom: 4, color: "var(--purple)" }}>
-            Product Images & Gallery ({images.length})
+      {activeTab === "pricing" && (
+        <div style={{ padding: 22, background: "#faf9f7", border: "1px solid var(--line)", borderRadius: 6 }}>
+          <h4 style={{ font: "15px var(--font-display)", marginBottom: 14, color: "var(--purple)" }}>Commercial Pricing & Margins</h4>
+          <div style={{ display: "grid", gap: 14 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12 }}>
+              <div>
+                <label style={labelStyle}>Selling Price (₹) *</label>
+                <input
+                  type="number"
+                  style={inputStyle}
+                  value={Number(form.price || 0)}
+                  onChange={e => {
+                    const sp = Number(e.target.value);
+                    const mrp = Number(form.mrp || 0);
+                    const disc = mrp > sp && mrp > 0 ? Math.round(((mrp - sp) / mrp) * 100) : 0;
+                    setForm({ ...form, price: sp, discount: disc > 0 ? disc : undefined });
+                  }}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Maximum Retail Price (MRP ₹)</label>
+                <input
+                  type="number"
+                  style={inputStyle}
+                  value={Number(form.mrp || 0)}
+                  onChange={e => {
+                    const mrp = Number(e.target.value);
+                    const sp = Number(form.price || 0);
+                    const disc = mrp > sp && mrp > 0 ? Math.round(((mrp - sp) / mrp) * 100) : 0;
+                    setForm({ ...form, mrp: mrp, discount: disc > 0 ? disc : undefined });
+                  }}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Discount (%)</label>
+                <input
+                  type="number"
+                  style={inputStyle}
+                  value={Number(form.discount || 0)}
+                  onChange={e => setForm({ ...form, discount: Number(e.target.value) })}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Cost Price (₹) [Internal Admin Only]</label>
+                <input
+                  type="number"
+                  style={inputStyle}
+                  value={form.costPrice !== undefined ? String(form.costPrice) : ""}
+                  placeholder="e.g. 240"
+                  onChange={e => setForm({ ...form, costPrice: e.target.value === "" ? undefined : Number(e.target.value) })}
+                />
+              </div>
+            </div>
+
+            {/* Margin Calculation Box */}
+            {(() => {
+              const sp = Number(form.price || 0);
+              const cp = Number(form.costPrice || 0);
+              const mrp = Number(form.mrp || 0);
+              if (sp > 0 && cp > 0) {
+                const margin = sp - cp;
+                const marginPct = ((margin / sp) * 100).toFixed(1);
+                return (
+                  <div style={{ background: "#e8f5e9", border: "1px solid #c8e6c9", borderRadius: 4, padding: "10px 14px", fontSize: 12 }}>
+                    <b>Gross Commercial Margin: </b>
+                    <span style={{ color: "#2e7d32", fontWeight: 700 }}>₹{margin.toFixed(2)} ({marginPct}%)</span>
+                    {mrp > sp && <span style={{ marginLeft: 14, color: "#666" }}>Customer Saves: ₹{(mrp - sp).toFixed(2)} ({Math.round(((mrp - sp) / mrp) * 100)}% off)</span>}
+                  </div>
+                );
+              }
+              return null;
+            })()}
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* TAB 3: INVENTORY & PRE-ORDER */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {activeTab === "inventory" && (
+        <div style={{ padding: 22, background: "#faf9f7", border: "1px solid var(--line)", borderRadius: 6 }}>
+          <h4 style={{ font: "15px var(--font-display)", marginBottom: 14, color: "var(--purple)" }}>Authoritative Inventory &amp; Pre-Order Orchestration</h4>
+          <div style={{ display: "grid", gap: 16 }}>
+            {/* Core Inventory Toggles */}
+            <div style={{ display: "flex", gap: 24, flexWrap: "wrap", background: "#fff", padding: 12, borderRadius: 4, border: "1px solid var(--line)" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  checked={form.trackInventory !== false}
+                  onChange={e => setForm({ ...form, trackInventory: e.target.checked })}
+                />
+                Enable Authoritative Stock Tracking
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  checked={form.inventoryMessagingEnabled !== false}
+                  onChange={e => setForm({ ...form, inventoryMessagingEnabled: e.target.checked })}
+                />
+                Show Dynamic Scarcity Messaging on PDP
+              </label>
+            </div>
+
+            {/* Quantity Limits & Thresholds */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12 }}>
+              <div>
+                <label style={labelStyle}>Available Stock Units *</label>
+                <input
+                  type="number"
+                  style={inputStyle}
+                  value={Number(form.stock ?? 0)}
+                  onChange={e => setForm({ ...form, stock: Math.max(0, Number(e.target.value)) })}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Low-Stock Warning Level</label>
+                <input
+                  type="number"
+                  style={inputStyle}
+                  value={Number(form.lowStockThreshold ?? 10)}
+                  onChange={e => setForm({ ...form, lowStockThreshold: Number(e.target.value) })}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Scarcity Urgency Threshold</label>
+                <input
+                  type="number"
+                  style={inputStyle}
+                  value={Number(form.scarcityThreshold ?? 5)}
+                  onChange={e => setForm({ ...form, scarcityThreshold: Number(e.target.value) })}
+                />
+                <span style={{ fontSize: 10, color: "var(--muted)" }}>Displays &ldquo;Only X left&rdquo; when &le; this</span>
+              </div>
+              <div>
+                <label style={labelStyle}>Max Purchase Per Order</label>
+                <input
+                  type="number"
+                  style={inputStyle}
+                  value={Number(form.maxPurchaseQty ?? 10)}
+                  onChange={e => setForm({ ...form, maxPurchaseQty: Math.max(1, Number(e.target.value)) })}
+                />
+              </div>
+            </div>
+
+            {/* Real-time Customer Scarcity Preview */}
+            <div style={{ background: "#fff", border: "1px dashed var(--purple)", borderRadius: 6, padding: "12px 16px" }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--purple)", textTransform: "uppercase", letterSpacing: ".05em", marginBottom: 4 }}>
+                Customer-Facing Scarcity Simulation Preview:
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 600 }}>
+                {Number(form.stock || 0) <= 0 ? (
+                  Boolean(form.preorderEnabled) ? (
+                    <span style={{ color: "#0066cc" }}>🔷 {String(form.preorderLabel || "Pre-Order Now")} — {String(form.preorderMessage || "Dispatching soon")}</span>
+                  ) : (
+                    <span style={{ color: "#b34141" }}>🚫 Out of Stock — {String(form.outOfStockMessage || "Back-in-stock waitlist available")}</span>
+                  )
+                ) : Number(form.stock || 0) <= Number(form.scarcityThreshold ?? 5) ? (
+                  <span style={{ color: "#d97706" }}>⚡ Only {Number(form.stock)} units left in lab stock — Order now</span>
+                ) : (
+                  <span style={{ color: "#2e7d32" }}>✓ In Stock — Ready for dispatch</span>
+                )}
+              </div>
+            </div>
+
+            {/* Out of Stock Messaging */}
+            <div>
+              <label style={labelStyle}>Out of Stock Message (Optional)</label>
+              <input
+                style={inputStyle}
+                value={String(form.outOfStockMessage || "")}
+                onChange={e => setForm({ ...form, outOfStockMessage: e.target.value })}
+                placeholder="e.g. Currently undergoing cGMP batch synthesis — restocking in 4 days"
+              />
+            </div>
+
+            {/* Pre-Order Architecture */}
+            <div style={{ borderTop: "1px solid var(--line)", paddingTop: 14 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--purple)" }}>
+                  ⏳ Backorder &amp; Pre-Order Orchestration
+                </span>
+                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    checked={Boolean(form.preorderEnabled)}
+                    onChange={e => setForm({ ...form, preorderEnabled: e.target.checked })}
+                  />
+                  Enable Pre-Order When Stock Is Zero
+                </label>
+              </div>
+
+              {Boolean(form.preorderEnabled) && (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, background: "#fff", padding: 14, borderRadius: 4, border: "1px solid #b3d7ff" }}>
+                  <div>
+                    <label style={labelStyle}>Pre-Order Button Label</label>
+                    <input
+                      style={inputStyle}
+                      value={String(form.preorderLabel || "Pre-Order Now")}
+                      onChange={e => setForm({ ...form, preorderLabel: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Expected Dispatch Date / Window</label>
+                    <input
+                      style={inputStyle}
+                      value={String(form.expectedDispatchDate || "")}
+                      onChange={e => setForm({ ...form, expectedDispatchDate: e.target.value })}
+                      placeholder="e.g. Dispatches on Oct 5, 2026"
+                    />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Max Pre-Order Capacity (Optional)</label>
+                    <input
+                      type="number"
+                      style={inputStyle}
+                      value={form.preorderMaxQty ? String(form.preorderMaxQty) : ""}
+                      onChange={e => setForm({ ...form, preorderMaxQty: e.target.value ? Number(e.target.value) : undefined })}
+                      placeholder="e.g. 50"
+                    />
+                  </div>
+                  <div style={{ gridColumn: "1 / -1" }}>
+                    <label style={labelStyle}>Pre-Order Explanatory Message</label>
+                    <input
+                      style={inputStyle}
+                      value={String(form.preorderMessage || "")}
+                      onChange={e => setForm({ ...form, preorderMessage: e.target.value })}
+                      placeholder="e.g. Reserved directly from the next clinical batch. Priority express shipping included."
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, cursor: "pointer" }}>
+                      <input
+                        type="checkbox"
+                        checked={Boolean(form.preorderCodAllowed)}
+                        onChange={e => setForm({ ...form, preorderCodAllowed: e.target.checked })}
+                      />
+                      Allow Cash on Delivery (COD) for Pre-Orders
+                    </label>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* TAB 4: VARIANTS & SKUS */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {activeTab === "variants" && (
+        <div style={{ padding: 22, background: "#faf9f7", border: "1px solid var(--line)", borderRadius: 6 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <div>
+              <h4 style={{ font: "15px var(--font-display)", color: "var(--purple)", margin: 0 }}>
+                Multi-SKU &amp; Variant Matrix ({variants.length})
+              </h4>
+              <p style={{ fontSize: 11, color: "var(--muted)", margin: "3px 0 0" }}>
+                Add different sizes, strengths, or packaging variants. Each variant has independent stock and price.
+              </p>
+            </div>
+            <button
+              onClick={addVariant}
+              style={{ padding: "7px 14px", background: "var(--purple)", color: "#fff", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600, borderRadius: 4 }}
+            >
+              + Add SKU Variant
+            </button>
+          </div>
+
+          {variants.length > 0 ? (
+            <div style={{ display: "grid", gap: 10 }}>
+              {variants.map((v, idx) => (
+                <div key={v.id || idx} style={{ display: "grid", gridTemplateColumns: "2fr 1.5fr 1fr 1fr 1fr auto auto", gap: 8, alignItems: "center", background: "#fff", padding: 10, border: "1px solid var(--line)", borderRadius: 4 }}>
+                  <div>
+                    <label style={{ fontSize: 10, color: "var(--muted)", display: "block" }}>Variant Name (e.g. 50ml / 500mg)</label>
+                    <input style={inputStyle} value={v.name} onChange={e => updateVariant(idx, { name: e.target.value })} placeholder="e.g. 50ml Bottle" />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 10, color: "var(--muted)", display: "block" }}>SKU Code</label>
+                    <input style={inputStyle} value={v.sku || ""} onChange={e => updateVariant(idx, { sku: e.target.value })} placeholder="e.g. QC-LUM-50ML" />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 10, color: "var(--muted)", display: "block" }}>Price (₹)</label>
+                    <input type="number" style={inputStyle} value={v.price} onChange={e => updateVariant(idx, { price: Number(e.target.value) })} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 10, color: "var(--muted)", display: "block" }}>MRP (₹)</label>
+                    <input type="number" style={inputStyle} value={v.mrp || 0} onChange={e => updateVariant(idx, { mrp: Number(e.target.value) })} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 10, color: "var(--muted)", display: "block" }}>Stock</label>
+                    <input type="number" style={inputStyle} value={v.stock} onChange={e => updateVariant(idx, { stock: Math.max(0, Number(e.target.value)) })} />
+                  </div>
+                  <div style={{ textAlign: "center" }}>
+                    <label style={{ fontSize: 10, color: "var(--muted)", display: "block" }}>Active</label>
+                    <input type="checkbox" checked={v.active} onChange={e => updateVariant(idx, { active: e.target.checked })} />
+                  </div>
+                  <button onClick={() => removeVariant(idx)} style={{ padding: "6px 10px", border: "1px solid #e2c3c3", background: "#fff", color: "#b34141", cursor: "pointer", fontSize: 11, borderRadius: 4 }}>✕</button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ padding: 30, textAlign: "center", border: "2px dashed var(--line)", color: "var(--muted)", borderRadius: 4 }}>
+              <p style={{ fontSize: 13, margin: 0 }}>This product currently has a single default SKU (no extra variants).</p>
+              <p style={{ fontSize: 11, margin: "6px 0 0" }}>Click &ldquo;+ Add SKU Variant&rdquo; if you have multiple sizes, strengths, or bottle volumes.</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* TAB 5: MEDIA & 3D */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {activeTab === "media" && (
+        <div style={{ padding: 22, background: "#faf9f7", border: "1px solid var(--line)", borderRadius: 6 }}>
+          <h4 style={{ font: "15px var(--font-display)", marginBottom: 4, color: "var(--purple)" }}>
+            Product Photography, Clinical Videos &amp; 3D Model
           </h4>
-          <p style={{ fontSize: 12, color: "var(--muted)", marginBottom: 14 }}>
-            The first image is the primary/featured product photo. Add, reorder, or replace product photos.
+          <p style={{ fontSize: 12, color: "var(--muted)", marginBottom: 16 }}>
+            The first image is the primary hero image. Videos and 3D models enrich the customer PDP gallery.
           </p>
+
           <GlobalMediaUploader
-            label="Product Images"
+            label="Product Image Gallery"
             preset="product_image"
             multiple
             value={images}
@@ -332,117 +887,41 @@ export function ProductEditFormAdvanced({ item, onSave }: { item: Record<string,
             }}
             folder="products"
           />
-        </div>
-      )}
-
-      {/* ═══════════════════════════════════════════════════════════════════════ */}
-      {/* TAB: MEDIA & CONTENT */}
-      {/* ═══════════════════════════════════════════════════════════════════════ */}
-      {activeTab === "media" && (
-        <div style={{ padding: 20, background: "#faf9f7", border: "1px solid var(--line)" }}>
-          <h4 style={{ font: "14px var(--font-display)", marginBottom: 4, color: "var(--purple)" }}>
-            Product Videos & 3D Interactive Media ({videos.length})
-          </h4>
-          <p style={{ fontSize: 12, color: "var(--muted)", marginBottom: 14 }}>
-            Upload direct MP4 videos or paste YouTube / Vimeo URLs. These will appear in the Amazon-style gallery with video badges on the public product page.
-          </p>
-          <GlobalMediaUploader
-            label="Product Videos"
-            preset="product_video"
-            multiple
-            allowVideo
-            value={videos}
-            onChange={(val) => {
-              const list: MediaItem[] = Array.isArray(val)
-                ? val.map((v) => (typeof v === "string" ? { url: v } : v))
-                : typeof val === "string" && val
-                ? [{ url: val }]
-                : [];
-              setVideos(list);
-              if (list.length > 0) {
-                setForm((prev) => ({
-                  ...prev,
-                  video: list[0].url,
-                  videoPoster: list[0].posterUrl || "",
-                }));
-              }
-            }}
-            folder="products"
-          />
 
           <div style={{ marginTop: 20, borderTop: "1px solid var(--line)", paddingTop: 16 }}>
-            <h4 style={{ fontSize: 13, fontWeight: 700, marginBottom: 12, color: "var(--purple)" }}>🎨 3D Product Model</h4>
+            <GlobalMediaUploader
+              label="Product Videos (MP4 / YouTube / Vimeo)"
+              preset="product_video"
+              multiple
+              allowVideo
+              value={videos}
+              onChange={(val) => {
+                const list: MediaItem[] = Array.isArray(val)
+                  ? val.map((v) => (typeof v === "string" ? { url: v } : v))
+                  : typeof val === "string" && val
+                  ? [{ url: val }]
+                  : [];
+                setVideos(list);
+                if (list.length > 0) {
+                  setForm((prev) => ({ ...prev, video: list[0].url, videoPoster: list[0].posterUrl || "" }));
+                }
+              }}
+              folder="products"
+            />
+          </div>
+
+          <div style={{ marginTop: 20, borderTop: "1px solid var(--line)", paddingTop: 16 }}>
+            <h5 style={{ fontSize: 13, fontWeight: 700, marginBottom: 10, color: "var(--purple)" }}>🎨 3D Interactive Model</h5>
             <div style={{ display: "grid", gap: 12 }}>
               <div>
-                <label style={labelStyle}>Model URL (GLB / GLTF)</label>
+                <label style={labelStyle}>Model URL (.glb / .gltf)</label>
                 <input
                   style={inputStyle}
                   value={String(form.modelUrl || "")}
-                  onChange={(e) => setForm({ ...form, modelUrl: e.target.value })}
+                  onChange={e => setForm({ ...form, modelUrl: e.target.value })}
                   placeholder="/models/product.glb or https://..."
                 />
-                <p style={{ fontSize: 10, color: "var(--muted)", marginTop: 4 }}>Leave empty to hide 3D tab on product page</p>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                <div>
-                  <label style={labelStyle}>Auto Rotate</label>
-                  <select style={inputStyle} value={String(form.model3dAutoRotate ?? "true")} onChange={(e) => setForm({ ...form, model3dAutoRotate: e.target.value === "true" })}>
-                    <option value="true">Enabled</option>
-                    <option value="false">Disabled</option>
-                  </select>
-                </div>
-                <div>
-                  <label style={labelStyle}>Rotation Speed</label>
-                  <input type="number" step="0.1" min="0" max="5" style={inputStyle} value={String(form.model3dRotationSpeed ?? "0.5")} onChange={(e) => setForm({ ...form, model3dRotationSpeed: parseFloat(e.target.value) || 0.5 })} />
-                </div>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-                <div>
-                  <label style={labelStyle}>Scale</label>
-                  <input type="number" step="0.1" min="0.1" max="5" style={inputStyle} value={String(form.model3dScale ?? "1")} onChange={(e) => setForm({ ...form, model3dScale: parseFloat(e.target.value) || 1 })} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Position X</label>
-                  <input type="number" step="0.1" style={inputStyle} value={String(form.model3dPositionX ?? "0")} onChange={(e) => setForm({ ...form, model3dPositionX: parseFloat(e.target.value) || 0 })} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Position Y</label>
-                  <input type="number" step="0.1" style={inputStyle} value={String(form.model3dPositionY ?? "0")} onChange={(e) => setForm({ ...form, model3dPositionY: parseFloat(e.target.value) || 0 })} />
-                </div>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-                <div>
-                  <label style={labelStyle}>Position Z</label>
-                  <input type="number" step="0.1" style={inputStyle} value={String(form.model3dPositionZ ?? "0")} onChange={(e) => setForm({ ...form, model3dPositionZ: parseFloat(e.target.value) || 0 })} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Camera Distance</label>
-                  <input type="number" step="0.5" min="1" max="20" style={inputStyle} value={String(form.model3dCameraDistance ?? "5")} onChange={(e) => setForm({ ...form, model3dCameraDistance: parseFloat(e.target.value) || 5 })} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Lighting</label>
-                  <input type="number" step="0.1" min="0" max="3" style={inputStyle} value={String(form.model3dLighting ?? "1.2")} onChange={(e) => setForm({ ...form, model3dLighting: parseFloat(e.target.value) || 1.2 })} />
-                </div>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-                <div>
-                  <label style={labelStyle}>Shadow</label>
-                  <select style={inputStyle} value={String(form.model3dShadow ?? "true")} onChange={(e) => setForm({ ...form, model3dShadow: e.target.value === "true" })}>
-                    <option value="true">Enabled</option>
-                    <option value="false">Disabled</option>
-                  </select>
-                </div>
-                <div>
-                  <label style={labelStyle}>Animation</label>
-                  <select style={inputStyle} value={String(form.model3dAnimation ?? "true")} onChange={(e) => setForm({ ...form, model3dAnimation: e.target.value === "true" })}>
-                    <option value="true">Enabled</option>
-                    <option value="false">Disabled</option>
-                  </select>
-                </div>
-                <div>
-                  <label style={labelStyle}>Poster Image</label>
-                  <input style={inputStyle} value={String(form.model3dPoster || "")} onChange={(e) => setForm({ ...form, model3dPoster: e.target.value })} placeholder="/images/poster.jpg" />
-                </div>
+                <span style={{ fontSize: 10, color: "var(--muted)" }}>Leave empty to disable the 3D viewer on this PDP</span>
               </div>
             </div>
           </div>
@@ -450,467 +929,491 @@ export function ProductEditFormAdvanced({ item, onSave }: { item: Record<string,
       )}
 
       {/* ═══════════════════════════════════════════════════════════════════════ */}
-      {/* TAB: PRICING & INVENTORY */}
+      {/* TAB 6: KEY HIGHLIGHTS / BULLETS */}
       {/* ═══════════════════════════════════════════════════════════════════════ */}
-      {activeTab === "pricing" && (
-        <div style={{ padding: 20, background: "#faf9f7", border: "1px solid var(--line)" }}>
-          <h4 style={{ font: "14px var(--font-display)", marginBottom: 14, color: "var(--purple)" }}>Pricing & Inventory</h4>
-          <div style={{ display: "grid", gap: 12 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12 }}>
-              <div><label style={labelStyle}>Selling Price (₹)</label><input type="number" style={inputStyle} value={Number(form.price || 0)} onChange={e => setForm({ ...form, price: Number(e.target.value) })} /></div>
-              <div><label style={labelStyle}>MRP (₹)</label><input type="number" style={inputStyle} value={Number(form.mrp || 0)} onChange={e => setForm({ ...form, mrp: Number(e.target.value) })} /></div>
-              <div><label style={labelStyle}>Discount %</label><input type="number" style={inputStyle} value={Number(form.discount || 0)} onChange={e => setForm({ ...form, discount: Number(e.target.value) })} /></div>
-              <div><label style={labelStyle}>Tax/GST %</label><input type="number" style={inputStyle} value={Number(form.taxRate || 18)} onChange={e => setForm({ ...form, taxRate: Number(e.target.value) })} /></div>
+      {activeTab === "highlights" && (
+        <div style={{ padding: 22, background: "#faf9f7", border: "1px solid var(--line)", borderRadius: 6 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
+            <div>
+              <h4 style={{ font: "15px var(--font-display)", color: "var(--purple)", margin: 0 }}>
+                Amazon-Style Key Highlights &amp; Feature Bullets ({highlights.length})
+              </h4>
+              <p style={{ fontSize: 11, color: "var(--muted)", margin: "3px 0 0" }}>
+                Unlimited bullet points. Only active bullets are shown on the live product page. Reorder, duplicate, or toggle visibility below.
+              </p>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12 }}>
-              <div><label style={labelStyle}>Stock Quantity</label><input type="number" style={inputStyle} value={Number(form.stock || 0)} onChange={e => setForm({ ...form, stock: Number(e.target.value) })} /></div>
-              <div><label style={labelStyle}>Low Stock Threshold</label><input type="number" style={inputStyle} value={Number(form.lowStockThreshold || 10)} onChange={e => setForm({ ...form, lowStockThreshold: Number(e.target.value) })} /></div>
-              <div><label style={labelStyle}>Product Status</label>
-                <select style={inputStyle} value={String(form.status || (form.active !== false ? 'active' : 'inactive'))} onChange={e => {
-                  const val = e.target.value;
-                  setForm({ ...form, status: val, active: val === 'active' || val === 'out_of_stock', visible: val !== 'hidden' });
-                }}>
-                  <option value="active">✅ Active</option>
-                  <option value="inactive">⏸️ Inactive</option>
-                  <option value="out_of_stock">🚫 Out of Stock</option>
-                  <option value="hidden">👁️‍🗨️ Hidden (not in listings)</option>
-                </select>
-              </div>
-              <div><label style={labelStyle}>Stock Override</label>
-                <select style={inputStyle} value={Number(form.stock || 0) <= 0 ? 'oos' : 'in_stock'} onChange={e => {
-                  setForm({ ...form, stock: e.target.value === 'oos' ? 0 : Number(form.lowStockThreshold || 10) + 1 });
-                }}>
-                  <option value="in_stock">In Stock</option>
-                  <option value="oos">Out of Stock</option>
-                </select>
-              </div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {highlights.length > 0 && (
+                <>
+                  <button
+                    onClick={() => setHighlights(highlights.filter(h => h.text.trim()))}
+                    style={{ padding: "6px 12px", background: "#fff", border: "1px solid var(--line)", cursor: "pointer", fontSize: 11, borderRadius: 4, color: "var(--muted)" }}
+                  >
+                    🧹 Remove Empty
+                  </button>
+                  <button
+                    onClick={() => setHighlights(highlights.map(h => ({ ...h, active: true })))}
+                    style={{ padding: "6px 12px", background: "#fff", border: "1px solid var(--line)", cursor: "pointer", fontSize: 11, borderRadius: 4, color: "var(--muted)" }}
+                  >
+                    ✅ Enable All
+                  </button>
+                </>
+              )}
+              <button
+                onClick={addHighlight}
+                style={{ padding: "7px 14px", background: "var(--purple)", color: "#fff", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600, borderRadius: 4 }}
+              >
+                + Add Key Highlight
+              </button>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <div style={{ display: "flex", alignItems: "end", paddingBottom: 4 }}><label style={{ fontSize: 13 }}><input type="checkbox" checked={!!form.homepageVisible} onChange={e => setForm({ ...form, homepageVisible: e.target.checked })} /> Show on Homepage</label></div>
-              <div><label style={labelStyle}>Out of Stock Message</label><input style={inputStyle} value={String(form.outOfStockMessage || '')} onChange={e => setForm({ ...form, outOfStockMessage: e.target.value })} placeholder="Currently unavailable — restocking soon" /></div>
-            </div>
-            {/* Status Summary */}
-            {(() => {
-              const stockNum = Number(form.stock || 0);
-              const st = String(form.status || (form.active !== false ? 'active' : 'inactive'));
-              const labels: Record<string, {color: string; text: string}> = {
-                active: { color: '#2e7d32', text: 'ACTIVE — visible on public site' },
-                inactive: { color: '#d4ad65', text: 'INACTIVE — not shown publicly' },
-                out_of_stock: { color: '#e65100', text: 'OUT OF STOCK — page visible but cannot purchase' },
-                hidden: { color: '#b34141', text: 'HIDDEN — removed from all public listings' },
-              };
-              const info = labels[st] || labels.active;
-              return <div style={{ padding: 12, background: stockNum <= 0 ? '#fff3cd' : '#e9f7e9', border: `1px solid ${stockNum <= 0 ? '#ffc107' : '#c3e6cb'}`, fontSize: 12 }}>
-                <b>Status Summary: </b>
-                <span style={{ color: info.color, fontWeight: 600 }}>{info.text}</span>
-              </div>;
-            })()}
           </div>
-        </div>
-      )}
 
-      {/* ═══════════════════════════════════════════════════════════════════════ */}
-      {/* TAB: SPECIFICATIONS */}
-      {/* ═══════════════════════════════════════════════════════════════════════ */}
-      {activeTab === "specs" && (
-        <div style={{ padding: 20, background: "#faf9f7", border: "1px solid var(--line)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-            <h4 style={{ font: "14px var(--font-display)", color: "var(--purple)", margin: 0 }}>
-              Specifications ({specs.length} rows)
-            </h4>
-            <button onClick={addSpec}
-              style={{ padding: "8px 14px", background: "var(--purple)", color: "#fff", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600 }}>+ Add Row</button>
-          </div>
-          {specs.length > 0 ? specs.map((spec, idx) => (
-            <div key={idx} style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 8, marginBottom: 8 }}>
-              <input style={inputStyle} value={spec.name} onChange={e => updateSpec(idx, "name", e.target.value)} placeholder="Specification name (e.g. Pack Size)" />
-              <input style={inputStyle} value={spec.value} onChange={e => updateSpec(idx, "value", e.target.value)} placeholder="Value (e.g. 30ml)" />
-              <button onClick={() => removeSpec(idx)} style={{ padding: "4px 10px", border: "1px solid #e2c3c3", background: "#fff", color: "#b34141", cursor: "pointer", fontSize: 11 }}>✕</button>
+          {highlights.length > 0 ? (
+            <div style={{ display: "grid", gap: 8 }}>
+              {highlights.map((hl, idx) => (
+                <div key={hl.id || idx} style={{ display: "grid", gridTemplateColumns: "24px 40px 1fr auto auto auto auto", gap: 8, alignItems: "center", background: hl.active !== false ? "#fff" : "#f5f3f0", padding: "8px 12px", border: "1px solid var(--line)", borderRadius: 4, opacity: hl.active !== false ? 1 : 0.6 }}>
+                  <span style={{ fontSize: 11, color: "var(--muted)", fontWeight: 600, textAlign: "center" }}>{idx + 1}</span>
+                  <input
+                    style={{ ...inputStyle, textAlign: "center", padding: "8px 4px" }}
+                    value={hl.icon || "✓"}
+                    onChange={e => updateHighlight(idx, { icon: e.target.value })}
+                    title="Bullet icon / symbol"
+                  />
+                  <input
+                    style={inputStyle}
+                    value={hl.text}
+                    onChange={e => updateHighlight(idx, { text: e.target.value })}
+                    placeholder="e.g. 15% Pure L-Ascorbic Acid stabilized with Ferulic Acid"
+                  />
+                  <label style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }}>
+                    <input
+                      type="checkbox"
+                      checked={hl.active !== false}
+                      onChange={e => updateHighlight(idx, { active: e.target.checked })}
+                    />
+                    Active
+                  </label>
+                  <div style={{ display: "flex", gap: 2 }}>
+                    <button onClick={() => moveHighlight(idx, -1)} disabled={idx === 0} style={{ padding: "4px 8px", border: "1px solid #ddd", background: "#fff", cursor: "pointer", fontSize: 10 }}>▲</button>
+                    <button onClick={() => moveHighlight(idx, 1)} disabled={idx === highlights.length - 1} style={{ padding: "4px 8px", border: "1px solid #ddd", background: "#fff", cursor: "pointer", fontSize: 10 }}>▼</button>
+                  </div>
+                  <button onClick={() => duplicateHighlight(idx)} title="Duplicate" style={{ padding: "4px 8px", border: "1px solid #c9d4e8", background: "#fff", color: "#2563eb", cursor: "pointer", fontSize: 10 }}>⎘</button>
+                  <button onClick={() => removeHighlight(idx)} style={{ padding: "4px 8px", border: "1px solid #e2c3c3", background: "#fff", color: "#b34141", cursor: "pointer", fontSize: 10 }}>✕</button>
+                </div>
+              ))}
             </div>
-          )) : (
-            <div style={{ padding: 30, textAlign: "center", border: "2px dashed var(--line)", color: "var(--muted)" }}>
-              <p style={{ fontSize: 14 }}>No specifications yet. Click "+ Add Row" to add product specs.</p>
+          ) : (
+            <div style={{ padding: 30, textAlign: "center", border: "2px dashed var(--line)", color: "var(--muted)", borderRadius: 4 }}>
+              <p style={{ fontSize: 13, margin: 0 }}>No bullet points added yet.</p>
+              <p style={{ fontSize: 11, margin: "6px 0 0" }}>When empty, no bullet box will render on the product page. Click &ldquo;+ Add Key Highlight&rdquo; to add.</p>
             </div>
           )}
         </div>
       )}
 
       {/* ═══════════════════════════════════════════════════════════════════════ */}
-      {/* TAB: A+ CONTENT ★ ★ ★ THE MAIN FEATURE ★ ★ ★ */}
+      {/* TAB 7: DESCRIPTION */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {activeTab === "description" && (
+        <div style={{ padding: 22, background: "#faf9f7", border: "1px solid var(--line)", borderRadius: 6 }}>
+          <h4 style={{ font: "15px var(--font-display)", marginBottom: 14, color: "var(--purple)" }}>Clinical &amp; Narrative Copy</h4>
+          <div style={{ display: "grid", gap: 14 }}>
+            <div>
+              <label style={labelStyle}>Short Executive Summary</label>
+              <input style={inputStyle} value={String(form.shortDescription || "")} onChange={e => setForm({ ...form, shortDescription: e.target.value })} placeholder="A single concise paragraph summarizing clinical purpose" />
+            </div>
+            <div>
+              <label style={labelStyle}>Full Formulation Monograph / Description</label>
+              <textarea style={{ ...inputStyle, minHeight: 110 }} value={String(form.description || "")} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Comprehensive description of product mechanism..." />
+            </div>
+            <div>
+              <label style={labelStyle}>Key Clinical Benefits (comma separated)</label>
+              <textarea style={{ ...inputStyle, minHeight: 65 }} value={Array.isArray(form.benefits) ? form.benefits.join(", ") : String(form.benefits || "")} onChange={e => setForm({ ...form, benefits: e.target.value.split(",").map(s => s.trim()).filter(Boolean) })} placeholder="Antioxidant defense, Melanin inhibition, Collagen synthesis..." />
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div>
+                <label style={labelStyle}>Full Ingredients List (INCI)</label>
+                <textarea style={{ ...inputStyle, minHeight: 80 }} value={String(form.ingredients || "")} onChange={e => setForm({ ...form, ingredients: e.target.value })} placeholder="Aqua, 3-O-Ethyl Ascorbic Acid, Glycerin, Ferulic Acid..." />
+              </div>
+              <div>
+                <label style={labelStyle}>Directions &amp; Application Protocol</label>
+                <textarea style={{ ...inputStyle, minHeight: 80 }} value={String(form.usage || "")} onChange={e => setForm({ ...form, usage: e.target.value })} placeholder="Apply 4-5 drops every morning to freshly cleansed face and neck..." />
+              </div>
+            </div>
+            <div>
+              <label style={labelStyle}>Clinical Warnings &amp; Safety Information</label>
+              <textarea style={{ ...inputStyle, minHeight: 60 }} value={String(form.safetyInfo || "")} onChange={e => setForm({ ...form, safetyInfo: e.target.value })} placeholder="For external dermatological use only. Perform patch test before use..." />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* TAB 8: SPECIFICATIONS */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {activeTab === "specs" && (
+        <div style={{ padding: 22, background: "#faf9f7", border: "1px solid var(--line)", borderRadius: 6 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <h4 style={{ font: "15px var(--font-display)", color: "var(--purple)", margin: 0 }}>
+              Technical Specifications ({specs.length} rows)
+            </h4>
+            <button onClick={addSpec} style={{ padding: "7px 14px", background: "var(--purple)", color: "#fff", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600, borderRadius: 4 }}>+ Add Row</button>
+          </div>
+          {specs.length > 0 ? specs.map((spec, idx) => (
+            <div key={idx} style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 8, marginBottom: 8 }}>
+              <input style={inputStyle} value={spec.name} onChange={e => updateSpec(idx, "name", e.target.value)} placeholder="e.g. Skin Type / pH Level" />
+              <input style={inputStyle} value={spec.value} onChange={e => updateSpec(idx, "value", e.target.value)} placeholder="e.g. All Skin Types / pH 3.5" />
+              <button onClick={() => removeSpec(idx)} style={{ padding: "4px 10px", border: "1px solid #e2c3c3", background: "#fff", color: "#b34141", cursor: "pointer", fontSize: 11, borderRadius: 4 }}>✕</button>
+            </div>
+          )) : (
+            <div style={{ padding: 30, textAlign: "center", border: "2px dashed var(--line)", color: "var(--muted)", borderRadius: 4 }}>
+              <p style={{ fontSize: 13, margin: 0 }}>No specifications yet. Click &ldquo;+ Add Row&rdquo; to add product specs.</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* TAB 9: PHARMA & CLINICAL */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {activeTab === "pharma" && (
+        <div style={{ padding: 22, background: "#faf9f7", border: "1px solid var(--line)", borderRadius: 6 }}>
+          <h4 style={{ font: "15px var(--font-display)", marginBottom: 14, color: "var(--purple)" }}>💊 Pharmaceutical &amp; Clinical Monograph</h4>
+          <div style={{ display: "grid", gap: 14 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div>
+                <label style={labelStyle}>Generic / Salt Name (Optional)</label>
+                <input style={inputStyle} value={String(form.genericName || "")} onChange={e => setForm({ ...form, genericName: e.target.value })} placeholder="e.g. Lycopene, Multivitamins & Minerals" />
+              </div>
+              <div>
+                <label style={labelStyle}>Chemical Composition (Optional)</label>
+                <input style={inputStyle} value={String(form.composition || "")} onChange={e => setForm({ ...form, composition: e.target.value })} placeholder="Active API percentages" />
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+              <div>
+                <label style={labelStyle}>Strength &amp; Dosage Form</label>
+                <input style={inputStyle} value={String(form.strength || form.dosageForm || "")} onChange={e => setForm({ ...form, strength: e.target.value, dosageForm: e.target.value })} placeholder="e.g. 15% w/v / Topical Serum" />
+              </div>
+              <div>
+                <label style={labelStyle}>Pack Size</label>
+                <input style={inputStyle} value={String(form.packSize || "")} onChange={e => setForm({ ...form, packSize: e.target.value })} placeholder="e.g. 30 ml Amber Dropper" />
+              </div>
+              <div>
+                <label style={labelStyle}>Manufacturer</label>
+                <input style={inputStyle} value={String(form.manufacturer || "")} onChange={e => setForm({ ...form, manufacturer: e.target.value })} placeholder="Licensed Pharmaceutical Lab" />
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+              <div>
+                <label style={labelStyle}>Batch No. (Optional)</label>
+                <input style={inputStyle} value={String(form.batchNo || "")} onChange={e => setForm({ ...form, batchNo: e.target.value })} placeholder="e.g. QC-BATCH-2026-08" />
+              </div>
+              <div>
+                <label style={labelStyle}>Expiry Date (Optional)</label>
+                <input style={inputStyle} value={String(form.expiryDate || "")} onChange={e => setForm({ ...form, expiryDate: e.target.value })} placeholder="e.g. 2028-09" />
+              </div>
+              <div>
+                <label style={labelStyle}>Storage Conditions</label>
+                <input style={inputStyle} value={String(form.storageConditions || "")} onChange={e => setForm({ ...form, storageConditions: e.target.value })} placeholder="Store below 25°C in a dry place" />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* TAB 10: TAX & GST */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {activeTab === "tax" && (
+        <div style={{ padding: 22, background: "#faf9f7", border: "1px solid var(--line)", borderRadius: 6 }}>
+          <h4 style={{ font: "15px var(--font-display)", marginBottom: 14, color: "var(--purple)" }}>⚖️ GST &amp; Healthcare Taxation Engine</h4>
+          <div style={{ display: "grid", gap: 14 }}>
+            <div style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 6, padding: 14 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--purple)" }}>Tax Model Mode</span>
+                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    checked={form.taxInclusive !== false}
+                    onChange={e => setForm({ ...form, taxInclusive: e.target.checked })}
+                  />
+                  Selling Price is GST-Inclusive
+                </label>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12, marginBottom: 14 }}>
+                <div>
+                  <label style={labelStyle}>Tax Rule</label>
+                  <select
+                    style={inputStyle}
+                    value={String(form.taxRuleId || "")}
+                    onChange={e => {
+                      const rId = e.target.value;
+                      const matched = taxRules.find(r => r.id === rId);
+                      setForm({
+                        ...form,
+                        taxRuleId: rId,
+                        gstRate: matched ? matched.gstRate : form.gstRate,
+                        hsnCode: (matched?.hsnCodes?.[0]) || form.hsnCode || "3004",
+                      });
+                    }}
+                  >
+                    <option value="">Standard Pharma (12%)</option>
+                    {taxRules.map(r => (
+                      <option key={r.id} value={r.id}>{r.name} ({r.gstRate}%)</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={labelStyle}>Tax Mode</label>
+                  <select style={inputStyle} value={String(form.taxMode || "taxable")} onChange={e => setForm({ ...form, taxMode: e.target.value })}>
+                    <option value="taxable">Taxable (Standard GST)</option>
+                    <option value="exempt">Exempt (0% Healthcare)</option>
+                    <option value="zero_rated">Zero-Rated (0%)</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={labelStyle}>GST Override % (Optional)</label>
+                  <input
+                    type="number"
+                    style={inputStyle}
+                    placeholder="Auto from rule"
+                    value={form.gstRate !== undefined ? String(form.gstRate) : ""}
+                    onChange={e => setForm({ ...form, gstRate: e.target.value === "" ? undefined : Number(e.target.value) })}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>HSN / SAC Code</label>
+                  <input style={inputStyle} value={String(form.hsnCode || "3004")} onChange={e => setForm({ ...form, hsnCode: e.target.value })} />
+                </div>
+              </div>
+
+              {/* Real-time GST Breakdown Preview */}
+              {(() => {
+                const effRate = form.taxMode === "exempt" || form.taxMode === "zero_rated"
+                  ? 0
+                  : (form.gstRate !== undefined && form.gstRate !== "" && !isNaN(Number(form.gstRate))
+                      ? Number(form.gstRate)
+                      : 12);
+                const isInc = form.taxInclusive !== false;
+                const priceNum = Number(form.price || 0);
+                const pTaxable = isInc ? Math.round((priceNum / (1 + effRate / 100)) * 100) / 100 : priceNum;
+                const pGst = isInc ? Math.round((priceNum - pTaxable) * 100) / 100 : Math.round((priceNum * (effRate / 100)) * 100) / 100;
+                const pCgst = Math.round((pGst / 2) * 100) / 100;
+                const pSgst = Math.round((pGst - pCgst) * 100) / 100;
+                const pTotal = isInc ? priceNum : Math.round((pTaxable + pGst) * 100) / 100;
+
+                return (
+                  <div style={{ background: "#f8f6f9", borderRadius: 4, padding: "10px 14px", border: "1px dashed #cfc3d5", fontSize: 12 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+                      <span><strong>Mode:</strong> {isInc ? "GST-Inclusive" : "GST-Exclusive (+ Tax at Checkout)"}</span>
+                      <span><strong>Rate:</strong> {effRate}%</span>
+                      <span><strong>Base Value:</strong> ₹{pTaxable.toFixed(2)}</span>
+                      <span><strong>CGST ({(effRate / 2).toFixed(1)}%):</strong> ₹{pCgst.toFixed(2)}</span>
+                      <span><strong>SGST ({(effRate / 2).toFixed(1)}%):</strong> ₹{pSgst.toFixed(2)}</span>
+                      <span style={{ color: "var(--purple)", fontWeight: 700 }}>Total: ₹{pTotal.toFixed(2)}</span>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* TAB 11: SHIPPING & COLD CHAIN */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {activeTab === "shipping" && (
+        <div style={{ padding: 22, background: "#faf9f7", border: "1px solid var(--line)", borderRadius: 6 }}>
+          <h4 style={{ font: "15px var(--font-display)", marginBottom: 14, color: "var(--purple)" }}>🚚 Shipping, Weight &amp; Cold-Chain Parameters</h4>
+          <div style={{ display: "grid", gap: 14 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12 }}>
+              <div>
+                <label style={labelStyle}>Weight (Grams) (Optional)</label>
+                <input
+                  type="number"
+                  style={inputStyle}
+                  value={form.weightGrams ? String(form.weightGrams) : ""}
+                  onChange={e => setForm({ ...form, weightGrams: e.target.value ? Number(e.target.value) : undefined })}
+                  placeholder="e.g. 150"
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Length (cm)</label>
+                <input
+                  type="number"
+                  style={inputStyle}
+                  value={form.dimLength ? String(form.dimLength) : ""}
+                  onChange={e => setForm({ ...form, dimLength: e.target.value ? Number(e.target.value) : undefined })}
+                  placeholder="e.g. 8"
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Width (cm)</label>
+                <input
+                  type="number"
+                  style={inputStyle}
+                  value={form.dimWidth ? String(form.dimWidth) : ""}
+                  onChange={e => setForm({ ...form, dimWidth: e.target.value ? Number(e.target.value) : undefined })}
+                  placeholder="e.g. 5"
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Height (cm)</label>
+                <input
+                  type="number"
+                  style={inputStyle}
+                  value={form.dimHeight ? String(form.dimHeight) : ""}
+                  onChange={e => setForm({ ...form, dimHeight: e.target.value ? Number(e.target.value) : undefined })}
+                  placeholder="e.g. 12"
+                />
+              </div>
+            </div>
+
+            <div style={{ background: "#fff", padding: 14, border: "1px solid var(--line)", borderRadius: 4 }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  checked={Boolean(form.coldChainRequired)}
+                  onChange={e => setForm({ ...form, coldChainRequired: e.target.checked })}
+                />
+                ❄️ Cold-Chain Packaging Required (Temperature Controlled Dispatch: 2°C - 8°C)
+              </label>
+              <p style={{ fontSize: 11, color: "var(--muted)", margin: "4px 0 0 24px" }}>
+                When enabled, cold-chain thermal packaging alerts will appear on shipping manifest and warehouse dispatch notes.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* TAB 12: A+ CONTENT */}
       {/* ═══════════════════════════════════════════════════════════════════════ */}
       {activeTab === "aplus" && (
-        <div style={{ padding: 20, background: "#faf9f7", border: "1px solid var(--line)" }}>
-          {/* ── PRODUCT ASSIGNMENT HEADER ── */}
-          <div style={{ padding: 16, background: "#fff", border: "2px solid " + (aplusPublished ? "#2e7d32" : "var(--line)"), marginBottom: 20, borderRadius: 4 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <p style={{ fontSize: 11, textTransform: "uppercase" as const, letterSpacing: ".08em", color: "var(--muted)", margin: 0 }}>A+ Content for:</p>
-                <h4 style={{ font: "20px var(--font-display)", color: "var(--purple)", margin: "4px 0 0" }}>{String(form.name || "Untitled Product")}</h4>
-                <p style={{ fontSize: 11, color: "var(--muted)", margin: "2px 0 0" }}>/products/{String(form.slug || "product-slug")}</p>
-              </div>
-              <div style={{ textAlign: "right" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: "flex-end" }}>
-                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: aplusPublished ? "#2e7d32" : "#d4ad65", display: "inline-block" }} />
-                  <span style={{ fontSize: 13, fontWeight: 700, color: aplusPublished ? "#2e7d32" : "#8a6d3b", textTransform: "uppercase" as const, letterSpacing: ".06em" }}>
-                    {aplusPublished ? "PUBLISHED" : "DRAFT"}
-                  </span>
-                </div>
-                <p style={{ fontSize: 11, color: "var(--muted)", margin: "2px 0 0" }}>
-                  {aplusSections.length} section{aplusSections.length !== 1 ? "s" : ""} · {aplusSections.filter(s => s.published !== false).length} visible
-                </p>
-              </div>
-            </div>
-            {/* ── PUBLISH CONTROLS ── */}
-            <div style={{ display: "flex", gap: 8, marginTop: 12, borderTop: "1px solid var(--line)", paddingTop: 12, flexWrap: "wrap" }}>
-              <button onClick={() => { save(); setAplusSavedMsg("Saved!"); setTimeout(() => setAplusSavedMsg(""), 2000); }}
-                style={{ padding: "8px 16px", background: "var(--purple)", color: "#fff", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600 }}>
-                💾 Save A+ Content
-              </button>
-              <a href={`/products/${String(form.slug || "")}`} target="_blank" rel="noopener noreferrer"
-                style={{ padding: "8px 16px", background: "#fff", color: "var(--purple)", border: "1px solid var(--purple)", fontSize: 12, fontWeight: 600, textDecoration: "none" }}>
-                👁️ Preview on Public Page
-              </a>
-              {!aplusPublished ? (
-                <button onClick={() => { setAplusPublished(true); setForm({ ...form, aplusPublished: true }); setAplusSavedMsg("Published! Save to persist."); setTimeout(() => setAplusSavedMsg(""), 3000); }}
-                  style={{ padding: "8px 16px", background: "#2e7d32", color: "#fff", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600 }}>
-                  ✅ Publish A+ Content
-                </button>
-              ) : (
-                <button onClick={() => { setAplusPublished(false); setForm({ ...form, aplusPublished: false }); setAplusSavedMsg("Unpublished. Save to persist."); setTimeout(() => setAplusSavedMsg(""), 3000); }}
-                  style={{ padding: "8px 16px", background: "#b34141", color: "#fff", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600 }}>
-                  🚫 Unpublish A+ Content
-                </button>
-              )}
-            </div>
-            {aplusSavedMsg && (
-              <p style={{ margin: "8px 0 0", fontSize: 12, color: "#2e7d32", fontWeight: 600 }}>{aplusSavedMsg}</p>
-            )}
-          </div>
-
-          {/* ── ATTACH TEMPLATE DROPDOWN CARD ── */}
-          <div style={{ padding: 14, background: "#f0f7ff", border: "1px solid #b3d7ff", marginBottom: 20 }}>
+        <div style={{ padding: 22, background: "#faf9f7", border: "1px solid var(--line)", borderRadius: 6 }}>
+          {/* Header & Status */}
+          <div style={{ padding: 16, background: "#fff", border: "2px solid " + (aplusPublished ? "#2e7d32" : "var(--line)"), marginBottom: 16, borderRadius: 4 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
               <div>
-                <b style={{ fontSize: 13, color: "#004085", display: "block" }}>🔗 Attach Reusable A+ Content Template</b>
-                <span style={{ fontSize: 11, color: "#383d41" }}>Quickly apply an existing A+ story template (e.g. Clinical Rigor, Botanical Purity) to this product.</span>
+                <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: ".08em", color: "var(--muted)", margin: 0 }}>A+ Visual Storytelling for:</p>
+                <h4 style={{ font: "18px var(--font-display)", color: "var(--purple)", margin: "4px 0 0" }}>{String(form.name || "Formulation")}</h4>
               </div>
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <select
-                  value={selectedTemplateId}
-                  onChange={(e) => setSelectedTemplateId(e.target.value)}
-                  style={{ padding: "6px 10px", border: "1px solid #b3d7ff", fontSize: 12, background: "#fff" }}
-                >
-                  <option value="">-- Choose A+ Template --</option>
-                  {aplusTemplatesList.map((t) => (
-                    <option key={t.id} value={t.id}>{t.title} ({t.sections?.length || 0} sections)</option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const found = aplusTemplatesList.find((t) => t.id === selectedTemplateId);
-                    if (found) {
-                      setAplusSections(found.sections);
-                      setAplusPublished(true);
-                      setForm((prev) => ({ ...prev, aplusTemplateId: found.id, aplusPublished: true }));
-                      setAplusSavedMsg(`Attached template: "${found.title}". Click Save Product to persist.`);
-                    }
-                  }}
-                  disabled={!selectedTemplateId}
-                  style={{ padding: "6px 14px", background: "var(--purple)", color: "#fff", border: "none", fontSize: 12, fontWeight: 600, cursor: selectedTemplateId ? "pointer" : "not-allowed" }}
-                >
-                  Apply Template 🔗
-                </button>
+              <div style={{ textAlign: "right" }}>
+                <span style={{
+                  fontSize: 11, padding: "3px 10px", borderRadius: 4,
+                  background: aplusPublished ? "#e9f7e9" : "#fff3cd",
+                  color: aplusPublished ? "#2e7d32" : "#8a6d3b",
+                  fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em",
+                }}>
+                  {aplusPublished ? "✅ PUBLISHED" : "⚠️ DRAFT"}
+                </span>
               </div>
+            </div>
+            <div style={{ display: "flex", gap: 8, marginTop: 12, borderTop: "1px solid var(--line)", paddingTop: 12, flexWrap: "wrap" }}>
+              <button
+                onClick={() => {
+                  setAplusPublished(!aplusPublished);
+                  setForm({ ...form, aplusPublished: !aplusPublished });
+                  setAplusSavedMsg(!aplusPublished ? "Published! Save Product to persist." : "Draft mode enabled.");
+                  setTimeout(() => setAplusSavedMsg(""), 3000);
+                }}
+                style={{ padding: "7px 14px", background: aplusPublished ? "#b34141" : "#2e7d32", color: "#fff", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600, borderRadius: 4 }}
+              >
+                {aplusPublished ? "🚫 Set to Draft" : "✅ Publish A+ Content"}
+              </button>
+              {aplusSavedMsg && <span style={{ fontSize: 12, color: "#2e7d32", alignSelf: "center", fontWeight: 600 }}>{aplusSavedMsg}</span>}
             </div>
           </div>
 
-          {/* ── SECTION TYPE PICKER ── */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 20, padding: 14, background: "#fff", border: "1px solid var(--line)" }}>
-            <span style={{ fontSize: 11, fontWeight: 600, color: "var(--muted)", alignSelf: "center", marginRight: 4 }}>ADD SECTION:</span>
+          {/* Template Attachment */}
+          <div style={{ padding: 12, background: "#f0f7ff", border: "1px solid #b3d7ff", marginBottom: 16, borderRadius: 4, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+            <span style={{ fontSize: 12, color: "#004085" }}>Attach Pre-Built Story Template:</span>
+            <div style={{ display: "flex", gap: 6 }}>
+              <select
+                value={selectedTemplateId}
+                onChange={e => setSelectedTemplateId(e.target.value)}
+                style={{ padding: "6px 8px", fontSize: 12, border: "1px solid #b3d7ff", background: "#fff" }}
+              >
+                <option value="">-- Choose Template --</option>
+                {aplusTemplatesList.map(t => (
+                  <option key={t.id} value={t.id}>{t.title} ({t.sections?.length || 0} sections)</option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => {
+                  const found = aplusTemplatesList.find(t => t.id === selectedTemplateId);
+                  if (found) {
+                    setAplusSections(found.sections);
+                    setAplusPublished(true);
+                    setForm(prev => ({ ...prev, aplusTemplateId: found.id, aplusPublished: true }));
+                    setAplusSavedMsg(`Applied "${found.title}". Click Save Product to persist.`);
+                  }
+                }}
+                disabled={!selectedTemplateId}
+                style={{ padding: "6px 12px", background: "var(--purple)", color: "#fff", border: "none", fontSize: 12, cursor: selectedTemplateId ? "pointer" : "not-allowed", borderRadius: 4 }}
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+
+          {/* Section Picker */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16, padding: 10, background: "#fff", border: "1px solid var(--line)", borderRadius: 4 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", alignSelf: "center", marginRight: 4 }}>ADD:</span>
             {APLUS_TYPES.map(t => (
-              <button key={t.value} onClick={() => addAplusSection(t.value)}
-                style={{
-                  padding: "6px 12px", background: "var(--purple)", color: "#fff", border: "none",
-                  cursor: "pointer", fontSize: 11, fontWeight: 600, borderRadius: 4,
-                }}>
+              <button
+                key={t.value}
+                onClick={() => addAplusSection(t.value)}
+                style={{ padding: "5px 10px", background: "var(--purple)", color: "#fff", border: "none", cursor: "pointer", fontSize: 11, fontWeight: 600, borderRadius: 3 }}
+              >
                 {t.icon} {t.label}
               </button>
             ))}
           </div>
 
-          {/* ── SECTION LIST ── */}
+          {/* Sections List */}
           {aplusSections.length > 0 ? (
-            <div style={{ display: "grid", gap: 0 }}>
+            <div style={{ display: "grid", gap: 8 }}>
               {aplusSections.map((sec, idx) => {
-                const typeConfig = APLUS_TYPES.find(t => t.value === sec.type) || { label: sec.type, icon: "?" };
+                const typeConfig = APLUS_TYPES.find(t => t.value === sec.type) || { label: sec.type, icon: "📄" };
                 const isExpanded = aplusExpanded === idx;
                 return (
-                  <div key={idx} style={{
-                    border: "1px solid var(--line)", borderTop: idx === 0 ? "1px solid var(--line)" : "none",
-                    background: "#fff",
-                  }}>
-                    {/* ── Section Header (always visible, clickable) ── */}
-                    <div style={{
-                      display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", cursor: "pointer",
-                      background: isExpanded ? "#f5f0eb" : "transparent",
-                      borderBottom: isExpanded ? "1px solid var(--line)" : "none",
-                    }} onClick={() => setAplusExpanded(isExpanded ? null : idx)}>
-                      <span style={{ fontSize: 10, color: "var(--muted)", minWidth: 20 }}>#{idx + 1}</span>
-                      <span style={{ fontSize: 14 }}>{typeConfig.icon}</span>
-                      <span style={{ fontSize: 12, fontWeight: 600, flex: 1 }}>
-                        {sec.heading || typeConfig.label}
-                        {sec.heading && <span style={{ fontWeight: 400, color: "var(--muted)", marginLeft: 6 }}>({typeConfig.label})</span>}
-                      </span>
-                      <span style={{
-                        fontSize: 9, padding: "2px 8px", borderRadius: 3,
-                        background: sec.published !== false ? "#e9f7e9" : "#fde8e8",
-                        color: sec.published !== false ? "#2e7d32" : "#b34141",
-                        textTransform: "uppercase" as const, letterSpacing: ".05em",
-                      }}>
-                        {sec.published !== false ? "PUBLISHED" : "DRAFT"}
-                      </span>
-                      <div style={{ display: "flex", gap: 2 }} onClick={e => e.stopPropagation()}>
-                        <button onClick={() => moveAplus(idx, -1)} disabled={idx === 0} title="Move up" style={{ fontSize: 10, padding: "3px 6px", border: "1px solid #ddd", background: "#fff", cursor: "pointer" }}>▲</button>
-                        <button onClick={() => moveAplus(idx, 1)} disabled={idx === aplusSections.length - 1} title="Move down" style={{ fontSize: 10, padding: "3px 6px", border: "1px solid #ddd", background: "#fff", cursor: "pointer" }}>▼</button>
-                        <button onClick={() => removeAplus(idx)} title="Delete section" style={{ fontSize: 10, padding: "3px 6px", border: "1px solid #e2c3c3", background: "#fff", color: "#b34141", cursor: "pointer" }}>✕</button>
+                  <div key={idx} style={{ border: "1px solid var(--line)", background: "#fff", borderRadius: 4, overflow: "hidden" }}>
+                    <div
+                      style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", cursor: "pointer", background: isExpanded ? "#f5f0eb" : "transparent" }}
+                      onClick={() => setAplusExpanded(isExpanded ? null : idx)}
+                    >
+                      <span style={{ fontSize: 12 }}>{typeConfig.icon}</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, flex: 1 }}>{sec.heading || typeConfig.label}</span>
+                      <div style={{ display: "flex", gap: 4 }} onClick={e => e.stopPropagation()}>
+                        <button onClick={() => moveAplus(idx, -1)} disabled={idx === 0} style={{ padding: "2px 6px", fontSize: 10, border: "1px solid #ddd", background: "#fff", cursor: "pointer" }}>▲</button>
+                        <button onClick={() => moveAplus(idx, 1)} disabled={idx === aplusSections.length - 1} style={{ padding: "2px 6px", fontSize: 10, border: "1px solid #ddd", background: "#fff", cursor: "pointer" }}>▼</button>
+                        <button onClick={() => removeAplus(idx)} style={{ padding: "2px 6px", fontSize: 10, border: "1px solid #e2c3c3", background: "#fff", color: "#b34141", cursor: "pointer" }}>✕</button>
                       </div>
-                      <span style={{ fontSize: 12, color: "var(--muted)" }}>{isExpanded ? "▲" : "▼"}</span>
+                      <span style={{ fontSize: 10, color: "var(--muted)" }}>{isExpanded ? "▲" : "▼"}</span>
                     </div>
 
-                    {/* ── Section Editor (expanded) ── */}
                     {isExpanded && (
-                      <div style={{ padding: 16, background: "#faf9f7" }}>
+                      <div style={{ padding: 14, background: "#faf9f7", borderTop: "1px solid var(--line)" }}>
                         <div style={{ display: "grid", gap: 10 }}>
-                          {/* Published toggle */}
-                          <div>
-                            <label style={{ fontSize: 12 }}>
-                              <input type="checkbox" checked={sec.published !== false} onChange={e => updateAplus(idx, { published: e.target.checked })} />
-                              {" "}Published (visible on public product page)
-                            </label>
-                          </div>
-
-                          {/* Heading */}
                           <div>
                             <label style={labelStyle}>Section Heading</label>
-                            <input style={inputStyle} value={sec.heading || ""} onChange={e => updateAplus(idx, { heading: e.target.value })}
-                              placeholder="e.g. Why Choose Lumine-C" />
+                            <input style={inputStyle} value={sec.heading || ""} onChange={e => updateAplus(idx, { heading: e.target.value })} placeholder="e.g. Clinical Mechanism" />
                           </div>
-
-                          {/* Media Field */}
                           <div>
-                            <GlobalMediaUploader
-                              label="Section Media (Image or Video)"
-                              preset={sec.type === "hero" ? "aplus_hero" : "general"}
-                              value={sec.imageUrl || sec.videoUrl || ""}
-                              onChange={(val) => {
-                                const url = typeof val === "string" ? val : Array.isArray(val) ? (typeof val[0] === "string" ? val[0] : val[0]?.url) : "";
-                                if (url.includes(".mp4") || url.includes("youtu") || url.includes("vimeo")) {
-                                  updateAplus(idx, { videoUrl: url, imageUrl: url });
-                                } else {
-                                  updateAplus(idx, { imageUrl: url });
-                                }
-                              }}
-                              folder="aplus"
-                            />
+                            <label style={labelStyle}>Image or Media URL</label>
+                            <input style={inputStyle} value={sec.imageUrl || sec.videoUrl || ""} onChange={e => updateAplus(idx, { imageUrl: e.target.value })} placeholder="https://..." />
                           </div>
-
-                          {(sec.type === "hero" || sec.type === "fullWidth") && (
-                            <div>
-                              <label style={labelStyle}>Overlay / Subtext (optional)</label>
-                              <input style={inputStyle} value={sec.text || ""} onChange={e => updateAplus(idx, { text: e.target.value })} placeholder="Text overlay on the hero image" />
-                            </div>
-                          )}
-
-                          {sec.type === "imageText" && (
-                            <>
-                              <p style={{ fontSize: 10, color: "var(--muted)", margin: "0 0 8px" }}>
-                                📐 Recommended: <strong>732 × 600 px</strong> · Ratio: <strong>~1.2:1</strong> · Formats: <strong>JPG, PNG, WEBP, GIF</strong>
-                              </p>
-                              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                                <div>
-                                  <label style={labelStyle}>Image</label>
-                                  <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
-                                    <label style={{ padding: "6px 12px", background: "var(--gold)", color: "#fff", border: "none", cursor: "pointer", fontSize: 10, fontWeight: 600 }}>
-                                      📤 Upload
-                                      <input type="file" accept="image/*,video/*" hidden onChange={async e => {
-                                        if (!e.target.files?.length) return;
-                                        const urls = await uploadFiles(e.target.files, "products");
-                                        if (urls.length) updateAplus(idx, { imageUrl: urls[0] });
-                                        e.target.value = "";
-                                      }} />
-                                    </label>
-                                  </div>
-                                  <input style={inputStyle} value={sec.imageUrl || ""} onChange={e => updateAplus(idx, { imageUrl: e.target.value })} placeholder="Image URL" />
-                                  {sec.imageUrl && <img src={sec.imageUrl} alt={sec.imageAlt || ""} style={{ width: "100%", maxHeight: 150, objectFit: "cover", marginTop: 8, border: "1px solid var(--line)" }} />}
-                                </div>
-                                <div>
-                                  <label style={labelStyle}>Alt Text</label>
-                                  <input style={inputStyle} value={sec.imageAlt || ""} onChange={e => updateAplus(idx, { imageAlt: e.target.value })} placeholder="Image description" />
-                                </div>
-                              </div>
-                              <div>
-                                <label style={labelStyle}>Text Content</label>
-                                <textarea style={{ ...inputStyle, minHeight: 80 }} value={sec.text || ""} onChange={e => updateAplus(idx, { text: e.target.value })}
-                                  placeholder="Describe the product feature, benefit, or story..." />
-                              </div>
-                            </>
-                          )}
-
-                          {sec.type === "richText" && (
-                            <>
-                              <div>
-                                <label style={labelStyle}>Rich Text Content (HTML supported)</label>
-                                <textarea style={{ ...inputStyle, minHeight: 120, fontFamily: "monospace", fontSize: 12 }} value={sec.text || ""} onChange={e => updateAplus(idx, { text: e.target.value })}
-                                  placeholder="Write your editorial content here. HTML tags like &lt;h2&gt;, &lt;p&gt;, &lt;strong&gt;, &lt;em&gt;, &lt;ul&gt;, &lt;li&gt; are supported." />
-                              </div>
-                              <div>
-                                <label style={labelStyle}>Image (optional)</label>
-                                <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
-                                  <label style={{ padding: "6px 12px", background: "var(--gold)", color: "#fff", border: "none", cursor: "pointer", fontSize: 10, fontWeight: 600 }}>
-                                    📤 Upload Image
-                                    <input type="file" accept="image/*" hidden onChange={async e => {
-                                      if (!e.target.files?.length) return;
-                                      const urls = await uploadFiles(e.target.files, "products");
-                                      if (urls.length) updateAplus(idx, { imageUrl: urls[0] });
-                                      e.target.value = "";
-                                    }} />
-                                  </label>
-                                </div>
-                                <input style={inputStyle} value={sec.imageUrl || ""} onChange={e => updateAplus(idx, { imageUrl: e.target.value })} placeholder="Image URL (or use upload button)" />
-                                {sec.imageUrl && <img src={sec.imageUrl} alt="" style={{ width: "100%", maxHeight: 200, objectFit: "cover", marginTop: 8, border: "1px solid var(--line)" }} />}
-                              </div>
-                            </>
-                          )}
-
-                          {(sec.type === "benefits" || sec.type === "features" || sec.type === "highlights") && (
-                            <>
-                              <div>
-                                <label style={labelStyle}>Items (one per line — each becomes a card/tile)</label>
-                                <textarea style={{ ...inputStyle, minHeight: 100 }} value={(sec.items || []).join("\n")} onChange={e => updateAplus(idx, { items: e.target.value.split("\n").filter(Boolean) })}
-                                  placeholder="Clinically tested ingredients&#10;Third-party verified&#10;No parabens or sulfates&#10;Made in India" />
-                              </div>
-                              <div>
-                                <label style={labelStyle}>Image (optional, shown above items)</label>
-                                <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
-                                  <label style={{ padding: "6px 12px", background: "var(--gold)", color: "#fff", border: "none", cursor: "pointer", fontSize: 10, fontWeight: 600 }}>
-                                    📤 Upload Image
-                                    <input type="file" accept="image/*" hidden onChange={async e => {
-                                      if (!e.target.files?.length) return;
-                                      const urls = await uploadFiles(e.target.files, "products");
-                                      if (urls.length) updateAplus(idx, { imageUrl: urls[0] });
-                                      e.target.value = "";
-                                    }} />
-                                  </label>
-                                </div>
-                                <input style={inputStyle} value={sec.imageUrl || ""} onChange={e => updateAplus(idx, { imageUrl: e.target.value })} placeholder="Image URL (or use upload button)" />
-                                {sec.imageUrl && <img src={sec.imageUrl} alt="" style={{ width: "100%", maxHeight: 200, objectFit: "cover", marginTop: 8, border: "1px solid var(--line)" }} />}
-                              </div>
-                            </>
-                          )}
-
-                          {sec.type === "comparison" && (
-                            <>
-                              <div>
-                                <label style={labelStyle}>Comparison Items (one per line — each becomes a column/card)</label>
-                                <textarea style={{ ...inputStyle, minHeight: 100 }} value={(sec.items || []).join("\n")} onChange={e => updateAplus(idx, { items: e.target.value.split("\n").filter(Boolean) })}
-                                  placeholder="Lumine-C: 15% Vitamin C, ₹899, 30ml&#10;Competitor A: 10% Vitamin C, ₹1200, 30ml&#10;Competitor B: 5% Vitamin C, ₹750, 30ml" />
-                              </div>
-                              <div>
-                                <label style={labelStyle}>Description text (optional)</label>
-                                <textarea style={{ ...inputStyle, minHeight: 60 }} value={sec.text || ""} onChange={e => updateAplus(idx, { text: e.target.value })}
-                                  placeholder="Why our product stands out..." />
-                              </div>
-                            </>
-                          )}
-
-                          {sec.type === "video" && (
-                            <>
-                              <div>
-                                <label style={labelStyle}>Video (Upload or URL)</label>
-                                <p style={{ fontSize: 10, color: "var(--muted)", margin: "0 0 6px" }}>
-                                  🎬 Recommended: <strong>1920 × 1080 px</strong> · Formats: <strong>MP4, WEBP</strong> · Max: <strong>100 MB</strong>
-                                </p>
-                                <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
-                                  <label style={{ padding: "6px 12px", background: "var(--gold)", color: "#fff", border: "none", cursor: "pointer", fontSize: 10, fontWeight: 600 }}>
-                                    📤 Upload Video
-                                    <input type="file" accept="video/*" hidden onChange={async e => {
-                                      if (!e.target.files?.length) return;
-                                      const urls = await uploadFiles(e.target.files, "products");
-                                      if (urls.length) updateAplus(idx, { videoUrl: urls[0] });
-                                      e.target.value = "";
-                                    }} />
-                                  </label>
-                                </div>
-                                <input style={inputStyle} value={sec.videoUrl || ""} onChange={e => updateAplus(idx, { videoUrl: e.target.value })}
-                                  placeholder="Video URL (YouTube / Vimeo / uploaded file)" />
-                                {sec.videoUrl && (sec.videoUrl.includes(".mp4") || sec.videoUrl.includes(".webm") || sec.videoUrl.startsWith("/uploads")) ? (
-                                  <video src={sec.videoUrl} controls style={{ width: "100%", maxHeight: 200, marginTop: 8, background: "#000" }} />
-                                ) : sec.videoUrl ? (
-                                  <p style={{ fontSize: 11, color: "#4caf50", marginTop: 4 }}>✓ Video URL set</p>
-                                ) : null}
-                              </div>
-                              <div>
-                                <label style={labelStyle}>Video Thumbnail / Poster (optional)</label>
-                                <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
-                                  <label style={{ padding: "6px 12px", background: "var(--gold)", color: "#fff", border: "none", cursor: "pointer", fontSize: 10, fontWeight: 600 }}>
-                                    📤 Upload
-                                    <input type="file" accept="image/*" hidden onChange={async e => {
-                                      if (!e.target.files?.length) return;
-                                      const urls = await uploadFiles(e.target.files, "products");
-                                      if (urls.length) updateAplus(idx, { imageUrl: urls[0] });
-                                      e.target.value = "";
-                                    }} />
-                                  </label>
-                                </div>
-                                <input style={inputStyle} value={sec.imageUrl || ""} onChange={e => updateAplus(idx, { imageUrl: e.target.value })}
-                                  placeholder="Poster/thumbnail URL" />
-                                {sec.imageUrl && <img src={sec.imageUrl} alt="" style={{ width: "100%", maxHeight: 120, objectFit: "cover", marginTop: 8, border: "1px solid var(--line)" }} />}
-                              </div>
-                              <div>
-                                <label style={labelStyle}>Caption / Description</label>
-                                <input style={inputStyle} value={sec.text || ""} onChange={e => updateAplus(idx, { text: e.target.value })}
-                                  placeholder="Watch how Lumine-C transforms your skin..." />
-                              </div>
-                            </>
-                          )}
-
-                          {sec.type === "cta" && (
-                            <>
-                              <div>
-                                <label style={labelStyle}>CTA Text / Button Label</label>
-                                <input style={inputStyle} value={sec.ctaText || ""} onChange={e => updateAplus(idx, { ctaText: e.target.value })}
-                                  placeholder="Shop Now" />
-                              </div>
-                              <div>
-                                <label style={labelStyle}>CTA Link / URL</label>
-                                <input style={inputStyle} value={sec.ctaLink || ""} onChange={e => updateAplus(idx, { ctaLink: e.target.value })}
-                                  placeholder="/shop or https://..." />
-                              </div>
-                              <div>
-                                <label style={labelStyle}>Background Image</label>
-                                <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
-                                  <label style={{ padding: "6px 12px", background: "var(--gold)", color: "#fff", border: "none", cursor: "pointer", fontSize: 10, fontWeight: 600 }}>
-                                    📤 Upload
-                                    <input type="file" accept="image/*" hidden onChange={async e => {
-                                      if (!e.target.files?.length) return;
-                                      const urls = await uploadFiles(e.target.files, "products");
-                                      if (urls.length) updateAplus(idx, { imageUrl: urls[0] });
-                                      e.target.value = "";
-                                    }} />
-                                  </label>
-                                </div>
-                                <input style={inputStyle} value={sec.imageUrl || ""} onChange={e => updateAplus(idx, { imageUrl: e.target.value })}
-                                  placeholder="Background image URL" />
-                                {sec.imageUrl && <img src={sec.imageUrl} alt="" style={{ width: "100%", maxHeight: 120, objectFit: "cover", marginTop: 8, border: "1px solid var(--line)" }} />}
-                              </div>
-                              <div>
-                                <label style={labelStyle}>Description text</label>
-                                <textarea style={{ ...inputStyle, minHeight: 60 }} value={sec.text || ""} onChange={e => updateAplus(idx, { text: e.target.value })}
-                                  placeholder="Discover the complete Queens Care range..." />
-                              </div>
-                            </>
-                          )}
+                          <div>
+                            <label style={labelStyle}>Narrative Text Content</label>
+                            <textarea style={{ ...inputStyle, minHeight: 70 }} value={sec.text || ""} onChange={e => updateAplus(idx, { text: e.target.value })} placeholder="Content for this section..." />
+                          </div>
                         </div>
                       </div>
                     )}
@@ -919,59 +1422,258 @@ export function ProductEditFormAdvanced({ item, onSave }: { item: Record<string,
               })}
             </div>
           ) : (
-            <div style={{ padding: 40, textAlign: "center", border: "2px dashed var(--line)", color: "var(--muted)" }}>
-              <p style={{ fontSize: 16, marginBottom: 8 }}>✨ No A+ Content yet</p>
-              <p style={{ fontSize: 13 }}>Click any section type above to start building your enhanced product description.</p>
-              <p style={{ fontSize: 12, marginTop: 8 }}>A+ Content appears below the main product information on the public product page.</p>
-            </div>
-          )}
-
-          {/* ── STATUS FOOTER ── */}
-          {aplusSections.length > 0 && (
-            <div style={{ marginTop: 16, padding: "10px 14px", background: aplusPublished ? "#e9f7e9" : "#fdf6e3", border: aplusPublished ? "1px solid #c3e6cb" : "1px solid #e8d5a3", fontSize: 12, color: aplusPublished ? "#2e7d32" : "#8a6d3b" }}>
-              {aplusPublished ? "✅" : "⚠️"} A+ Content is <strong>{aplusPublished ? "PUBLISHED" : "in DRAFT"}</strong> for this product.
-              {aplusPublished
-                ? ` ${aplusSections.filter(s => s.published !== false).length} of ${aplusSections.length} sections visible on the public page.`
-                : ` Only you (the admin) can see this content. Publish it to make it visible on /products/${String(form.slug || "...")}.`}
-            </div>
-          )}
-          {aplusSections.length === 0 && (
-            <div style={{ marginTop: 16, padding: "10px 14px", background: "#fdf6e3", border: "1px solid #e8d5a3", fontSize: 12, color: "#8a6d3b" }}>
-              ⚠️ No A+ sections added yet. Click any section type above to start building. Then Save and Publish to make it visible on the public product page.
+            <div style={{ padding: 30, textAlign: "center", border: "2px dashed var(--line)", color: "var(--muted)", borderRadius: 4 }}>
+              <p style={{ fontSize: 13, margin: 0 }}>No A+ Story sections added yet.</p>
+              <p style={{ fontSize: 11, margin: "6px 0 0" }}>Use the section picker above to construct clinical infographics, comparison tables, and banners.</p>
             </div>
           )}
         </div>
       )}
 
       {/* ═══════════════════════════════════════════════════════════════════════ */}
-      {/* TAB: SEO */}
+      {/* TAB 13: SEO */}
       {/* ═══════════════════════════════════════════════════════════════════════ */}
       {activeTab === "seo" && (
-        <div style={{ padding: 20, background: "#faf9f7", border: "1px solid var(--line)" }}>
-          <h4 style={{ font: "14px var(--font-display)", marginBottom: 14, color: "var(--purple)" }}>SEO & Visibility</h4>
-          <div style={{ display: "grid", gap: 12 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <div><label style={labelStyle}>SEO Title</label><input style={inputStyle} value={String(form.seoTitle || "")} onChange={e => setForm({ ...form, seoTitle: e.target.value })} placeholder="Product name — Queens Care" /></div>
-              <div><label style={labelStyle}>SEO Description</label><input style={inputStyle} value={String(form.seoDescription || "")} onChange={e => setForm({ ...form, seoDescription: e.target.value })} placeholder="Short description for search engines" /></div>
+        <div style={{ padding: 22, background: "#faf9f7", border: "1px solid var(--line)", borderRadius: 6 }}>
+          <h4 style={{ font: "15px var(--font-display)", marginBottom: 14, color: "var(--purple)" }}>🔍 Search Engine Optimization (SEO) &amp; OpenGraph</h4>
+          <div style={{ padding: "10px 14px", background: "#f8fafc", border: "1px solid var(--line)", borderRadius: 4, marginBottom: 14 }}>
+            <label style={{ ...labelStyle, marginBottom: 2 }}>Canonical Public URL</label>
+            <div style={{ fontFamily: "monospace", fontSize: 12, color: "#1e293b" }}>
+              https://queenscare.in/products/{String(form.slug || "")}
+            </div>
+            <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--muted)" }}>
+              Updating this slug automatically establishes an authoritative 301 redirect and updates Google search canonical tags.
+            </p>
+          </div>
+          <div style={{ display: "grid", gap: 14 }}>
+            <div>
+              <label style={labelStyle}>Meta Title</label>
+              <input style={inputStyle} value={String(form.seoTitle || "")} onChange={e => setForm({ ...form, seoTitle: e.target.value })} placeholder="e.g. Lumine-C 15% Vitamin C Serum | Queens Care Laboratories" />
             </div>
             <div>
-              <label style={labelStyle}>OG Image URL</label>
-              <input style={inputStyle} value={String(form.seoOgImage || "")} onChange={e => setForm({ ...form, seoOgImage: e.target.value })} placeholder="https://..." />
+              <label style={labelStyle}>Meta Description</label>
+              <textarea style={{ ...inputStyle, minHeight: 70 }} value={String(form.seoDescription || "")} onChange={e => setForm({ ...form, seoDescription: e.target.value })} placeholder="Concise 150-160 character description for Google search snippets" />
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div>
+                <label style={labelStyle}>OpenGraph Social Image URL</label>
+                <input style={inputStyle} value={String(form.seoOgImage || "")} onChange={e => setForm({ ...form, seoOgImage: e.target.value })} placeholder="https://... (1200x630 px)" />
+              </div>
+              <div>
+                <label style={labelStyle}>Product Image Alt Text</label>
+                <input style={inputStyle} value={String(form.altText || "")} onChange={e => setForm({ ...form, altText: e.target.value })} placeholder="Descriptive alt text for accessibility" />
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── BOTTOM SAVE ── */}
-      <div style={{ marginTop: 24, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <p style={{ fontSize: 12, color: "var(--muted)" }}>
-          {images.length} images · {specs.length} specs · {aplusSections.length} A+ sections
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* TAB 14: CROSS-SELL & MERCHANDISING */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {activeTab === "cross_sell" && (
+        <div style={{ padding: 22, background: "#faf9f7", border: "1px solid var(--line)", borderRadius: 6 }}>
+          <h4 style={{ font: "15px var(--font-display)", marginBottom: 14, color: "var(--purple)" }}>🎯 Cross-Sell, Upsell &amp; Formulations Bundle</h4>
+          <div style={{ display: "grid", gap: 16 }}>
+            {/* Frequently Bought Together */}
+            <div style={{ background: "#fff", padding: 14, border: "1px solid var(--line)", borderRadius: 4 }}>
+              <label style={{ ...labelStyle, fontSize: 13, color: "var(--purple)", marginBottom: 6 }}>
+                Frequently Bought Together Formulations
+              </label>
+              <p style={{ fontSize: 11, color: "var(--muted)", margin: "0 0 10px" }}>
+                Select complementary formulations that customers often combine in their daily protocol.
+              </p>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {allCatalogProducts
+                  .filter(p => p.slug !== form.slug)
+                  .map(p => {
+                    const isSelected = fbtProducts.includes(p.id) || fbtProducts.includes(p.slug);
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => {
+                          if (isSelected) {
+                            setFbtProducts(fbtProducts.filter(id => id !== p.id && id !== p.slug));
+                          } else {
+                            setFbtProducts([...fbtProducts, p.slug]);
+                          }
+                        }}
+                        style={{
+                          padding: "6px 12px", borderRadius: 20, fontSize: 12, cursor: "pointer",
+                          border: isSelected ? "1px solid var(--purple)" : "1px solid var(--line)",
+                          background: isSelected ? "var(--purple)" : "#f8f8f8",
+                          color: isSelected ? "#fff" : "var(--foreground)",
+                          fontWeight: isSelected ? 600 : 400,
+                        }}
+                      >
+                        {isSelected ? "✓ " : "+ "} {p.name}
+                      </button>
+                    );
+                  })}
+              </div>
+            </div>
+
+            {/* Related Formulations */}
+            <div style={{ background: "#fff", padding: 14, border: "1px solid var(--line)", borderRadius: 4 }}>
+              <label style={{ ...labelStyle, fontSize: 13, color: "var(--purple)", marginBottom: 6 }}>
+                Related Formulations in Same Category
+              </label>
+              <p style={{ fontSize: 11, color: "var(--muted)", margin: "0 0 10px" }}>
+                Curated alternatives and regimen recommendations displayed in the related products carousel.
+              </p>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {allCatalogProducts
+                  .filter(p => p.slug !== form.slug)
+                  .map(p => {
+                    const isSelected = relatedProducts.includes(p.id) || relatedProducts.includes(p.slug);
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => {
+                          if (isSelected) {
+                            setRelatedProducts(relatedProducts.filter(id => id !== p.id && id !== p.slug));
+                          } else {
+                            setRelatedProducts([...relatedProducts, p.slug]);
+                          }
+                        }}
+                        style={{
+                          padding: "6px 12px", borderRadius: 20, fontSize: 12, cursor: "pointer",
+                          border: isSelected ? "1px solid var(--purple)" : "1px solid var(--line)",
+                          background: isSelected ? "var(--purple)" : "#f8f8f8",
+                          color: isSelected ? "#fff" : "var(--foreground)",
+                          fontWeight: isSelected ? 600 : 400,
+                        }}
+                      >
+                        {isSelected ? "✓ " : "+ "} {p.name}
+                      </button>
+                    );
+                  })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* TAB 15: ADVANCED & INTERNAL NOTES */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {activeTab === "advanced" && (
+        <div style={{ padding: 22, background: "#faf9f7", border: "1px solid var(--line)", borderRadius: 6 }}>
+          <h4 style={{ font: "15px var(--font-display)", marginBottom: 14, color: "var(--purple)" }}>⚙️ Advanced Settings &amp; Internal Notes</h4>
+          <div style={{ display: "grid", gap: 14 }}>
+            <div style={{ display: "flex", gap: 24, flexWrap: "wrap", background: "#fff", padding: 12, borderRadius: 4, border: "1px solid var(--line)" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  checked={Boolean(form.homepageVisible)}
+                  onChange={e => setForm({ ...form, homepageVisible: e.target.checked })}
+                />
+                Feature in Homepage Formulations Showcase
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  checked={form.visible !== false}
+                  onChange={e => setForm({ ...form, visible: e.target.checked })}
+                />
+                Visible in Catalog Search
+              </label>
+            </div>
+
+            <div>
+              <label style={labelStyle}>Search Keywords &amp; Misspellings (Internal)</label>
+              <input
+                style={inputStyle}
+                value={String(form.searchKeywords || form.tags || "")}
+                onChange={e => setForm({ ...form, searchKeywords: e.target.value, tags: e.target.value })}
+                placeholder="vit c, l-ascorbic, brightening, serum, dark spots"
+              />
+            </div>
+
+            <div>
+              <label style={labelStyle}>Internal Pharmacist / Admin Notes [Confidential]</label>
+              <textarea
+                style={{ ...inputStyle, minHeight: 90 }}
+                value={String(form.adminNotes || "")}
+                onChange={e => setForm({ ...form, adminNotes: e.target.value })}
+                placeholder="Internal audit notes, supplier lead times, storage requirements, or QC lot notes..."
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── BOTTOM SAVE BAR ── */}
+      <div style={{ marginTop: 22, display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--line)", paddingTop: 16 }}>
+        <p style={{ fontSize: 12, color: "var(--muted)", margin: 0 }}>
+          {images.length} photos · {variants.length} SKU variants · {highlights.length} highlights · {specs.length} specs · {aplusSections.length} A+ sections
         </p>
-        <button onClick={save} disabled={saving}
-          style={{ padding: "12px 32px", background: "var(--purple)", color: "#fff", border: "none", cursor: "pointer", fontSize: 14, fontWeight: 600 }}>
+        <button
+          onClick={handleSaveClick}
+          disabled={saving}
+          style={{ padding: "11px 32px", background: "var(--purple)", color: "#fff", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 700, borderRadius: 4 }}
+        >
           {saving ? "Saving…" : "💾 Save Product"}
         </button>
       </div>
+
+      {/* ── SEO IMPACT CONFIRMATION MODAL ── */}
+      {showSeoModal && (
+        <div style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 9999, padding: 16
+        }}>
+          <div style={{
+            background: "#fff", borderRadius: 8, padding: 24, maxWidth: 520, width: "100%",
+            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+              <span style={{ fontSize: 24 }}>⚠️</span>
+              <h3 style={{ margin: 0, font: "20px var(--font-display)", color: "#991b1b" }}>
+                Confirm Public URL / Slug Change
+              </h3>
+            </div>
+            <p style={{ fontSize: 13, color: "#334155", lineHeight: 1.6, margin: "0 0 16px" }}>
+              You are modifying the live public URL for this formulation. Existing backlinks, customer bookmarks, and search engine indices pointing to the previous URL will be affected.
+            </p>
+            <div style={{ background: "#f8fafc", border: "1px solid var(--line)", borderRadius: 6, padding: 12, marginBottom: 18, fontSize: 12 }}>
+              <div style={{ marginBottom: 6 }}>
+                <strong style={{ color: "#64748B" }}>Current URL:</strong>{" "}
+                <code style={{ color: "#dc2626" }}>/products/{String(item.slug)}</code>
+              </div>
+              <div>
+                <strong style={{ color: "#64748B" }}>New URL:</strong>{" "}
+                <code style={{ color: "#16a34a" }}>/products/{String(form.slug)}</code>
+              </div>
+            </div>
+            <p style={{ fontSize: 12, color: "#15803d", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "8px 12px", borderRadius: 4, margin: "0 0 20px" }}>
+              ✓ An authoritative <strong>301 Permanent Redirect</strong> will be automatically registered across all servers to preserve search engine ranking equity and forward existing traffic seamlessly.
+            </p>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+              <button
+                type="button"
+                onClick={() => setShowSeoModal(false)}
+                style={{ padding: "9px 16px", border: "1px solid var(--line)", background: "#fff", borderRadius: 6, fontSize: 13, cursor: "pointer" }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSeoModal(false);
+                  executeSave();
+                }}
+                style={{ padding: "9px 20px", background: "var(--purple)", color: "#fff", border: "none", borderRadius: 6, fontWeight: 600, fontSize: 13, cursor: "pointer" }}
+              >
+                Confirm &amp; Update URL
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

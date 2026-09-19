@@ -1,5 +1,6 @@
 import { json, requireUser, safeText } from "@/lib/http";
 import { store } from "@/lib/commerce/store";
+import { slugValidator, redirectStore, normalizeSlug } from "@/lib/commerce/store-extensions";
 
 export async function GET() {
   const user = await requireUser(["admin"]);
@@ -13,8 +14,14 @@ export async function POST(request: Request) {
   if (!user) return json({ error: "Unauthorized" }, 401);
   const b = await request.json().catch(() => null);
   const title = safeText(b?.title, 180);
-  const slug = safeText(b?.slug, 160).replace(/[^a-z0-9]+/gi, "-").toLowerCase();
-  if (!title || !slug) return json({ error: "Title and slug are required." }, 422);
+  const rawSlug = safeText(b?.slug, 160) || title;
+  if (!title || !rawSlug) return json({ error: "Title and slug are required." }, 422);
+
+  const valResult = await slugValidator.validate(rawSlug, "blog");
+  if (!valResult.valid) {
+    return json({ error: valResult.error || "This URL is already in use." }, 400);
+  }
+  const slug = valResult.normalizedSlug;
 
   const post = await store.posts.save({
     title,
@@ -46,6 +53,11 @@ export async function PATCH(request: Request) {
   const body = await request.json().catch(() => ({}));
   if (!body.id && !body.slug) return json({ error: "id or slug required" }, 422);
 
+  const allPosts = await store.posts.list(true);
+  const existing = allPosts.find((p) => p.id === body.id || p.slug === body.slug);
+  const oldSlug = existing ? normalizeSlug(existing.slug) : "";
+  const postId = existing ? existing.id : body.id;
+
   const data: Record<string, unknown> = {};
   const fields = [
     "title", "slug", "excerpt", "body", "content", "category", "tags",
@@ -56,7 +68,25 @@ export async function PATCH(request: Request) {
     if (k in body) data[k] = body[k];
   }
 
-  const post = await store.posts.save({ id: body.id, slug: body.slug, ...data });
+  if (body.slug) {
+    const valResult = await slugValidator.validate(String(body.slug), "blog", postId);
+    if (!valResult.valid) {
+      return json({ error: valResult.error || "This URL is already in use." }, 400);
+    }
+    data.slug = valResult.normalizedSlug;
+
+    if (oldSlug && oldSlug !== valResult.normalizedSlug) {
+      await redirectStore.createOrUpdate(
+        `/blog/${oldSlug}`,
+        `/blog/${valResult.normalizedSlug}`,
+        "blog",
+        postId,
+        true
+      );
+    }
+  }
+
+  const post = await store.posts.save({ id: postId, slug: (data.slug as string) || oldSlug, ...data });
   return json({ post });
 }
 

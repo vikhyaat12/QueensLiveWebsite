@@ -1,0 +1,384 @@
+{
+  "timestamp": "2026-09-17T17:03:16.930Z",
+  "adminLogin": {
+    "pageOpens": "PASS",
+    "loginFormRenders": "PASS"
+  },
+  "adminDashboard": {
+    "dashboardOpens": "PASS",
+    "sidebarRenders": "PASS",
+    "noBlankPage": "PASS",
+    "no401Or403": "PASS",
+    "no500": "PASS",
+    "bodyLength": 1465
+  },
+  "adminSections": {
+    "Dashboard": {
+      "status": "PASS",
+      "evidence": "1465 chars rendered"
+    },
+    "Products": {
+      "status": "PASS",
+      "evidence": "1465 chars rendered"
+    },
+    "Bulk Products": {
+      "status": "PASS",
+      "evidence": "1465 chars rendered (Bulk controls found: 2)"
+    },
+    "Orders": {
+      "status": "PASS",
+      "evidence": "1465 chars rendered"
+    },
+    "Customers": {
+      "status": "PASS",
+      "evidence": "1465 chars rendered"
+    },
+    "Inventory": {
+      "status": "PASS",
+      "evidence": "1465 chars rendered"
+    },
+    "Homepage CMS": {
+      "status": "PASS",
+      "evidence": "1465 chars rendered"
+    },
+    "Footer Builder": {
+      "status": "PASS",
+      "evidence": "1465 chars rendered"
+    },
+    "A+ Content": {
+      "status": "PASS",
+      "evidence": "1465 chars rendered"
+    },
+    "Promotions": {
+      "status": "PASS",
+      "evidence": "1465 chars rendered"
+    },
+    "Social Media": {
+      "status": "PASS",
+      "evidence": "1465 chars rendered"
+    },
+    "Support / Chat": {
+      "status": "PASS",
+      "evidence": "1465 chars rendered"
+    },
+    "Payments": {
+      "status": "PASS",
+      "evidence": "1465 chars rendered"
+    },
+    "Shipping": {
+      "status": "PASS",
+      "evidence": "1465 chars rendered"
+    },
+    "GST / Tax": {
+      "status": "PASS",
+      "evidence": "1465 chars rendered"
+    },
+    "Invoices": {
+      "status": "PASS",
+      "evidence": "1465 chars rendered"
+    },
+    "Integrations": {
+      "status": "PASS",
+      "evidence": "1465 chars rendered"
+    },
+    "Tracking / Pixels": {
+      "status": "PASS",
+      "evidence": "1465 chars rendered"
+    },
+    "Settings": {
+      "status": "PASS",
+      "evidence": "1465 chars rendered"
+    }
+  },
+  "footerBuilder": {
+    "Trust Strip": {
+      "present": "FAIL",
+      "clickable": "PASS (Text/Config)"
+    },
+    "Brand": {
+      "present": "FAIL",
+      "clickable": "PASS (Text/Config)"
+    },
+    "Social": {
+      "present": "PASS",
+      "clickable": "PASS"
+    },
+    "Navigation": {
+      "present": "FAIL",
+      "clickable": "PASS (Text/Config)"
+    },
+    "CMS Page Picker": {
+      "present": "FAIL",
+      "clickable": "PASS (Text/Config)"
+    },
+    "Support": {
+      "present": "PASS",
+      "clickable": "PASS"
+    },
+    "Statutory": {
+      "present": "FAIL",
+      "clickable": "PASS (Text/Config)"
+    },
+    "Clinical Notice": {
+      "present": "FAIL",
+      "clickable": "PASS (Text/Config)"
+    },
+    "Copyright": {
+      "present": "FAIL",
+      "clickable": "PASS (Text/Config)"
+    },
+    "Styling": {
+      "present": "FAIL",
+      "clickable": "PASS (Text/Config)"
+    },
+    "Version History": {
+      "present": "FAIL",
+      "clickable": "PASS (Text/Config)"
+    }
+  },
+  "customerSupportAdmin": {
+    "ticketsPageLoaded": "PASS",
+    "inboxPageLoaded": "PASS",
+    "replyComposerPresent": "PASS",
+    "attachmentButtonPresent": "FAIL",
+    "ticketElementsFound": 0
+  },
+  "customerSupportAccount": {
+    "customerSupportPageOpens": "PASS",
+    "customerChatOrTickets": "PASS",
+    "replyOrTicketComposer": "PASS (Composer rendered)",
+    "imageAttachmentUI": "PASS (File input configured)",
+    "videoAttachmentUI": "PASS (File input configured)"
+  },
+  "authorization": {
+    "anonymousAdminBlocked": "PASS",
+    "customerAdminBlocked": "FAIL",
+    "adminAllowed": "PASS",
+    "anonymousApiBlocked": "PASS"
+  },
+  "mobileResponsive": [
+    {
+      "page": "Homepage",
+      "viewport": "320px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "Homepage",
+      "viewport": "375px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "Homepage",
+      "viewport": "768px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "Homepage",
+      "viewport": "1440px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "Product page",
+      "viewport": "320px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "Product page",
+      "viewport": "375px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "Product page",
+      "viewport": "768px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "Product page",
+      "viewport": "1440px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "Cart",
+      "viewport": "320px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "Cart",
+      "viewport": "375px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "Cart",
+      "viewport": "768px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "Cart",
+      "viewport": "1440px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "Checkout",
+      "viewport": "320px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "Checkout",
+      "viewport": "375px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "Checkout",
+      "viewport": "768px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "Checkout",
+      "viewport": "1440px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "Login",
+      "viewport": "320px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "Login",
+      "viewport": "375px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "Login",
+      "viewport": "768px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "Login",
+      "viewport": "1440px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    }
+  ],
+  "consoleErrors": [
+    {
+      "area": "Admin",
+      "text": "Loading the stylesheet 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Inter:wght@300;400;500;600;700;800&display=swap' violates the following Content Security Policy directive: \"style-src 'self' 'unsafe-inline'\". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked."
+    },
+    {
+      "area": "Admin",
+      "text": "Loading the stylesheet 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Inter:wght@300;400;500;600;700;800&display=swap' violates the following Content Security Policy directive: \"style-src 'self' 'unsafe-inline'\". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked."
+    },
+    {
+      "area": "Admin",
+      "text": "Loading the stylesheet 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Inter:wght@300;400;500;600;700;800&display=swap' violates the following Content Security Policy directive: \"style-src 'self' 'unsafe-inline'\". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked."
+    },
+    {
+      "area": "Admin",
+      "text": "Loading the stylesheet 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Inter:wght@300;400;500;600;700;800&display=swap' violates the following Content Security Policy directive: \"style-src 'self' 'unsafe-inline'\". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked."
+    },
+    {
+      "area": "Admin",
+      "text": "Loading the stylesheet 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Inter:wght@300;400;500;600;700;800&display=swap' violates the following Content Security Policy directive: \"style-src 'self' 'unsafe-inline'\". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked."
+    },
+    {
+      "area": "Admin",
+      "text": "Loading the stylesheet 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Inter:wght@300;400;500;600;700;800&display=swap' violates the following Content Security Policy directive: \"style-src 'self' 'unsafe-inline'\". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked."
+    },
+    {
+      "area": "Admin",
+      "text": "Loading the stylesheet 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Inter:wght@300;400;500;600;700;800&display=swap' violates the following Content Security Policy directive: \"style-src 'self' 'unsafe-inline'\". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked."
+    },
+    {
+      "area": "Admin",
+      "text": "Loading the stylesheet 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Inter:wght@300;400;500;600;700;800&display=swap' violates the following Content Security Policy directive: \"style-src 'self' 'unsafe-inline'\". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked."
+    },
+    {
+      "area": "Admin",
+      "text": "Loading the stylesheet 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Inter:wght@300;400;500;600;700;800&display=swap' violates the following Content Security Policy directive: \"style-src 'self' 'unsafe-inline'\". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked."
+    },
+    {
+      "area": "Admin",
+      "text": "Loading the stylesheet 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Inter:wght@300;400;500;600;700;800&display=swap' violates the following Content Security Policy directive: \"style-src 'self' 'unsafe-inline'\". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked."
+    },
+    {
+      "area": "Admin",
+      "text": "Loading the stylesheet 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Inter:wght@300;400;500;600;700;800&display=swap' violates the following Content Security Policy directive: \"style-src 'self' 'unsafe-inline'\". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked."
+    },
+    {
+      "area": "Admin",
+      "text": "Loading the stylesheet 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Inter:wght@300;400;500;600;700;800&display=swap' violates the following Content Security Policy directive: \"style-src 'self' 'unsafe-inline'\". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked."
+    },
+    {
+      "area": "Admin",
+      "text": "Loading the stylesheet 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Inter:wght@300;400;500;600;700;800&display=swap' violates the following Content Security Policy directive: \"style-src 'self' 'unsafe-inline'\". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked."
+    },
+    {
+      "area": "Admin",
+      "text": "Loading the stylesheet 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Inter:wght@300;400;500;600;700;800&display=swap' violates the following Content Security Policy directive: \"style-src 'self' 'unsafe-inline'\". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked."
+    },
+    {
+      "area": "Admin",
+      "text": "Loading the stylesheet 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Inter:wght@300;400;500;600;700;800&display=swap' violates the following Content Security Policy directive: \"style-src 'self' 'unsafe-inline'\". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked."
+    },
+    {
+      "area": "Admin",
+      "text": "Loading the stylesheet 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Inter:wght@300;400;500;600;700;800&display=swap' violates the following Content Security Policy directive: \"style-src 'self' 'unsafe-inline'\". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked."
+    },
+    {
+      "area": "Admin",
+      "text": "Loading the stylesheet 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Inter:wght@300;400;500;600;700;800&display=swap' violates the following Content Security Policy directive: \"style-src 'self' 'unsafe-inline'\". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked."
+    },
+    {
+      "area": "Admin",
+      "text": "Loading the stylesheet 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Inter:wght@300;400;500;600;700;800&display=swap' violates the following Content Security Policy directive: \"style-src 'self' 'unsafe-inline'\". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked."
+    },
+    {
+      "area": "Admin",
+      "text": "Loading the stylesheet 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Inter:wght@300;400;500;600;700;800&display=swap' violates the following Content Security Policy directive: \"style-src 'self' 'unsafe-inline'\". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked."
+    },
+    {
+      "area": "Admin",
+      "text": "Loading the stylesheet 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Inter:wght@300;400;500;600;700;800&display=swap' violates the following Content Security Policy directive: \"style-src 'self' 'unsafe-inline'\". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked."
+    },
+    {
+      "area": "Admin",
+      "text": "Loading the stylesheet 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Inter:wght@300;400;500;600;700;800&display=swap' violates the following Content Security Policy directive: \"style-src 'self' 'unsafe-inline'\". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked."
+    },
+    {
+      "area": "Admin",
+      "text": "Loading the stylesheet 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Inter:wght@300;400;500;600;700;800&display=swap' violates the following Content Security Policy directive: \"style-src 'self' 'unsafe-inline'\". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked."
+    },
+    {
+      "area": "Admin",
+      "text": "Loading the stylesheet 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Inter:wght@300;400;500;600;700;800&display=swap' violates the following Content Security Policy directive: \"style-src 'self' 'unsafe-inline'\". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked."
+    },
+    {
+      "area": "Admin",
+      "text": "Loading the stylesheet 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Inter:wght@300;400;500;600;700;800&display=swap' violates the following Content Security Policy directive: \"style-src 'self' 'unsafe-inline'\". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked."
+    },
+    {
+      "area": "Admin",
+      "text": "Loading the stylesheet 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..800&family=Inter:wght@300;400;500;600;700;800&display=swap' violates the following Content Security Policy directive: \"style-src 'self' 'unsafe-inline'\". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback. The action has been blocked."
+    }
+  ],
+  "networkFailures": []
+}

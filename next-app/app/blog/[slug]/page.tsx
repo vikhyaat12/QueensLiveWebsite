@@ -1,14 +1,23 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { store } from "@/lib/commerce/store";
+import { sanitizeHtml } from "@/lib/sanitize";
+import { redirectStore } from "@/lib/commerce/store-extensions";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const post = await store.posts.bySlug((await params).slug);
-  if (!post) return { title: "Post not found" };
+  const slug = (await params).slug;
+  const post = await store.posts.bySlug(slug);
+  if (!post) {
+    const redirectTarget = await redirectStore.resolve(`/blog/${slug}`);
+    if (redirectTarget) {
+      permanentRedirect(redirectTarget.destination);
+    }
+    return { title: "Post not found" };
+  }
   return {
     title: post.seoTitle || post.title,
     description: post.seoDescription || post.excerpt,
@@ -23,8 +32,15 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 }
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
-  const post = await store.posts.bySlug((await params).slug);
-  if (!post) return notFound();
+  const slug = (await params).slug;
+  const post = await store.posts.bySlug(slug);
+  if (!post) {
+    const redirectTarget = await redirectStore.resolve(`/blog/${slug}`);
+    if (redirectTarget) {
+      permanentRedirect(redirectTarget.destination);
+    }
+    return notFound();
+  }
 
   const allPosts = await store.posts.list();
   const currentIndex = allPosts.findIndex((p) => p.slug === post.slug);
@@ -86,7 +102,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         )}
 
         {/* Article body */}
-        <div style={{ fontSize: 17, lineHeight: 1.9, color: "var(--ink)", maxWidth: 720 }} dangerouslySetInnerHTML={{ __html: post.content || post.body || "" }} />
+        <div style={{ fontSize: 17, lineHeight: 1.9, color: "var(--ink)", maxWidth: 720 }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content || post.body || "") }} />
 
         {/* Article images gallery */}
         {articleImages.length > 0 && (

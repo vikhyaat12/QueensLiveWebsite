@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { STANDARD_REJECTION_REASONS } from "@/lib/commerce/order-constants";
 
 /* ═══════════════════════════════════════════════════════════════
    ORDER DETAIL PANEL
@@ -99,6 +100,11 @@ export default function OrderDetailPanel({
   // Cancel confirm
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
+  // Prescription review state
+  const [rxStatus, setRxStatus] = useState("");
+  const [rxNote, setRxNote] = useState("");
+  const [rxSaving, setRxSaving] = useState(false);
+
   const fetchDetail = useCallback(async () => {
     try {
       setLoading(true);
@@ -112,11 +118,28 @@ export default function OrderDetailPanel({
       setTrackingNumber(String(data.order?.trackingNumber || ""));
       setTrackingUrl(String(data.order?.trackingUrl || ""));
       setRefundAmount(String(data.order?.total || ""));
+      setRxStatus(String(data.order?.prescriptionStatus || (data.order?.prescriptionKey ? "submitted" : "not_submitted")));
+      setRxNote(String(data.order?.prescriptionNotes || ""));
     } catch {
       setError("Failed to load order details.");
     }
     setLoading(false);
   }, [orderId]);
+
+  const updateRxStatus = async (status: string) => {
+    setRxSaving(true);
+    try {
+      await fetch(`/api/admin/orders/${encodeURIComponent(orderId)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prescriptionStatus: status, prescriptionNotes: rxNote }),
+      });
+      setRxStatus(status);
+      fetchDetail();
+      onRefresh();
+    } catch {}
+    setRxSaving(false);
+  };
 
   useEffect(() => {
     fetchDetail();
@@ -278,6 +301,126 @@ export default function OrderDetailPanel({
         </div>
       </div>
 
+      {/* ── Logistics & Printing Toolbar ─────────────────────── */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 8,
+          marginBottom: 16,
+          padding: "10px 14px",
+          background: "#fff",
+          border: "1px solid var(--line)",
+          borderRadius: 6,
+        }}
+      >
+        <span style={{ fontSize: 11, fontWeight: 700, color: "var(--purple)", textTransform: "uppercase", letterSpacing: ".06em" }}>
+          Logistics Documents
+        </span>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <a
+            href={`/account/orders/${encodeURIComponent(orderId)}/invoice`}
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              padding: "5px 12px",
+              background: "var(--purple, #2A0F3A)",
+              color: "#fff",
+              borderRadius: 4,
+              fontSize: 11,
+              fontWeight: 600,
+              textDecoration: "none",
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+            }}
+          >
+            <span>📄</span> Tax Invoice (A4 View)
+          </a>
+          <a
+            href={`/api/orders/${encodeURIComponent(orderId)}/invoice/pdf?download=1`}
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              padding: "5px 12px",
+              background: "#f3eef8",
+              color: "var(--purple, #2A0F3A)",
+              border: "1px solid var(--purple, #2A0F3A)",
+              borderRadius: 4,
+              fontSize: 11,
+              fontWeight: 600,
+              textDecoration: "none",
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+            }}
+          >
+            <span>📥</span> Download PDF
+          </a>
+          <a
+            href={`/admin/orders/${encodeURIComponent(orderId)}/print/shipping-label`}
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              padding: "5px 12px",
+              background: "#240e35",
+              color: "#fff",
+              borderRadius: 4,
+              fontSize: 11,
+              fontWeight: 600,
+              textDecoration: "none",
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+            }}
+          >
+            <span>🏷️</span> Shipping Label (4x6 / A4)
+          </a>
+          <a
+            href={`/admin/orders/${encodeURIComponent(orderId)}/print/packing-slip`}
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              padding: "5px 12px",
+              background: "#f0f0f0",
+              color: "#333",
+              border: "1px solid #ccc",
+              borderRadius: 4,
+              fontSize: 11,
+              fontWeight: 600,
+              textDecoration: "none",
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+            }}
+          >
+            <span>📋</span> Packing Slip
+          </a>
+          <a
+            href={`/admin/orders/${encodeURIComponent(orderId)}/print/signature-page`}
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              padding: "5px 12px",
+              background: "#f0f0f0",
+              color: "#333",
+              border: "1px solid #ccc",
+              borderRadius: 4,
+              fontSize: 11,
+              fontWeight: 600,
+              textDecoration: "none",
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+            }}
+          >
+            <span>✍️</span> Delivery POD Sheet
+          </a>
+        </div>
+      </div>
+
       {/* ── 2. Items Table ───────────────────────────────────── */}
       <div style={{ marginBottom: 18 }}>
         <h4 style={{ fontSize: 11, textTransform: "uppercase", color: "var(--muted)", margin: "0 0 8px", letterSpacing: ".08em" }}>
@@ -349,6 +492,63 @@ export default function OrderDetailPanel({
           </div>
         )}
       </div>
+
+      {/* ── GST / TAX SUMMARY TABLE ── */}
+      {(() => {
+        const snapshot = order.invoiceSnapshot as Record<string, unknown> | undefined;
+        const breakdown = Array.isArray(snapshot?.gstBreakdown) ? (snapshot.gstBreakdown as Array<Record<string, unknown>>) : null;
+        if (!breakdown || breakdown.length === 0) return null;
+
+        return (
+          <div style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 6, marginBottom: 18, overflow: "hidden" }}>
+            <div style={{ padding: "10px 14px", background: "#fbf9fc", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: 11, textTransform: "uppercase", fontWeight: 700, color: "var(--purple)", letterSpacing: ".06em" }}>
+                ⚖️ Tax & GST Breakdown (HSN Summary)
+              </span>
+              <span style={{ fontSize: 11, color: "var(--muted)" }}>
+                {snapshot?.totalIgst && Number(snapshot.totalIgst) > 0 ? "Inter-State Supply (IGST)" : "Intra-State Supply (CGST + SGST)"}
+              </span>
+            </div>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                <thead>
+                  <tr style={{ background: "#f8f6f9", borderBottom: "1px solid var(--line)", textAlign: "left", color: "var(--muted)", fontSize: 11 }}>
+                    <th style={{ padding: "8px 12px" }}>HSN/SAC</th>
+                    <th style={{ padding: "8px 12px", textAlign: "right" }}>Taxable Value (₹)</th>
+                    <th style={{ padding: "8px 12px", textAlign: "center" }}>GST Rate</th>
+                    <th style={{ padding: "8px 12px", textAlign: "right" }}>CGST (₹)</th>
+                    <th style={{ padding: "8px 12px", textAlign: "right" }}>SGST (₹)</th>
+                    <th style={{ padding: "8px 12px", textAlign: "right" }}>IGST (₹)</th>
+                    <th style={{ padding: "8px 12px", textAlign: "right" }}>Total Tax (₹)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {breakdown.map((row, i) => (
+                    <tr key={i} style={{ borderBottom: "1px solid #f0edf2" }}>
+                      <td style={{ padding: "8px 12px", fontFamily: "monospace" }}>{String(row.hsnCode || "3004")}</td>
+                      <td style={{ padding: "8px 12px", textAlign: "right" }}>₹{Number(row.taxableValue || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+                      <td style={{ padding: "8px 12px", textAlign: "center" }}>{String(row.gstRate)}%</td>
+                      <td style={{ padding: "8px 12px", textAlign: "right" }}>{Number(row.cgstAmount || 0) > 0 ? `₹${Number(row.cgstAmount).toFixed(2)}` : "—"}</td>
+                      <td style={{ padding: "8px 12px", textAlign: "right" }}>{Number(row.sgstAmount || 0) > 0 ? `₹${Number(row.sgstAmount).toFixed(2)}` : "—"}</td>
+                      <td style={{ padding: "8px 12px", textAlign: "right" }}>{Number(row.igstAmount || 0) > 0 ? `₹${Number(row.igstAmount).toFixed(2)}` : "—"}</td>
+                      <td style={{ padding: "8px 12px", textAlign: "right", fontWeight: 600 }}>₹{Number(row.totalTax || 0).toFixed(2)}</td>
+                    </tr>
+                  ))}
+                  <tr style={{ background: "#faf8fb", fontWeight: 700, borderTop: "2px solid #e5dfea" }}>
+                    <td style={{ padding: "8px 12px" }}>Total</td>
+                    <td style={{ padding: "8px 12px", textAlign: "right" }}>₹{Number(snapshot?.taxableProductValue || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+                    <td style={{ padding: "8px 12px" }}></td>
+                    <td style={{ padding: "8px 12px", textAlign: "right" }}>₹{Number(snapshot?.totalCgst || 0).toFixed(2)}</td>
+                    <td style={{ padding: "8px 12px", textAlign: "right" }}>₹{Number(snapshot?.totalSgst || 0).toFixed(2)}</td>
+                    <td style={{ padding: "8px 12px", textAlign: "right" }}>₹{Number(snapshot?.totalIgst || 0).toFixed(2)}</td>
+                    <td style={{ padding: "8px 12px", textAlign: "right", color: "var(--purple)" }}>₹{Number(snapshot?.totalGst || 0).toFixed(2)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── 3 & 4. Customer + Addresses (2-col) ──────────────── */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 18 }}>
@@ -538,6 +738,89 @@ export default function OrderDetailPanel({
         </div>
       </div>
 
+      {/* ── Prescription Review (Clinical Compliance) ── */}
+      <div style={{ background: "#fff", border: "1px solid var(--line)", borderRadius: 6, padding: 16, marginBottom: 18 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <h4 style={{ fontSize: 11, textTransform: "uppercase", color: "var(--muted)", margin: 0, letterSpacing: ".08em" }}>
+            🩺 Medical Prescription Verification
+          </h4>
+          <span style={{
+            fontSize: 11,
+            fontWeight: 700,
+            padding: "3px 8px",
+            borderRadius: 4,
+            textTransform: "uppercase",
+            background: rxStatus === "approved" ? "#e8f5e9" : rxStatus === "rejected" ? "#fee2e2" : rxStatus === "submitted" ? "#fef3c7" : "#f1f5f9",
+            color: rxStatus === "approved" ? "#2e7d32" : rxStatus === "rejected" ? "#b91c1c" : rxStatus === "submitted" ? "#b45309" : "#64748b"
+          }}>
+            {rxStatus ? rxStatus.replace(/_/g, " ") : "Not Submitted"}
+          </span>
+        </div>
+
+        {order.prescriptionKey ? (
+          <div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#f8fafc", padding: "10px 14px", borderRadius: 6, marginBottom: 12 }}>
+              <div>
+                <b style={{ fontSize: 13, color: "#1e293b" }}>📄 {String(order.prescriptionFilename || "Prescription Document")}</b>
+                <p style={{ margin: "2px 0 0", fontSize: 11, color: "#64748b" }}>Protected in encrypted medical storage</p>
+              </div>
+              <a
+                href={`/api/orders/${encodeURIComponent(orderId)}/prescription`}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  padding: "6px 14px",
+                  background: "var(--purple, #2A0F3A)",
+                  color: "#D4AF37",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  borderRadius: 4,
+                  textDecoration: "none",
+                  display: "inline-block"
+                }}
+              >
+                👁️ View Secure Document
+              </a>
+            </div>
+
+            <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+              <label style={{ fontSize: 12, fontWeight: 600 }}>Clinical Decision:</label>
+              <select
+                value={rxStatus}
+                onChange={(e) => updateRxStatus(e.target.value)}
+                disabled={rxSaving}
+                style={{ padding: "6px 10px", fontSize: 12, borderRadius: 4, border: "1px solid var(--line)" }}
+              >
+                <option value="submitted">Submitted (Pending Review)</option>
+                <option value="under_review">Under Review</option>
+                <option value="approved">Approved by Pharmacist</option>
+                <option value="rejected">Rejected / Invalid</option>
+                <option value="replacement_requested">Replacement Requested</option>
+              </select>
+              <input
+                type="text"
+                value={rxNote}
+                onChange={(e) => setRxNote(e.target.value)}
+                placeholder="Pharmacist notes (optional)..."
+                style={{ flex: 1, minWidth: 200, padding: "6px 10px", fontSize: 12, borderRadius: 4, border: "1px solid var(--line)" }}
+              />
+              <button
+                type="button"
+                onClick={() => updateRxStatus(rxStatus)}
+                disabled={rxSaving}
+                style={{ padding: "6px 12px", background: "#f1f5f9", border: "1px solid var(--line)", borderRadius: 4, fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+              >
+                {rxSaving ? "Saving..." : "Save Note"}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>
+            No prescription was submitted for this order (Optional wellness purchase).
+          </p>
+        )}
+      </div>
+
       {/* ── 7. Status Timeline ───────────────────────────────── */}
       {history.length > 0 && (
         <div style={{ marginBottom: 18, background: "#fff", border: "1px solid var(--line)", borderRadius: 6, padding: 14 }}>
@@ -595,41 +878,67 @@ export default function OrderDetailPanel({
         }}
       >
         {/* Change Status */}
-        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          <select
-            value={newStatus}
-            onChange={(e) => setNewStatus(e.target.value)}
-            style={{ padding: "6px 10px", fontSize: 11, borderRadius: 4, border: "1px solid var(--line)" }}
-          >
-            {ORDER_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {s.replace(/_/g, " ")}
-              </option>
-            ))}
-          </select>
-          <input
-            placeholder="Note (optional)"
-            value={statusNote}
-            onChange={(e) => setStatusNote(e.target.value)}
-            style={{ padding: "6px 10px", fontSize: 11, border: "1px solid var(--line)", borderRadius: 4, width: 160 }}
-          />
-          <button
-            onClick={() => updateStatus(newStatus, statusNote || undefined)}
-            disabled={newStatus === String(order.status)}
-            style={{
-              padding: "6px 14px",
-              fontSize: 11,
-              fontWeight: 700,
-              background: newStatus !== String(order.status) ? "var(--purple)" : "#ccc",
-              color: "#fff",
-              border: "none",
-              borderRadius: 4,
-              cursor: newStatus !== String(order.status) ? "pointer" : "not-allowed",
-            }}
-          >
-            Update Status
-          </button>
-        </div>
+        {validTransitions && validTransitions.length > 0 ? (
+          <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+            <select
+              value={newStatus}
+              onChange={(e) => setNewStatus(e.target.value)}
+              style={{ padding: "6px 10px", fontSize: 11, borderRadius: 4, border: "1px solid var(--line)" }}
+            >
+              <option value={String(order.status)}>Current: {String(order.status).replace(/_/g, " ")}</option>
+              {validTransitions.map((s) => (
+                <option key={s} value={s}>
+                  → Transition to {s.replace(/_/g, " ")}
+                </option>
+              ))}
+            </select>
+
+            {newStatus === "rejected" ? (
+              <select
+                value={statusNote || STANDARD_REJECTION_REASONS[0]}
+                onChange={(e) => setStatusNote(e.target.value)}
+                style={{ padding: "6px 10px", fontSize: 11, border: "1px solid #c62828", borderRadius: 4 }}
+              >
+                {STANDARD_REJECTION_REASONS.map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                placeholder="Transition note (optional)"
+                value={statusNote}
+                onChange={(e) => setStatusNote(e.target.value)}
+                style={{ padding: "6px 10px", fontSize: 11, border: "1px solid var(--line)", borderRadius: 4, width: 180 }}
+              />
+            )}
+
+            <button
+              onClick={() => {
+                const note = newStatus === "rejected" && !statusNote ? STANDARD_REJECTION_REASONS[0] : statusNote;
+                updateStatus(newStatus, note || undefined);
+              }}
+              disabled={newStatus === String(order.status) || !validTransitions.includes(newStatus)}
+              style={{
+                padding: "6px 14px",
+                fontSize: 11,
+                fontWeight: 700,
+                background: newStatus !== String(order.status) && validTransitions.includes(newStatus) ? "var(--purple)" : "#ccc",
+                color: "#fff",
+                border: "none",
+                borderRadius: 4,
+                cursor: newStatus !== String(order.status) && validTransitions.includes(newStatus) ? "pointer" : "not-allowed",
+              }}
+            >
+              Update Status
+            </button>
+          </div>
+        ) : (
+          <span style={{ fontSize: 11, color: "var(--muted)", fontStyle: "italic" }}>
+            Terminal Status ({String(order.status)}) — No further transitions.
+          </span>
+        )}
 
         {/* Issue Refund */}
         {!showRefund ? (

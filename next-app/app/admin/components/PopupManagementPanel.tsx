@@ -403,7 +403,7 @@ const POPUP_TEMPLATES: Array<{ name: string; icon: string; description: string; 
       title: "Laboratory Cleanroom Video",
       placement: "science",
       mediaType: "video",
-      videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      videoUrl: "",
       mediaLayout: "above",
       eyebrow: "RESEARCH & DEVELOPMENT",
       heading: "Inside the <em>Queens Care Cleanroom</em>",

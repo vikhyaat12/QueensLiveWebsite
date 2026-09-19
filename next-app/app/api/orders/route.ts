@@ -1,6 +1,11 @@
 import { json, requireUser } from "@/lib/http";
 import { store } from "@/lib/commerce/store";
-import { affiliateStore, couponStore, shippingStore, paymentGatewayStore } from "@/lib/commerce/store-extensions";
+import { affiliateStore, couponStore, paymentGatewayStore, settingStore } from "@/lib/commerce/store-extensions";
+import { validateDonation, generateInvoiceNumber, calculateOrderPricing } from "@/lib/commerce/pricing-engine";
+import { resolveProductTax } from "@/lib/commerce/tax-rules";
+import { inventoryService } from "@/lib/commerce/inventory";
+import { emailService } from "@/lib/email/email-service";
+import { dispatchNotification } from "@/lib/notifications/notification-orchestrator";
 import type { CartLine, ShippingDetails } from "@/lib/commerce/types";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -31,14 +36,22 @@ function lineKey(lines: CartLine[]): string {
 
 export async function GET() {
   const user = await requireUser();
-  return user ? json({ orders: await store.orders.list(user) }) : json({ error: "Unauthorized" }, 401);
+  if (!user) return json({ error: "Unauthorized" }, 401);
+  // Strictly return only orders belonging to this user
+  const orders = await store.orders.list({ id: user.id, role: "customer" } as never);
+  return json({ orders });
 }
 
 export async function POST(request: Request) {
-  // allow guest order creation — we do not require authentication here,
-  // but if a user is present, use their id
-  const maybeUser = await requireUser().catch(() => null);
-  const userId = maybeUser ? maybeUser.id : `guest-${Date.now().toString(36)}`;
+  // Checkout/order placement MUST require an authenticated customer account
+  const user = await requireUser();
+  if (!user) {
+    return json({ error: "Authentication required. Please sign in to place an order." }, 401);
+  }
+  if (user.status === "disabled" || user.status === "deactivated" || user.isActive === false) {
+    return json({ error: "Your account is disabled. Please contact customer support." }, 403);
+  }
+  const userId = user.id;
 
   const body = await request.json().catch(() => null);
   const lines = Array.isArray(body?.lines) ? body.lines : [];
@@ -48,8 +61,20 @@ export async function POST(request: Request) {
   if (!shipping) return json({ error: "Shipping details are incomplete or invalid." }, 422);
 
   const errors: Array<{ productId: string; reason: string }> = [];
-  const resolvedLines: Array<{ productId: string; name: string; unitPrice: number; quantity: number }> = [];
-  let subtotal = 0;
+  const resolvedLines: Array<{
+    productId: string;
+    name: string;
+    variantId?: string;
+    variantName?: string;
+    sku?: string;
+    unitPrice: number;
+    quantity: number;
+    hsnCode?: string;
+    gstRate?: number;
+    taxMode?: "taxable" | "exempt" | "zero_rated";
+    taxInclusive?: boolean;
+    taxRuleId?: string;
+  }> = [];
 
   const productsAll = await store.products.all();
   for (const line of lines) {
@@ -66,14 +91,43 @@ export async function POST(request: Request) {
       errors.push({ productId: line.productId, reason: "Product is no longer available." });
       continue;
     }
-    if (p.stock < line.quantity) {
-      errors.push({ productId: line.productId, reason: `Insufficient stock. Available: ${p.stock}` });
+
+    let unitPrice = p.price;
+    let variantName = line.variantName;
+    let sku = p.sku || p.slug;
+    let availableStock = Number(p.stock || 0);
+
+    if (line.variantId && Array.isArray(p.variants)) {
+      const v = p.variants.find((x) => x.id === line.variantId);
+      if (v && v.active !== false) {
+        unitPrice = v.price;
+        variantName = v.name;
+        sku = v.sku || sku;
+        availableStock = Number(v.stock || 0);
+      }
+    }
+
+    if (availableStock < line.quantity && !p.preorderEnabled) {
+      errors.push({ productId: line.productId, reason: `Insufficient stock. Available: ${availableStock}` });
       continue;
     }
-    // use server-side price only — never trust client-sent prices
-    const unitPrice = p.price;
-    resolvedLines.push({ productId: p.slug, name: p.name, unitPrice, quantity: line.quantity });
-    subtotal += unitPrice * line.quantity;
+
+    // use server-side price and tax parameters only — never trust client-sent prices
+    const taxInfo = await resolveProductTax(p);
+    resolvedLines.push({
+      productId: p.slug,
+      name: variantName ? `${p.name} (${variantName})` : p.name,
+      variantId: line.variantId,
+      variantName,
+      sku,
+      unitPrice,
+      quantity: line.quantity,
+      hsnCode: taxInfo.hsnCode,
+      gstRate: taxInfo.gstRate,
+      taxMode: taxInfo.taxMode,
+      taxInclusive: taxInfo.taxInclusive,
+      taxRuleId: taxInfo.ruleId,
+    });
   }
 
   if (errors.length) { const msg=errors[0].reason.startsWith("Insufficient stock")?errors[0].reason:"Your bag needs attention. Please review the items."; return json({ error: msg, details: errors }, 422); }
@@ -83,61 +137,168 @@ export async function POST(request: Request) {
   const shippingMethod = String(body?.shippingMethod || "standard").toLowerCase();
 
   // coupon discount validation
-  let discount = 0;
+  let couponDiscount = 0;
   const couponCode = body?.couponCode ? String(body.couponCode).trim().toUpperCase() : undefined;
   if (couponCode) {
     const coupon = await couponStore.byCode(couponCode);
     if (coupon && coupon.isActive) {
+      const subForCoupon = resolvedLines.reduce((s, r) => s + r.unitPrice * r.quantity, 0);
       if (coupon.type === "percentage") {
-        discount = Math.round((subtotal * Number(coupon.discount)) / 100);
+        couponDiscount = Math.round((subForCoupon * Number(coupon.discount)) / 100);
       } else {
-        discount = Math.min(subtotal, Number(coupon.discount));
+        couponDiscount = Math.min(subForCoupon, Number(coupon.discount));
       }
     }
   }
 
-  // dynamic server-side shipping rate calculation
-  const shippingCalc = await shippingStore.rules.calculate(subtotal - discount, shipping.pincode, shippingMethod);
-  const shippingFee = shippingCalc.shippingFee;
-  
-  // COD handling fee
-  let codFee = 0;
-  if (paymentMethod === "cod") {
-    const gw = await paymentGatewayStore.byProvider("cod");
-    codFee = Number(gw?.codCharge || shippingCalc.codFee || 0);
+  // ─── DONATION VALIDATION ─────────────────────────────────────────────────
+  const rawDonation = Number(body?.donationAmount || 0);
+  let donationAmount = 0;
+  if (rawDonation > 0) {
+    const donationSetting = await settingStore.get("donation_config");
+    const dcConfig = donationSetting?.value
+      ? (typeof donationSetting.value === "string" ? JSON.parse(String(donationSetting.value)) : donationSetting.value)
+      : { enabled: false };
+    const dValidation = validateDonation(rawDonation, dcConfig);
+    if (!dValidation.valid) {
+      return json({ error: dValidation.error || "Invalid donation." }, 422);
+    }
+    donationAmount = dValidation.amount;
   }
 
-  const total = Math.max(0, subtotal - discount + shippingFee + codFee);
+  // ─── AUTHORITATIVE PRICING CALCULATION ────────────────────────────────────
+  const breakdown = await calculateOrderPricing({
+    lines: resolvedLines.map(r => ({
+      productId: r.productId,
+      name: r.name,
+      sku: r.productId,
+      unitPrice: r.unitPrice,
+      quantity: r.quantity,
+      hsnCode: r.hsnCode,
+      gstRate: r.gstRate,
+      taxMode: r.taxMode,
+      taxInclusive: r.taxInclusive,
+      taxRuleId: r.taxRuleId,
+    })),
+    shippingState: shipping.state, shippingMethod, couponDiscount,
+    donationAmount, paymentMethod,
+  });
+
+  const total = breakdown.grandTotal;
+  const invoiceNo = await generateInvoiceNumber();
+
+  // Server-side payment-method enforcement: the chosen gateway must exist and
+  // be enabled. COD additionally honours admin-configured min/max order values.
+  const selectedGateway = await paymentGatewayStore.byProvider(paymentMethod);
+  if (!selectedGateway || !selectedGateway.enabled) {
+    return json(
+      { error: paymentMethod === "cod" ? "Cash on Delivery is currently unavailable. Please choose a prepaid method." : "The selected payment method is currently unavailable. Please choose another." },
+      422,
+    );
+  }
+  if (paymentMethod === "cod") {
+    const codMin = Number(selectedGateway.minOrderValue || 0);
+    const codMax = Number(selectedGateway.maxOrderValue || 0);
+    if (codMin > 0 && total < codMin) {
+      return json({ error: `Cash on Delivery is available on orders of ₹${codMin.toLocaleString("en-IN")} or more.` }, 422);
+    }
+    if (codMax > 0 && total > codMax) {
+      return json({ error: `Cash on Delivery is unavailable for orders above ₹${codMax.toLocaleString("en-IN")}. Please pay online.` }, 422);
+    }
+  }
 
   // duplicate prevention: same user + same cart + same total within 10 minutes
   const cartLines: CartLine[] = resolvedLines.map((r) => ({ productId: r.productId, quantity: r.quantity }));
   const duplicate = await store.orders.findRecentDuplicate(userId, lineKey(cartLines), total);
   if (duplicate) return json({ error: "This order was already placed just now. Please check your orders.", orderId: duplicate.id }, 409);
 
-  // atomically decrement stock for every line before persisting the order.
-  // If any decrement fails, roll back the ones we already applied.
-  const decremented: string[] = [];
-  for (const r of resolvedLines) {
-    const ok = await store.products.decrementStock(r.productId, r.quantity);
-    if (!ok) {
-      for (const slug of decremented) {
-        await store.products.decrementStock(slug, -resolvedLines.find((x) => x.productId === slug)!.quantity).catch(() => {});
-      }
-      return json({ error: `Insufficient stock for ${r.name}. Please adjust your bag.` }, 422);
-    }
-    decremented.push(r.productId);
+  // Atomically verify & reserve stock via authoritative inventoryService
+  const reserveResult = await inventoryService.reserveStock(
+    resolvedLines.map((r) => ({
+      productId: r.productId,
+      variantId: r.variantId,
+      variantName: r.variantName,
+      sku: r.sku,
+      quantity: r.quantity,
+      unitPrice: r.unitPrice,
+    })),
+    invoiceNo,
+    userId
+  );
+  if (!reserveResult.success) {
+    return json({ error: reserveResult.error || "Failed to reserve inventory for this order." }, 422);
   }
 
+  // optional prescription details
+  const prescriptionKey = typeof body?.prescriptionKey === "string" ? body.prescriptionKey.trim() : undefined;
+  const prescriptionFilename = typeof body?.prescriptionFilename === "string" ? body.prescriptionFilename.trim() : undefined;
+
   // create order with server-validated total, canonical product slugs, and unit prices
-  const orderLines = resolvedLines.map((r) => ({ productId: r.productId, quantity: r.quantity, unitPrice: r.unitPrice }));
+  const orderLines = resolvedLines.map((r) => ({
+    productId: r.productId,
+    quantity: r.quantity,
+    unitPrice: r.unitPrice,
+    variantId: r.variantId,
+    variantName: r.variantName,
+    sku: r.sku,
+  }));
   const order = await store.orders.create(userId, orderLines, total, shipping, {
-    subtotal,
-    discount,
-    shippingFee: shippingFee + codFee,
+    subtotal: breakdown.subtotal,
+    discount: breakdown.totalDiscount,
+    shippingFee: breakdown.shippingCharge + breakdown.shippingTax,
     couponCode,
     paymentMethod,
     paymentStatus: paymentMethod === "cod" ? "cod_pending" : "pending",
+    prescriptionKey,
+    prescriptionFilename,
+    prescriptionStatus: prescriptionKey ? "submitted" : "not_submitted",
+    donationAmount: breakdown.donationAmount,
+    invoiceNo,
   });
+
+  // ─── STORE INVOICE SNAPSHOT ──────────────────────────────────────────────
+  // Snapshot pricing details so historical invoices never change.
+  try {
+    const invoiceSnapshot = {
+      version: 3,
+      orderId: order.id,
+      invoiceNo,
+      lines: breakdown.lines.map(l => ({
+        productId: l.productId, name: l.name, sku: l.sku, hsnCode: l.hsnCode,
+        quantity: l.quantity, unitPrice: l.unitPrice, discount: l.discount,
+        taxableValue: l.taxableValue, gstRate: l.gstRate,
+        cgst: l.cgst, sgst: l.sgst, igst: l.igst, gstTotal: l.gstTotal,
+        lineTotal: l.lineTotal, taxTreatment: l.taxTreatment,
+        taxMode: l.taxMode, taxInclusive: l.taxInclusive, taxRuleId: l.taxRuleId,
+      })),
+      subtotal: breakdown.subtotal,
+      totalDiscount: breakdown.totalDiscount,
+      taxableProductValue: breakdown.taxableProductValue,
+      totalCgst: breakdown.totalCgst, totalSgst: breakdown.totalSgst,
+      totalIgst: breakdown.totalIgst, totalGst: breakdown.totalGst,
+      shippingCharge: breakdown.shippingCharge, shippingTax: breakdown.shippingTax,
+      shippingMethod: breakdown.shippingMethod,
+      codFee: breakdown.codFee,
+      otherCharges: breakdown.otherCharges,
+      totalOtherCharges: breakdown.totalOtherCharges,
+      totalOtherChargesTax: breakdown.totalOtherChargesTax,
+      donationAmount: breakdown.donationAmount, donationTax: breakdown.donationTax,
+      donationTaxTreatment: breakdown.donationTaxTreatment,
+      roundOff: breakdown.roundOff, grandTotal: breakdown.grandTotal,
+      gstBreakdown: breakdown.gstBreakdown,
+      amountInWords: breakdown.amountInWords,
+      businessInfo: breakdown.businessInfo,
+      invoiceConfig: breakdown.invoiceConfig,
+      invoiceColumnsConfig: breakdown.invoiceColumnsConfig,
+      invoiceTemplateConfig: breakdown.invoiceTemplateConfig,
+      paymentMethod, shipping, couponCode,
+      calculatedAt: breakdown.calculatedAt,
+      createdAt: new Date().toISOString(),
+    };
+    await settingStore.set(`invoice_snapshot_${order.id}`, invoiceSnapshot, "invoices");
+  } catch (e) {
+    console.error("Invoice snapshot error (non-fatal):", e);
+  }
 
   // Affiliate conversion attribution
   const cookieHeader = request.headers.get("cookie") || "";
@@ -151,7 +312,7 @@ export async function POST(request: Request) {
       const resolved = await affiliateStore.byRef(refCode);
       if (resolved?.affiliate && resolved.affiliate.status === "active") {
         const rate = Number(resolved.affiliate.commissionRate || 10);
-        const commissionAmount = Math.round((subtotal * rate) / 100);
+        const commissionAmount = Math.round((breakdown.subtotal * rate) / 100);
         if (commissionAmount > 0) {
           await affiliateStore.recordCommission(
             String(resolved.affiliate.id),
@@ -166,5 +327,49 @@ export async function POST(request: Request) {
     }
   }
 
-  return json({ order: { ...order, lines: resolvedLines, total, shipping } }, 201);
+  // Dispatch Order Confirmation & Operations Alerts (non-blocking)
+  try {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const itemSummary = resolvedLines.map((l) => `${l.name} (x${l.quantity})`).join(", ");
+
+    // 1. Customer Omnichannel Notification (Email, SMS, WhatsApp)
+    dispatchNotification({
+      event: "order_placed",
+      recipient: {
+        name: shipping.fullName,
+        email: shipping.email,
+        phone: shipping.phone,
+      },
+      data: {
+        customer_name: shipping.fullName,
+        order_id: String(order.id),
+        order_total: breakdown.grandTotal,
+        payment_method: paymentMethod.toUpperCase(),
+        item_summary: itemSummary,
+        order_url: `${siteUrl}/account/orders`,
+      },
+      idempotencyKey: `order_placed_${order.id}`,
+    }).catch((err) => console.error("Order placed notification error:", err));
+
+    // 2. Operations Alert Email
+    const opsEmail = process.env.OPERATIONS_EMAIL || "care@queenscare.in";
+    emailService.send({
+      templateId: "admin_order_alert",
+      recipientEmail: opsEmail,
+      recipientName: "Operations Team",
+      data: {
+        order_id: String(order.id),
+        order_total: breakdown.grandTotal,
+        customer_name: shipping.fullName,
+        customer_city: `${shipping.city}, ${shipping.state}`,
+        items_count: resolvedLines.length,
+        admin_order_url: `${siteUrl}/admin`,
+      },
+      idempotencyKey: `admin_alert_${order.id}`,
+    }).catch((err) => console.error("Admin order alert error:", err));
+  } catch (e) {
+    console.error("Non-fatal email dispatch error:", e);
+  }
+
+  return json({ order: { ...order, lines: resolvedLines, total, shipping, breakdown } }, 201);
 }

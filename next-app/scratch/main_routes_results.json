@@ -1,0 +1,417 @@
+{
+  "results": [
+    {
+      "route": "/",
+      "name": "Homepage",
+      "status": "FAIL",
+      "elapsed": "9401ms",
+      "notes": "Client-side exception or hydration error detected",
+      "consoleErrors": 2,
+      "networkFailures": 0
+    },
+    {
+      "route": "/products",
+      "name": "Products Catalog",
+      "status": "FAIL",
+      "elapsed": "24227ms",
+      "notes": "Client-side exception or hydration error detected",
+      "consoleErrors": 2,
+      "networkFailures": 0
+    },
+    {
+      "route": "/shop",
+      "name": "Shop",
+      "status": "FAIL",
+      "elapsed": "4604ms",
+      "notes": "Client-side exception or hydration error detected",
+      "consoleErrors": 2,
+      "networkFailures": 0
+    },
+    {
+      "route": "/search",
+      "name": "Search",
+      "status": "FAIL",
+      "elapsed": "8261ms",
+      "notes": "Client-side exception or hydration error detected",
+      "consoleErrors": 2,
+      "networkFailures": 0
+    },
+    {
+      "route": "/cart",
+      "name": "Cart",
+      "status": "FAIL",
+      "elapsed": "3042ms",
+      "notes": "Client-side exception or hydration error detected",
+      "consoleErrors": 2,
+      "networkFailures": 0
+    },
+    {
+      "route": "/checkout",
+      "name": "Checkout",
+      "status": "FAIL",
+      "elapsed": "9004ms",
+      "notes": "Client-side exception or hydration error detected",
+      "consoleErrors": 2,
+      "networkFailures": 0
+    },
+    {
+      "route": "/login",
+      "name": "Customer Login",
+      "status": "FAIL",
+      "elapsed": "8168ms",
+      "notes": "Client-side exception or hydration error detected",
+      "consoleErrors": 2,
+      "networkFailures": 0
+    },
+    {
+      "route": "/account",
+      "name": "Customer Account",
+      "status": "FAIL",
+      "elapsed": "3417ms",
+      "notes": "Client-side exception or hydration error detected",
+      "consoleErrors": 2,
+      "networkFailures": 0
+    },
+    {
+      "route": "/about",
+      "name": "About",
+      "status": "FAIL",
+      "elapsed": "3067ms",
+      "notes": "Client-side exception or hydration error detected",
+      "consoleErrors": 2,
+      "networkFailures": 0
+    },
+    {
+      "route": "/people",
+      "name": "Our People Directory",
+      "status": "FAIL",
+      "elapsed": "3345ms",
+      "notes": "Client-side exception or hydration error detected",
+      "consoleErrors": 2,
+      "networkFailures": 0
+    },
+    {
+      "route": "/our-people",
+      "name": "Our People Alias",
+      "status": "FAIL",
+      "elapsed": "3764ms",
+      "notes": "Client-side exception or hydration error detected",
+      "consoleErrors": 2,
+      "networkFailures": 0
+    },
+    {
+      "route": "/blog",
+      "name": "Blog",
+      "status": "FAIL",
+      "elapsed": "2701ms",
+      "notes": "Client-side exception or hydration error detected",
+      "consoleErrors": 2,
+      "networkFailures": 0
+    },
+    {
+      "route": "/contact",
+      "name": "Contact",
+      "status": "FAIL",
+      "elapsed": "3793ms",
+      "notes": "Client-side exception or hydration error detected",
+      "consoleErrors": 2,
+      "networkFailures": 0
+    },
+    {
+      "route": "/faq",
+      "name": "FAQ",
+      "status": "FAIL",
+      "elapsed": "4335ms",
+      "notes": "Client-side exception or hydration error detected",
+      "consoleErrors": 2,
+      "networkFailures": 0
+    },
+    {
+      "route": "/careers",
+      "name": "Careers",
+      "status": "FAIL",
+      "elapsed": "4713ms",
+      "notes": "Client-side exception or hydration error detected",
+      "consoleErrors": 2,
+      "networkFailures": 0
+    },
+    {
+      "route": "/affiliate",
+      "name": "Affiliate",
+      "status": "FAIL",
+      "elapsed": "4725ms",
+      "notes": "Client-side exception or hydration error detected",
+      "consoleErrors": 2,
+      "networkFailures": 0
+    },
+    {
+      "route": "/admin/login",
+      "name": "Admin Login",
+      "status": "FAIL",
+      "elapsed": "2256ms",
+      "notes": "Client-side exception or hydration error detected",
+      "consoleErrors": 2,
+      "networkFailures": 0
+    }
+  ],
+  "mobileResults": [
+    {
+      "page": "/",
+      "viewport": "320px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "/",
+      "viewport": "375px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "/",
+      "viewport": "768px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "/",
+      "viewport": "1440px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "/products",
+      "viewport": "320px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "/products",
+      "viewport": "375px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "/products",
+      "viewport": "768px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "/products",
+      "viewport": "1440px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "/cart",
+      "viewport": "320px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "/cart",
+      "viewport": "375px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "/cart",
+      "viewport": "768px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "/cart",
+      "viewport": "1440px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "/checkout",
+      "viewport": "320px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "/checkout",
+      "viewport": "375px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "/checkout",
+      "viewport": "768px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "/checkout",
+      "viewport": "1440px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "/login",
+      "viewport": "320px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "/login",
+      "viewport": "375px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "/login",
+      "viewport": "768px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    },
+    {
+      "page": "/login",
+      "viewport": "1440px",
+      "horizontalOverflow": "NO (FIT OK)",
+      "status": "PASS"
+    }
+  ],
+  "globalConsoleErrors": [
+    {
+      "route": "/",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=JsspmUY7UYOI-rQTeMlmY' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=JsspmUY7UYOI-rQTeMlmY' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/products",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=CevlcN9LAhhTQJ1sF_zC0' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/products",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=CevlcN9LAhhTQJ1sF_zC0' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/shop",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=iqMW-adtHlhxFO-JMTw9g' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/shop",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=iqMW-adtHlhxFO-JMTw9g' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/search",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=Q8qOXUjGdTFs75wRgot9d' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/search",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=Q8qOXUjGdTFs75wRgot9d' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/cart",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=6q7r8kiptI6GE2G1Byuay' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/cart",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=6q7r8kiptI6GE2G1Byuay' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/checkout",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=ubdsA_ZawBISIUfACSF0f' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/checkout",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=ubdsA_ZawBISIUfACSF0f' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/login",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=xQh9IGNjjNT58UslUL0BL' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/login",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=xQh9IGNjjNT58UslUL0BL' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/account",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=ccflN2wx2gvulGK9NgMNg' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/account",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=ccflN2wx2gvulGK9NgMNg' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/about",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=QudWwDrhQn6YyM_aq2Wg5' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/about",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=QudWwDrhQn6YyM_aq2Wg5' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/people",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=M20qDiMhD2viowHDs5QA6' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/people",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=M20qDiMhD2viowHDs5QA6' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/our-people",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=Chnk5sr3AtXZirJDnDdL4' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/our-people",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=Chnk5sr3AtXZirJDnDdL4' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/blog",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=yGZCFQvA5CVmhlCQWjBMU' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/blog",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=yGZCFQvA5CVmhlCQWjBMU' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/contact",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=9MgGLurWEKSWVsk2Cs1J_' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/contact",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=9MgGLurWEKSWVsk2Cs1J_' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/faq",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=i648M9Qewz6ZhlBEuSak7' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/faq",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=i648M9Qewz6ZhlBEuSak7' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/careers",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=UMHg1z9sP3wJdnSWl6HQE' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/careers",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=UMHg1z9sP3wJdnSWl6HQE' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/affiliate",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=ayBdi65p87MKF0k0AbSsi' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/affiliate",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=ayBdi65p87MKF0k0AbSsi' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/admin/login",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=ZqhE1mmNYu4Sd3cgpUBwZ' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    },
+    {
+      "route": "/admin/login",
+      "text": "WebSocket connection to 'ws://127.0.0.1:3000/_next/webpack-hmr?id=ZqhE1mmNYu4Sd3cgpUBwZ' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+    }
+  ]
+}

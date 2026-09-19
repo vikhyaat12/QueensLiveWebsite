@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import TrackingPixelsConfig from "./components/TrackingPixelsConfig";
 
 interface AnalyticsData {
   stats: {
@@ -48,7 +49,7 @@ const btnStyle: React.CSSProperties = { padding: "8px 16px", border: "none", bor
 export default function AnalyticsDashboard() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"overview" | "traffic" | "funnel" | "products" | "journey" | "sources" | "revenue">("overview");
+  const [tab, setTab] = useState<"overview" | "traffic" | "funnel" | "products" | "journey" | "sources" | "revenue" | "tracking">("overview");
   const [dateRange, setDateRange] = useState("7d");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -131,6 +132,7 @@ export default function AnalyticsDashboard() {
     { id: "journey" as const, label: "Journey" },
     { id: "sources" as const, label: "Sources" },
     { id: "revenue" as const, label: "💰 Revenue" },
+    { id: "tracking" as const, label: "⚙️ Tracking & Pixels" },
   ];
 
   const eventTypes = [
@@ -157,59 +159,61 @@ export default function AnalyticsDashboard() {
         </div>
       </div>
 
-      {/* Filters */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap", alignItems: "flex-end" }}>
-        <div>
-          <label style={labelStyle}>Date Range</label>
-          <select value={dateRange} onChange={e => setDateRange(e.target.value)} style={{ ...inputStyle, width: 140 }}>
-            <option value="today">Today</option>
-            <option value="yesterday">Yesterday</option>
-            <option value="7d">Last 7 Days</option>
-            <option value="30d">Last 30 Days</option>
-            <option value="90d">Last 90 Days</option>
-            <option value="all">All Time</option>
-            <option value="custom">Custom</option>
-          </select>
-        </div>
-        {dateRange === "custom" && (
-          <>
-            <div><label style={labelStyle}>From</label><input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} style={inputStyle} /></div>
-            <div><label style={labelStyle}>To</label><input type="date" value={toDate} onChange={e => setToDate(e.target.value)} style={inputStyle} /></div>
-          </>
-        )}
-        <div>
-          <label style={labelStyle}>Event Type</label>
-          <select value={eventFilter} onChange={e => setEventFilter(e.target.value)} style={{ ...inputStyle, width: 160 }}>
-            {eventTypes.map(et => <option key={et.value} value={et.value}>{et.label}</option>)}
-          </select>
-        </div>
-        <div>
-          <label style={labelStyle}>Product</label>
-          <input placeholder="Filter product…" value={productFilter} onChange={e => setProductFilter(e.target.value)} style={{ ...inputStyle, width: 140 }} />
-        </div>
-        <div>
-          <label style={labelStyle}>Device</label>
-          <select value={deviceFilter} onChange={e => setDeviceFilter(e.target.value)} style={{ ...inputStyle, width: 120 }}>
-            <option value="">All</option>
-            <option value="desktop">Desktop</option>
-            <option value="mobile">Mobile</option>
-            <option value="tablet">Tablet</option>
-          </select>
-        </div>
-        <div>
-          <label style={labelStyle}>Source</label>
-          <input placeholder="Filter source…" value={sourceFilter} onChange={e => setSourceFilter(e.target.value)} style={{ ...inputStyle, width: 140 }} />
-        </div>
-      </div>
-
       {/* Tab Navigation */}
-      <div style={{ display: "flex", gap: 2, marginBottom: 20, borderBottom: "2px solid #e8e4df" }}>
+      <div style={{ display: "flex", gap: 2, marginBottom: 20, borderBottom: "2px solid #e8e4df", overflowX: "auto" }}>
         {tabs.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: "10px 18px", background: tab === t.id ? "#2A0F3A" : "transparent", color: tab === t.id ? "#D4AF37" : "#666", border: "none", borderBottom: tab === t.id ? "2px solid #D4AF37" : "2px solid transparent", marginBottom: -2, cursor: "pointer", fontWeight: 700, fontSize: 13 }}>
+          <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: "10px 18px", background: tab === t.id ? "#2A0F3A" : "transparent", color: tab === t.id ? "#D4AF37" : "#666", border: "none", borderBottom: tab === t.id ? "2px solid #D4AF37" : "2px solid transparent", marginBottom: -2, cursor: "pointer", fontWeight: 700, fontSize: 13, whiteSpace: "nowrap" }}>
             {t.label}
           </button>
         ))}
       </div>
+
+      {/* Filters (only for reporting tabs) */}
+      {tab !== "tracking" && (
+        <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap", alignItems: "flex-end" }}>
+          <div>
+            <label style={labelStyle}>Date Range</label>
+            <select value={dateRange} onChange={e => setDateRange(e.target.value)} style={{ ...inputStyle, width: 140 }}>
+              <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
+              <option value="7d">Last 7 Days</option>
+              <option value="30d">Last 30 Days</option>
+              <option value="90d">Last 90 Days</option>
+              <option value="all">All Time</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          {dateRange === "custom" && (
+            <>
+              <div><label style={labelStyle}>From</label><input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} style={inputStyle} /></div>
+              <div><label style={labelStyle}>To</label><input type="date" value={toDate} onChange={e => setToDate(e.target.value)} style={inputStyle} /></div>
+            </>
+          )}
+          <div>
+            <label style={labelStyle}>Event Type</label>
+            <select value={eventFilter} onChange={e => setEventFilter(e.target.value)} style={{ ...inputStyle, width: 160 }}>
+              {eventTypes.map(et => <option key={et.value} value={et.value}>{et.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>Product</label>
+            <input placeholder="Filter product…" value={productFilter} onChange={e => setProductFilter(e.target.value)} style={{ ...inputStyle, width: 140 }} />
+          </div>
+          <div>
+            <label style={labelStyle}>Device</label>
+            <select value={deviceFilter} onChange={e => setDeviceFilter(e.target.value)} style={{ ...inputStyle, width: 120 }}>
+              <option value="">All</option>
+              <option value="desktop">Desktop</option>
+              <option value="mobile">Mobile</option>
+              <option value="tablet">Tablet</option>
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>Source</label>
+            <input placeholder="Filter source…" value={sourceFilter} onChange={e => setSourceFilter(e.target.value)} style={{ ...inputStyle, width: 140 }} />
+          </div>
+        </div>
+      )}
 
       {loading && <p style={{ textAlign: "center", color: "#999", padding: 40 }}>Loading analytics…</p>}
 
@@ -573,6 +577,12 @@ export default function AnalyticsDashboard() {
         </>
       )}
 
+      {/* ─── TRACKING & PIXELS TAB ─── */}
+      {tab === "tracking" && (
+        <div style={{ marginTop: 10 }}>
+          <TrackingPixelsConfig />
+        </div>
+      )}
 
     </div>
   );

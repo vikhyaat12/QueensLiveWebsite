@@ -1,43 +1,32 @@
 import { json } from "@/lib/http";
-import { store } from "@/lib/commerce/store";
+import { searchEngine } from "@/lib/commerce/search-engine";
+import type { SearchQueryOptions } from "@/lib/commerce/types";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const q = url.searchParams.get("q")?.trim() || "";
+  const q = url.searchParams.get("q") || "";
+  const type = (url.searchParams.get("type") as "suggest" | "full") || (url.searchParams.has("full") ? "full" : "suggest");
+  const category = url.searchParams.get("category") || undefined;
+  const inStockOnly = url.searchParams.get("inStock") === "true";
+  const minPrice = url.searchParams.has("minPrice") ? Number(url.searchParams.get("minPrice")) : undefined;
+  const maxPrice = url.searchParams.has("maxPrice") ? Number(url.searchParams.get("maxPrice")) : undefined;
+  const sort = (url.searchParams.get("sort") as SearchQueryOptions["sort"]) || "relevance";
+  const page = Math.max(1, Number(url.searchParams.get("page") || 1));
+  const limit = Math.max(1, Math.min(50, Number(url.searchParams.get("limit") || (type === "suggest" ? 6 : 12))));
 
-  if (!q || q.length < 2) {
-    return json({ results: [], query: q });
-  }
+  const response = await searchEngine.search({
+    q,
+    type,
+    category,
+    inStockOnly,
+    minPrice,
+    maxPrice,
+    sort,
+    page,
+    limit,
+  });
 
-  const allProducts = await store.products.all();
-  const lower = q.toLowerCase();
-
-  const results = allProducts
-    .filter((p: Record<string, unknown>) => {
-      const name = String(p.name || "").toLowerCase();
-      const category = String(p.category || "").toLowerCase();
-      const slug = String(p.slug || "").toLowerCase();
-      const description = String(p.description || "").toLowerCase();
-      const sku = String(p.sku || "").toLowerCase();
-      return (
-        name.includes(lower) ||
-        category.includes(lower) ||
-        slug.includes(lower) ||
-        description.includes(lower) ||
-        sku.includes(lower)
-      );
-    })
-    .map((p: Record<string, unknown>) => ({
-      id: p.id,
-      name: p.name,
-      slug: p.slug,
-      image: p.image,
-      price: p.price,
-      mrp: p.mrp,
-      category: p.category,
-      stock: p.stock,
-    }))
-    .slice(0, 12);
-
-  return json({ results, query: q });
+  return json(response);
 }

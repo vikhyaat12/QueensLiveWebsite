@@ -8,17 +8,27 @@ import React, { useState } from "react";
    ═══════════════════════════════════════════════════════════════ */
 
 export type Tab =
-  | "dashboard" | "orders" | "products" | "product-edit" | "aplus"
+  | "dashboard" | "setup-checklist" | "maintenance" | "operations"
+  | "orders" | "products" | "product-edit" | "aplus" | "inventory"
   | "categories" | "customers" | "b2b" | "stores" | "careers"
   | "career-applications" | "doctors" | "employees" | "affiliates"
   | "coupons" | "blog" | "faq" | "reviews" | "media" | "banners"
   | "testimonials" | "settings" | "offers" | "homepage" | "marketing"
   | "payments" | "shipping" | "push" | "pages" | "social-links"
   | "otp-security" | "notifications-matrix" | "data-export"
-  | "analytics" | "staff" | "audit-log" | "popups";
+  | "analytics" | "staff" | "audit-log" | "popups" | "models3d"
+  | "billing" | "invoice-designer" | "tax-rules" | "email-templates" | "integrations" | "merchandising" | "whatsapp"
+  | "analytics-tracking"
+  | "support-inbox" | "support-settings" | "support-tickets" | "support-reports" | "ticket-config"
+  | "footer-builder" | "redirects";
 
 export const ENDPOINTS: Record<Tab, string | null> = {
   dashboard: "/api/admin/dashboard",
+  whatsapp: "/api/admin/whatsapp",
+  inventory: "/api/admin/inventory",
+  "setup-checklist": null,
+  maintenance: null,
+  operations: "/api/admin/orders",
   orders: "/api/admin/orders",
   products: "/api/products?all=true",
   categories: "/api/admin/categories",
@@ -55,6 +65,21 @@ export const ENDPOINTS: Record<Tab, string | null> = {
   staff: "/api/admin/staff",
   "audit-log": "/api/admin/audit-log",
   popups: "/api/popups",
+  models3d: "/api/admin/models3d",
+  billing: "/api/admin/settings/billing",
+  "invoice-designer": null,
+  "tax-rules": "/api/admin/tax",
+  "email-templates": "/api/admin/email/templates",
+  integrations: "/api/admin/integrations",
+  merchandising: "/api/admin/promotions",
+  "support-inbox": "/api/admin/support/conversations",
+  "support-settings": "/api/admin/support/settings",
+  "support-tickets": "/api/admin/support/tickets",
+  "support-reports": "/api/admin/support/reports",
+  "ticket-config": "/api/admin/support/ticket-config",
+  "analytics-tracking": "/api/admin/analytics-config",
+  "footer-builder": null,
+  redirects: "/api/admin/redirects",
 };
 
 export const req = async (path: string, init?: RequestInit) => {

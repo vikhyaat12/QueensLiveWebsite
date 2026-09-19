@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import React from "react";
+import QueensCareHeader from "@/app/components/QueensCareHeader";
+import QueensCareFooter from "@/app/components/QueensCareFooter";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 export type OurStoryData = {
   title?: string;
@@ -37,11 +40,14 @@ export default function OurStoryClient({ initialData }: { initialData: OurStoryD
         background: d.backgroundColor || "var(--paper, #FAF8F5)",
         color: d.textColor || "var(--ink, #180524)",
         minHeight: "100vh",
-        padding: "40px 24px 80px",
+        display: "flex",
+        flexDirection: "column",
         fontFamily: "var(--font-sans, system-ui, sans-serif)",
       }}
     >
-      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+      <QueensCareHeader activePage="about" />
+
+      <main style={{ flex: 1, maxWidth: 1100, margin: "0 auto", padding: "40px 24px 80px", width: "100%" }}>
         {/* Navigation Breadcrumb */}
         <div style={{ marginBottom: 32 }}>
           <Link
@@ -85,7 +91,7 @@ export default function OurStoryClient({ initialData }: { initialData: OurStoryD
               margin: "0 0 24px",
             }}
             dangerouslySetInnerHTML={{
-              __html: d.heroHeading || "Born from clinical rigor. <em>Formulated for life.</em>",
+              __html: sanitizeHtml(d.heroHeading || "Born from clinical rigor. <em>Formulated for life.</em>"),
             }}
           />
           <p
@@ -425,7 +431,8 @@ export default function OurStoryClient({ initialData }: { initialData: OurStoryD
             {d.ctaText || "Explore Our Formulations"} <span>→</span>
           </Link>
         </section>
-      </div>
+      </main>
+      <QueensCareFooter />
     </div>
   );
 }

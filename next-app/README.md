@@ -1,35 +1,76 @@
-# Queens Care Laboratories
+# Queens Care Laboratories — Enterprise Pharmaceutical E-Commerce Platform
 
-Premium, responsive Next.js storefront foundation for Queens Care Laboratories.
+Queens Care Laboratories is a clinical-luxury pharmaceutical e-commerce platform engineered for an aspirational 5%+ conversion rate, zero hardcoded business rules, omnichannel communication (Email, SMS, WhatsApp, Push), and 100% hosting portability.
 
-## Run locally
+---
+
+## Quick Start (Local Development)
 
 ```bash
-npm.cmd run dev
-npm.cmd run build
+# 1. Install dependencies
+npm ci
+
+# 2. Setup environment variables
+copy .env.example .env.local
+
+# 3. Start local development server (Turbopack)
+npm run dev
 ```
 
-## Architecture
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-- `app/components/QueensCareExperience.tsx` is the editable storefront content and interaction layer.
-- `app/components/CareScene.tsx` is the motion-safe Three.js hero enhancement.
-- `app/[...slug]/page.tsx` supplies graceful pages for commercial, support, and portal URLs while their secured services are connected.
-- `app/sitemap.ts` and `app/robots.ts` provide search engine discovery endpoints.
+---
 
-## Production integrations required
+## Production Verification & Build
 
-The schema and Prisma CLI are included for the production persistence migration. Run `npm run db:generate`, `npm run db:validate`, and `npm run db:migrate` against the configured PostgreSQL instance before accepting live orders. The local adapter remains intentionally deterministic for offline development. Never expose payment secrets in browser code.
+```bash
+# Type check (0 errors)
+npx tsc --noEmit
 
-Suggested environment variables:
+# Lint check (0 errors)
+npx eslint . --quiet
 
-```text
-RAZORPAY_KEY_ID=
-RAZORPAY_KEY_SECRET=
-RAZORPAY_WEBHOOK_SECRET=
-DATABASE_URL=
-CMS_API_URL=
-CMS_API_TOKEN=
-NEXT_PUBLIC_SITE_URL=
+# Production build (129/129 routes compiled)
+npm run build
+
+# Start production server
+npm start -- -p 3000
 ```
 
-Run dependency security review in the deployment environment before release: `npm audit`.
+---
+
+## Documentation Index
+
+- [System Architecture Specification](docs/ARCHITECTURE.md)
+- [Master Production Deployment Guide](docs/DEPLOYMENT.md) (Vercel, Docker, Node.js VPS)
+- [Hosting & Database Migration Runbook](docs/MIGRATION.md)
+- [Environment Variables Reference](.env.example)
+
+---
+
+## Key System Features
+
+1. **Omnichannel Communications Engine**:
+   - Central Transactional Email Engine with 13 standardized branded templates.
+   - Multi-provider SMS Service (Twilio, MSG91, Fast2SMS, Generic Webhooks).
+   - Multi-provider WhatsApp Service (Meta Cloud API, Gupshup, Twilio).
+   - Admin Notification Rules Matrix enabling per-event channel toggles.
+   - Duplicate send protection via composite idempotency keys.
+
+2. **Secure OTP Authentication**:
+   - Salted `scrypt` hashing with constant-time comparison.
+   - Brute-force lockout and resend cooldown enforcement.
+   - Multi-channel delivery (Email, SMS, WhatsApp).
+
+3. **Authoritative Dual-Tax GST Engine**:
+   - Server-authoritative CGST/SGST intra-state split and IGST inter-state allocation.
+   - Frozen, immutable tax snapshots for every order.
+   - Downloadable automated PDF tax invoices.
+
+4. **Duty Pharmacist & Operations Command Desk**:
+   - High-density Operations portal for packing slips and shipping labels.
+   - Duty Pharmacist review desk with approval/rejection notes and patient notifications.
+
+5. **Hosting Portability**:
+   - Zero-lockin deployment supporting Vercel, Docker containers, and Node.js VPS.
+   - Cloud S3 / Cloudflare R2 storage abstraction with automatic local filesystem fallback.

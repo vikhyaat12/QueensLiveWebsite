@@ -1,6 +1,8 @@
+import "server-only";
 import { randomBytes } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { fileDb } from "./file-db";
+import { store } from "./store";
 
 const usePrisma = Boolean(process.env.DATABASE_URL);
 const now = () => new Date().toISOString();
@@ -653,7 +655,7 @@ export const defaultB2BPageConfig: B2BPageConfig = {
     ctaLink: "#enquiry-form",
     ctaVisible: true,
     trustBadges: [
-      { top: "ISO 9001 & cGMP", bottom: "Cleanroom Validated", icon: "🔬" },
+      { top: "Batch-Tested Quality", bottom: "Cleanroom Validated", icon: "🔬" },
       { top: "48-72h Metro SLA", bottom: "Pan-India Dispatch", icon: "🚚" },
       { top: "Full Batch COA", bottom: "Regulatory Dossiers", icon: "📑" },
       { top: "Tiered Margins", bottom: "Protected Territories", icon: "🛡️" },
@@ -684,8 +686,8 @@ export const defaultB2BPageConfig: B2BPageConfig = {
       {
         id: "b2b-ben-2",
         icon: "🔬",
-        title: "cGMP Cleanroom Formulations",
-        description: "All products manufactured in ISO 9001 cleanrooms with rigorous batch release testing.",
+        title: "Quality-Controlled Formulations",
+        description: "All products formulated in controlled cleanrooms with rigorous batch release testing.",
         visible: true,
         sortOrder: 2,
       },
@@ -1247,68 +1249,412 @@ export const settingStore = {
   },
 };
 
+// ─── ORDER STATE MACHINE & REJECTION REASONS ────────────────────────────────
+
+export {
+  ORDER_VALID_TRANSITIONS,
+  STANDARD_REJECTION_REASONS,
+  ORDER_STATUSES,
+  type StandardRejectionReason,
+  type OrderStatusType,
+} from "./order-constants";
+import { ORDER_VALID_TRANSITIONS, STANDARD_REJECTION_REASONS } from "./order-constants";
+
 // ─── ORDERS (extended) ──────────────────────────────────────────────────────
 
 export const orderStoreExtended = {
-  updateStatus: async (id: string, status: string, note?: string) => {
+  VALID_TRANSITIONS: ORDER_VALID_TRANSITIONS,
+  REJECTION_REASONS: STANDARD_REJECTION_REASONS,
+
+  byId: async (id: string) => {
+    return await store.orders.byId(id);
+  },
+
+  updateStatus: async (id: string, status: string, note?: string, actorId = "admin") => {
+    const orders = fileDb.findMany("orders");
+    let currentOrder = orders.find((o) => o.id === id);
+    if (!currentOrder && usePrisma) {
+      try {
+        currentOrder = (await prisma.order.findUnique({ where: { id }, include: { lines: true } })) as never;
+      } catch {}
+    }
+    if (!currentOrder) {
+      return { success: false, error: "Order not found." };
+    }
+
+    const currentStatus = String(currentOrder.status || "pending");
+    const allowed = ORDER_VALID_TRANSITIONS[currentStatus] || [];
+    if (!allowed.includes(status)) {
+      return {
+        success: false,
+        error: `Cannot transition from "${currentStatus}" to "${status}". Allowed: ${allowed.join(", ") || "none"}.`,
+      };
+    }
+
+    if (status === "rejected") {
+      if (!note || !note.trim()) {
+        return { success: false, error: "Rejection reason is required." };
+      }
+    }
+
     if (usePrisma) {
       try {
         await prisma.order.update({ where: { id }, data: { status: status as never } });
-        if (note) await prisma.orderStatusHistory.create({ data: { orderId: id, status: status as never, note } });
+        await prisma.orderStatusHistory.create({
+          data: { orderId: id, status: status as never, note: note || "" },
+        });
       } catch {}
     }
     fileDb.update("orders", id, { status });
-    // Record status history in fileDb too
-    fileDb.insert("orderStatusHistory", { orderId: id, status, note: note || "", createdAt: new Date().toISOString() });
+
+    fileDb.insert("orderStatusHistory", {
+      orderId: id,
+      status,
+      note: note || "",
+      actorId,
+      createdAt: new Date().toISOString(),
+    });
+
+    fileDb.insert("auditLogs", {
+      action: "order_status_changed",
+      actorId,
+      targetType: "order",
+      targetId: id,
+      details: `Order ${id.slice(0, 14)}: ${currentStatus} → ${status}${note ? ` (${note})` : ""}`,
+      createdAt: new Date().toISOString(),
+    });
+
+    if (status === "cancelled" || status === "rejected") {
+      const rawLines = Array.isArray(currentOrder.lines) ? currentOrder.lines : [];
+      for (const line of rawLines) {
+        try {
+          const pid = String(line.productId || "");
+          const qty = Number(line.quantity || 0);
+          if (pid && qty > 0) {
+            await store.products.decrementStock(pid, -qty);
+          }
+        } catch {}
+      }
+    }
+
+    return { success: true };
   },
+
+  bulkUpdateStatus: async (
+    orderIds: string[],
+    action: "accept" | "reject",
+    reason?: string,
+    customNote?: string,
+    actorId = "admin"
+  ) => {
+    if (!Array.isArray(orderIds) || orderIds.length === 0) {
+      return { success: false, error: "No orders selected." };
+    }
+
+    const targetStatus = action === "accept" ? "confirmed" : "rejected";
+
+    if (action === "reject") {
+      if (!reason || !reason.trim()) {
+        return { success: false, error: "A rejection reason is mandatory." };
+      }
+      if (reason === "Other" && (!customNote || !customNote.trim())) {
+        return { success: false, error: "Please enter an explanation for 'Other'." };
+      }
+    }
+
+    const note =
+      action === "reject"
+        ? `${reason}${customNote && reason === "Other" ? `: ${customNote}` : customNote ? ` (${customNote})` : ""}`
+        : customNote || "Bulk confirmed by admin";
+
+    const results: Array<{ id: string; success: boolean; error?: string }> = [];
+    let processed = 0;
+
+    for (const id of orderIds) {
+      const res = await orderStoreExtended.updateStatus(id, targetStatus, note, actorId);
+      if (res.success) {
+        processed++;
+        results.push({ id, success: true });
+      } else {
+        results.push({ id, success: false, error: res.error });
+      }
+    }
+
+    return {
+      success: processed > 0,
+      processed,
+      total: orderIds.length,
+      results,
+    };
+  },
+
   history: async (orderId: string) => {
-    return fileDb.findMany("orderStatusHistory", (h: Record<string, unknown>) => h.orderId === orderId);
+    if (usePrisma) {
+      try {
+        const rows = await prisma.orderStatusHistory.findMany({
+          where: { orderId },
+          orderBy: { createdAt: "desc" },
+        });
+        if (rows.length > 0) return rows;
+      } catch {}
+    }
+    return fileDb
+      .findMany("orderStatusHistory", (h: Record<string, unknown>) => h.orderId === orderId)
+      .sort((a, b) => new Date(String(b.createdAt)).getTime() - new Date(String(a.createdAt)).getTime());
   },
+
   byUser: async (userId: string) => {
-    return fileDb.findMany("orders", o => o.userId === userId);
+    return await store.orders.list({ id: userId, role: "customer" } as never);
   },
+
   all: async () => {
-    return fileDb.findMany("orders");
+    if (usePrisma) {
+      try {
+        return (await prisma.order.findMany({
+          include: { lines: { include: { product: true } } },
+          orderBy: { createdAt: "desc" },
+        })) as unknown as Record<string, unknown>[];
+      } catch {}
+    }
+    const all = fileDb.findMany("orders");
+    const allProducts = fileDb.findMany("products");
+    return all.map((o) => {
+      const rawLines = Array.isArray(o.lines) ? o.lines : [];
+      const enriched = rawLines.map((l: Record<string, unknown>) => {
+        const pid = String(l.productId || "");
+        const p = allProducts.find((x: Record<string, unknown>) => x.id === pid || x.slug === pid);
+        return {
+          ...l,
+          product: p || {
+            id: pid,
+            name: String(l.name || "Queens Care Formulation"),
+            image: String(l.image || "/uploads/logos/queens-care-official-original.png"),
+            price: Number(l.unitPrice || 0),
+            slug: pid,
+          },
+        };
+      });
+      return { ...o, lines: enriched };
+    });
   },
 };
 
 // ─── CUSTOMERS (admin) ──────────────────────────────────────────────────────
 
 export const customerStore = {
-  list: async () => {
-    if (usePrisma) {
-      try { return await prisma.user.findMany({ where: { role: "customer" }, orderBy: { createdAt: "desc" } }); } catch {}
-    }
-    return fileDb.findMany("users", u => u.role === "customer");
+  list: async (filter?: { search?: string; status?: string }) => {
+    const users = (await store.users.list({ role: "customer", search: filter?.search, status: filter?.status })) || [];
+    const allOrders = (fileDb.findMany("orders") || []) as Array<Record<string, unknown>>;
+    return users.map((u) => {
+      const userOrders = allOrders.filter((o) => o.userId === u.id);
+      const totalSpend = userOrders.reduce((acc, o) => acc + (Number(o.total) || 0), 0);
+      const { passwordHash, ...safe } = u as unknown as Record<string, unknown>;
+      return {
+        ...safe,
+        status: safe.status || (safe.isActive === false ? "disabled" : "active"),
+        orderCount: userOrders.length,
+        totalSpend,
+      };
+    });
   },
   byId: async (id: string) => {
-    if (usePrisma) {
-      try { return await prisma.user.findUnique({ where: { id }, include: { addresses: true, orders: true, wishlist: true } }); } catch {}
-    }
-    return fileDb.findOne("users", u => u.id === id);
+    const user = await store.users.byId(id);
+    if (!user) return null;
+    const { passwordHash, ...safeUser } = user as unknown as Record<string, unknown>;
+    const orders = (fileDb.findMany("orders", (o) => o.userId === id) || []).sort(
+      (a, b) => new Date(String(b.createdAt)).getTime() - new Date(String(a.createdAt)).getTime()
+    );
+    const addresses = fileDb.findMany("addresses", (a) => a.userId === id) || [];
+    const activity = fileDb.findMany("auditLogs", (l) => l.targetId === id || (l.targetType === "customer" && l.targetId === id)) || [];
+    return {
+      user: {
+        ...safeUser,
+        status: safeUser.status || (safeUser.isActive === false ? "disabled" : "active"),
+      },
+      orders,
+      addresses,
+      activity,
+    };
   },
   count: async () => {
-    return fileDb.findMany("users", u => u.role === "customer").length;
+    const customers = await store.users.list({ role: "customer" });
+    return customers.length;
+  },
+  setStatus: async (id: string, status: "active" | "disabled", actorId?: string) => {
+    const user = await store.users.byId(id);
+    if (!user) return null;
+    const nextTokenVersion = (user.tokenVersion || 1) + 1;
+    const updated = await store.users.update(id, {
+      status,
+      isActive: status === "active",
+      tokenVersion: nextTokenVersion,
+    });
+    fileDb.insert("auditLogs", {
+      action: status === "disabled" ? "customer_disabled" : "customer_enabled",
+      actorId: actorId || "admin",
+      targetType: "customer",
+      targetId: id,
+      details: `Customer ${user.email} status changed to ${status}`,
+      createdAt: new Date().toISOString(),
+    });
+    return updated;
+  },
+  deactivate: async (id: string, actorId?: string) => {
+    const user = await store.users.byId(id);
+    if (!user) return null;
+    const userOrders = fileDb.findMany("orders", (o) => o.userId === id);
+    const orderCount = userOrders.length;
+    const nextTokenVersion = (user.tokenVersion || 1) + 1;
+    const anonymizedEmail = `anonymized_${id.replace(/[^a-z0-9]/gi, "")}@deleted.local`;
+    const updated = await store.users.update(id, {
+      name: "Deactivated Customer",
+      email: anonymizedEmail,
+      phone: "",
+      status: "deactivated",
+      isActive: false,
+      tokenVersion: nextTokenVersion,
+    });
+    fileDb.insert("auditLogs", {
+      action: "customer_deactivated",
+      actorId: actorId || "admin",
+      targetType: "customer",
+      targetId: id,
+      details: `Customer account deactivated and anonymized. ${orderCount} historical orders preserved.`,
+      createdAt: new Date().toISOString(),
+    });
+    return { user: updated, historicalOrdersPreserved: orderCount };
   },
   update: async (id: string, data: Record<string, unknown>) => {
-    if (usePrisma) {
-      try {
-        const u = await prisma.user.update({ where: { id }, data: data as never });
-        fileDb.update("users", id, u as unknown as Record<string, unknown>);
-        return u;
-      } catch {}
-    }
-    return fileDb.update("users", id, data);
+    return store.users.update(id, data);
   },
 };
 
 // ─── ADDRESSES ───────────────────────────────────────────────────────────────
 
 export const addressStore = {
-  list: async (userId: string) => [],
-  create: async (userId: string, data: Record<string, unknown>) => ({ ...data, userId }),
-  update: async (id: string, data: Record<string, unknown>) => ({ ...data, id }),
-  delete: async (id: string) => {},
+  list: async (userId: string) => {
+    if (usePrisma) {
+      try {
+        return await prisma.address.findMany({
+          where: { userId },
+          orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
+        });
+      } catch {}
+    }
+    return fileDb
+      .findMany("addresses", (a) => a.userId === userId)
+      .sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0));
+  },
+
+  byId: async (id: string, userId?: string) => {
+    if (usePrisma) {
+      try {
+        const a = await prisma.address.findUnique({ where: { id } });
+        if (a && (!userId || a.userId === userId)) return a;
+        return null;
+      } catch {}
+    }
+    const found = fileDb.findOne("addresses", (a) => a.id === id);
+    if (found && (!userId || found.userId === userId)) return found;
+    return null;
+  },
+
+  create: async (userId: string, data: Record<string, unknown>) => {
+    if (data.isDefault) {
+      await addressStore.clearDefault(userId);
+    }
+    if (usePrisma) {
+      try {
+        const addr = await prisma.address.create({
+          data: {
+            userId,
+            label: String(data.label || "Home"),
+            fullName: String(data.fullName || ""),
+            phone: String(data.phone || ""),
+            address: String(data.address || ""),
+            city: String(data.city || ""),
+            state: String(data.state || ""),
+            pincode: String(data.pincode || ""),
+            isDefault: Boolean(data.isDefault),
+          },
+        });
+        fileDb.insert("addresses", addr as unknown as Record<string, unknown>);
+        return addr;
+      } catch {}
+    }
+    const item = {
+      id: `addr-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+      userId,
+      label: String(data.label || "Home"),
+      fullName: String(data.fullName || ""),
+      phone: String(data.phone || ""),
+      address: String(data.address || ""),
+      city: String(data.city || ""),
+      state: String(data.state || ""),
+      pincode: String(data.pincode || ""),
+      isDefault: Boolean(data.isDefault),
+      createdAt: now(),
+    };
+    fileDb.insert("addresses", item);
+    return item;
+  },
+
+  update: async (id: string, userId: string, data: Record<string, unknown>) => {
+    const existing = await addressStore.byId(id, userId);
+    if (!existing) return null;
+
+    if (data.isDefault) {
+      await addressStore.clearDefault(userId);
+    }
+
+    if (usePrisma) {
+      try {
+        const updated = await prisma.address.update({
+          where: { id },
+          data: data as never,
+        });
+        fileDb.update("addresses", id, updated as unknown as Record<string, unknown>);
+        return updated;
+      } catch {}
+    }
+    const updated = fileDb.update("addresses", id, data);
+    return updated;
+  },
+
+  delete: async (id: string, userId: string) => {
+    const existing = await addressStore.byId(id, userId);
+    if (!existing) return false;
+
+    if (usePrisma) {
+      try {
+        await prisma.address.delete({ where: { id } });
+      } catch {}
+    }
+    fileDb.remove("addresses", id);
+    return true;
+  },
+
+  clearDefault: async (userId: string) => {
+    if (usePrisma) {
+      try {
+        await prisma.address.updateMany({ where: { userId }, data: { isDefault: false } });
+      } catch {}
+    }
+    const userAddrs = fileDb.findMany("addresses", (a) => a.userId === userId);
+    for (const a of userAddrs) {
+      if (a.isDefault) fileDb.update("addresses", String(a.id), { isDefault: false });
+    }
+  },
+};
+
+// ─── WISHLIST ────────────────────────────────────────────────────────────────
+
+export const wishlistStore = {
+  get: async (userId: string) => store.wishlist.get(userId),
+  getItemsWithProducts: async (userId: string) => store.wishlist.getItemsWithProducts(userId),
+  add: async (userId: string, productId: string) => store.wishlist.add(userId, productId),
+  remove: async (userId: string, productId: string) => store.wishlist.remove(userId, productId),
+  toggle: async (userId: string, productId: string) => store.wishlist.toggle(userId, productId),
 };
 
 // ─── 3D MODELS ──────────────────────────────────────────────────────────────
@@ -1820,6 +2166,13 @@ export const pushHistoryStore = {
 };
 
 // ─── PAGE SETTINGS (NAVIGATION MANAGEMENT) ──────────────────────────────────
+export interface LiveNavItem {
+  id: string;
+  label: string;
+  href: string;
+  sort: number;
+}
+
 export const pageSettingsStore = {
   list: async () => fileDb.findMany("pageSettings").sort((a: Record<string, unknown>, b: Record<string, unknown>) => (Number(a.sortOrder) || 0) - (Number(b.sortOrder) || 0)),
   active: async () => fileDb.findMany("pageSettings", (p) => p.active !== false).sort((a: Record<string, unknown>, b: Record<string, unknown>) => (Number(a.sortOrder) || 0) - (Number(b.sortOrder) || 0)),
@@ -1830,6 +2183,175 @@ export const pageSettingsStore = {
   create: async (data: Record<string, unknown>) => fileDb.insert("pageSettings", data),
   update: async (id: string, data: Record<string, unknown>) => fileDb.update("pageSettings", id, data),
   remove: async (id: string) => fileDb.remove("pageSettings", id),
+
+  // Live published navigation resolution (server authoritative, 0ms flash)
+  getLiveHeaderNav: async (): Promise<LiveNavItem[]> => {
+    const published = (fileDb.findMany("publishedHeaderNav") || []) as Array<Record<string, unknown>>;
+    if (published.length > 0) {
+      return (published
+        .filter((item) => item.visible !== false)
+        .sort((a, b) => (Number(a.sort) || 0) - (Number(b.sort) || 0)) as Array<Record<string, unknown>>)
+        .map((item) => ({
+          id: String(item.id || item.slug || item.label),
+          label: String(item.label || item.title),
+          href: String(item.href || (item.slug ? (String(item.slug).startsWith("#") ? String(item.slug) : `/${item.slug}`) : "/")),
+          sort: Number(item.sort || 0),
+        }));
+    }
+
+    // First-time fallback: compile all pages into publishedHeaderNav so draft vs publish diff is complete
+    const rawPages = (fileDb.findMany("pageSettings") || [])
+      .sort((a: Record<string, unknown>, b: Record<string, unknown>) => (Number(a.sortOrder) || 0) - (Number(b.sortOrder) || 0));
+
+    const timestamp = new Date().toISOString();
+    const compiled = rawPages.map((p: Record<string, unknown>, idx: number) => {
+      const slug = String(p.slug || "").trim();
+      let href = "/";
+      if (slug.startsWith("#") || slug.startsWith("http")) href = slug;
+      else if (slug.length > 0) href = `/${slug}`;
+
+      return {
+        id: String(p.id || `pg-${idx}`),
+        slug,
+        title: String(p.title || ""),
+        label: String(p.label || p.title || "Page"),
+        href,
+        sort: Number(p.sortOrder ?? idx),
+        visible: p.active !== false && p.headerVisible !== false,
+        publishedAt: timestamp,
+      };
+    });
+
+    if (compiled.length > 0) {
+      fileDb.save({ publishedHeaderNav: compiled });
+    }
+
+    return compiled
+      .filter((item) => item.visible)
+      .map((item) => ({
+        id: item.id,
+        label: item.label,
+        href: item.href,
+        sort: item.sort,
+      }));
+  },
+
+  // Publish current draft pageSettings to live publishedHeaderNav
+  publish: async (actorEmail?: string) => {
+    const draftPages = (fileDb.findMany("pageSettings") || [])
+      .sort((a: Record<string, unknown>, b: Record<string, unknown>) => (Number(a.sortOrder) || 0) - (Number(b.sortOrder) || 0));
+
+    const timestamp = new Date().toISOString();
+
+    fileDb.insert("navigationSnapshots", {
+      id: `NAV-SNAP-${Date.now()}`,
+      timestamp,
+      actorEmail: actorEmail || "admin@queenscare.in",
+      draftPages,
+    });
+
+    const publishedItems: LiveNavItem[] = [];
+    const allPublishedRecords: Array<Record<string, unknown>> = [];
+
+    draftPages.forEach((p: Record<string, unknown>, idx: number) => {
+      const isVisible = p.active !== false && p.headerVisible !== false;
+      const slug = String(p.slug || "").trim();
+      let href = "/";
+      if (slug.startsWith("#") || slug.startsWith("http")) href = slug;
+      else if (slug.length > 0) href = `/${slug}`;
+
+      const navItem = {
+        id: String(p.id || `pg-${idx}`),
+        slug,
+        title: String(p.title || ""),
+        label: String(p.label || p.title || "Page"),
+        href,
+        sort: Number(p.sortOrder ?? idx),
+        visible: isVisible,
+        publishedAt: timestamp,
+      };
+
+      allPublishedRecords.push(navItem);
+      if (isVisible) {
+        publishedItems.push({
+          id: navItem.id,
+          label: navItem.label,
+          href: navItem.href,
+          sort: navItem.sort,
+        });
+      }
+    });
+
+    fileDb.save({ publishedHeaderNav: allPublishedRecords });
+
+    return {
+      ok: true,
+      timestamp,
+      liveCount: publishedItems.length,
+      publishedCount: publishedItems.length,
+      publishedNav: publishedItems,
+    };
+  },
+
+  // Discard draft: revert pageSettings to state matching publishedHeaderNav
+  discardDraft: async () => {
+    const published = (fileDb.findMany("publishedHeaderNav") || []) as Array<Record<string, unknown>>;
+    if (!published.length) return { ok: false, message: "No published state found" };
+
+    published.forEach((pub) => {
+      const existing = fileDb.findOne("pageSettings", (p) => p.id === pub.id);
+      if (existing) {
+        fileDb.update("pageSettings", String(pub.id), {
+          headerVisible: pub.visible !== false,
+          label: pub.label,
+          sortOrder: pub.sort,
+        });
+      }
+    });
+
+    return { ok: true };
+  },
+
+  // Check if draft has uncommitted differences from live published
+  getPublishStatus: async () => {
+    const published = (fileDb.findMany("publishedHeaderNav") || []) as Array<Record<string, unknown>>;
+    const drafts = (fileDb.findMany("pageSettings") || []) as Array<Record<string, unknown>>;
+
+    let hasDiff = false;
+    if (published.length === 0 && drafts.length > 0) {
+      hasDiff = true;
+    } else {
+      for (const d of drafts) {
+        const pub = published.find((p) => p.id === d.id);
+        if (!pub) {
+          hasDiff = true;
+          break;
+        }
+        const pubVis = pub.visible !== false;
+        const draftVis = d.active !== false && d.headerVisible !== false;
+        const draftLabel = String(d.label || d.title || "");
+        const pubLabel = String(pub.label || pub.title || "");
+        if (pubVis !== draftVis || pubLabel !== draftLabel || Number(pub.sort) !== Number(d.sortOrder)) {
+          hasDiff = true;
+          break;
+        }
+      }
+      if (!hasDiff && drafts.length !== published.length) {
+        hasDiff = true;
+      }
+    }
+
+    const lastPub = published[0]?.publishedAt ? String(published[0].publishedAt) : null;
+    const liveCount = published.filter((p) => p.visible !== false).length;
+    return {
+      hasUnpublishedChanges: hasDiff,
+      isDraftModified: hasDiff,
+      lastPublishedAt: lastPub,
+      draftCount: drafts.length,
+      liveCount,
+      publishedCount: liveCount,
+    };
+  },
 };
 
 // ─── SOCIAL MEDIA LINKS ─────────────────────────────────────────────────────
@@ -1995,7 +2517,8 @@ export const paymentGatewayStore = {
   },
 
   update: async (id: string, patch: Record<string, unknown>) => {
-    const existing = fileDb.findOne("paymentGateways", (gw: Record<string, unknown>) => gw.id === id || gw.provider === id || gw.id === `gw-${id}`);
+    const cleanId = id.replace(/^gw-/, "");
+    const existing = fileDb.findOne("paymentGateways", (gw: Record<string, unknown>) => gw.id === id || gw.provider === id || gw.id === cleanId || gw.provider === cleanId || gw.id === `gw-${id}`);
     if (!existing) return null;
 
     const existingCreds = ((existing.credentials as Record<string, unknown>) || {});
@@ -2026,13 +2549,15 @@ export const paymentGatewayStore = {
   },
 
   delete: async (id: string) => {
-    const existing = fileDb.findOne("paymentGateways", (gw: Record<string, unknown>) => gw.id === id || gw.provider === id || gw.id === `gw-${id}`);
+    const cleanId = id.replace(/^gw-/, "");
+    const existing = fileDb.findOne("paymentGateways", (gw: Record<string, unknown>) => gw.id === id || gw.provider === id || gw.id === cleanId || gw.provider === cleanId || gw.id === `gw-${id}`);
     if (!existing) return false;
     return fileDb.remove("paymentGateways", String(existing.id));
   },
 
   testConnection: async (id: string) => {
-    const gw = fileDb.findOne("paymentGateways", (g: Record<string, unknown>) => g.id === id || g.provider === id || g.id === `gw-${id}`);
+    const cleanId = id.replace(/^gw-/, "");
+    const gw = fileDb.findOne("paymentGateways", (g: Record<string, unknown>) => g.id === id || g.provider === id || g.id === cleanId || g.provider === cleanId || g.id === `gw-${id}`);
     if (!gw) return { success: false, message: "Payment gateway not found.", status: "not_configured" };
 
     const provider = String(gw.provider);
@@ -2904,6 +3429,725 @@ export const careerPageStore = {
   },
 };
 
+// ─── OUR PEOPLE / EMPLOYEE PAGE CMS STORE ───────────────────────────────────
+
+export type OurPeopleSectionId =
+  | "hero"
+  | "filterBar"
+  | "categoryChips"
+  | "directoryGrid"
+  | "cultureSection"
+  | "lifeSection"
+  | "ctaSection"
+  | "trustBadgesBar";
+
+export interface EmployeePrivacySettings {
+  showEmail?: boolean;
+  showPhone?: boolean;
+  showLocation?: boolean;
+  showEmployeeId?: boolean;
+  showSocialLinks?: boolean;
+  showQR?: boolean;
+  showStats?: boolean;
+  showMedia?: boolean;
+  showProducts?: boolean;
+  showTeamMembers?: boolean;
+  showDownloadPdf?: boolean;
+}
+
+export interface EmployeeKeyStat {
+  number: string;
+  label: string;
+  subtitle?: string;
+  icon?: string;
+}
+
+export interface OurPeoplePageConfig {
+  active?: boolean;
+  seo: {
+    metaTitle: string;
+    metaDescription: string;
+    canonicalUrl?: string;
+    ogImage?: string;
+    keywords?: string;
+  };
+  theme?: {
+    primaryBg?: string;
+    heroBgGradient?: string;
+    cultureBgGradient?: string;
+    cardBg?: string;
+    textColor?: string;
+    headingColor?: string;
+    goldAccent?: string;
+    borderColor?: string;
+    fontFamilyDisplay?: string;
+    fontFamilyBody?: string;
+    fontFamilyCursive?: string;
+  };
+  animations?: {
+    masterEnabled?: boolean;
+    particlesEnabled?: boolean;
+    intensity?: number;
+    speed?: number;
+    drQueensBlink?: boolean;
+    parallaxAmount?: number;
+    reducedMotion?: boolean;
+  };
+  hero: {
+    enabled?: boolean;
+    eyebrow: string;
+    heading: string;
+    highlightedHeading: string;
+    description: string;
+    primaryCta: {
+      label: string;
+      url: string;
+      enabled?: boolean;
+      openInNewTab?: boolean;
+      bgColor?: string;
+      textColor?: string;
+      icon?: string;
+    };
+    secondaryCta: {
+      label: string;
+      url: string;
+      videoUrl?: string;
+      enabled?: boolean;
+      openInNewTab?: boolean;
+      icon?: string;
+      modalTitle?: string;
+    };
+    features: Array<{ id?: string; title: string; subtitle: string; icon: string; visible?: boolean }>;
+    environmentImageUrl?: string;
+    teamPlaqueTitle?: string;
+    teamPlaqueSubtitle?: string;
+    plaque?: {
+      enabled?: boolean;
+      eyebrow?: string;
+      title?: string;
+      subtext?: string;
+      icon?: string;
+      companyName?: string;
+    };
+    character: {
+      enabled: boolean;
+      imageUrl: string;
+      blinkImageUrl?: string;
+      altText?: string;
+      speechBubble: string;
+      cursiveTagline: string;
+      scale?: number;
+      positionX?: number;
+      positionY?: number;
+    };
+    topCard?: {
+      enabled?: boolean;
+      title?: string;
+      subtitle?: string;
+      icon?: string;
+    };
+    rightCard?: {
+      enabled?: boolean;
+      title?: string;
+      subtitle?: string;
+      icon?: string;
+    };
+    particlesEnabled?: boolean;
+    animationIntensity?: number;
+    parallaxAmount?: number;
+    animationSpeed?: number;
+    styles?: {
+      background?: string;
+      textColor?: string;
+      goldColor?: string;
+      paddingTop?: string;
+      paddingBottom?: string;
+    };
+  };
+  filterBar: {
+    enabled: boolean;
+    searchPlaceholder: string;
+    searchIcon?: string;
+    allDepartmentsLabel?: string;
+    allLocationsLabel?: string;
+    sortOptions?: Array<{ id: string; label: string }>;
+    departments: string[];
+    locations: string[];
+    roles: string[];
+    buttonLabel: string;
+    showDepartmentDropdown?: boolean;
+    showLocationDropdown?: boolean;
+    showRoleDropdown?: boolean;
+    showSortDropdown?: boolean;
+    showViewModeToggle?: boolean;
+  };
+  categoryChips: Array<{
+    id: string;
+    label: string;
+    departmentKey: string;
+    icon?: string;
+    color?: string;
+    visible?: boolean;
+    countOverride?: number;
+    sortOrder?: number;
+  }>;
+  directoryGrid: {
+    enabled?: boolean;
+    cardsPerPage: number;
+    columnsDesktop: number;
+    columnsTablet?: number;
+    columnsMobile?: number;
+    viewProfileButtonLabel?: string;
+    verifiedBadgeLabel?: string;
+    showDepartmentBadge: boolean;
+    showQuote: boolean;
+    showSocialLinks: boolean;
+    showLocationBadge?: boolean;
+    showViewProfile: boolean;
+    emptyStateTitle?: string;
+    emptyStateDescription?: string;
+    emptyStateResetButton?: string;
+  };
+  cultureSection: {
+    enabled: boolean;
+    eyebrow?: string;
+    heading: string;
+    subtitle: string;
+    cta: { label: string; url: string; enabled?: boolean; openInNewTab?: boolean };
+    mapImageUrl?: string;
+    highFiveImageUrl?: string;
+    highFiveImageAlt?: string;
+    stats: Array<{ id?: string; value: string; label: string; icon: string; visible?: boolean }>;
+    quoteTagline: string;
+    quoteCard?: {
+      enabled?: boolean;
+      quote?: string;
+      author?: string;
+      cursiveFont?: boolean;
+    };
+    styles?: {
+      background?: string;
+      textColor?: string;
+      goldColor?: string;
+      padding?: string;
+    };
+  };
+  lifeSection: {
+    enabled: boolean;
+    heading: string;
+    subtitle: string;
+    viewAllCta: { label: string; url: string; enabled?: boolean };
+    cards: Array<{
+      id: string;
+      title: string;
+      subtitle: string;
+      description: string;
+      imageUrl: string;
+      icon?: string;
+      url?: string;
+      visible?: boolean;
+    }>;
+  };
+  ctaSection: {
+    enabled: boolean;
+    heading: string;
+    subtitle: string;
+    cta: { label: string; url: string; enabled?: boolean };
+    characterTagline: string;
+    characterImageUrl?: string;
+    badges: Array<{ label: string; icon: string; visible?: boolean }>;
+  };
+  trustBadgesBar?: {
+    enabled: boolean;
+    badges: Array<{
+      id?: string;
+      label: string;
+      subtitle?: string;
+      icon: string;
+      visible?: boolean;
+    }>;
+  };
+  profileDefaults?: {
+    breadcrumbHome?: string;
+    breadcrumbPeople?: string;
+    verifiedBadgeText?: string;
+    qrModalTitle?: string;
+    qrModalSubtitle?: string;
+    qrModalInstructions?: string;
+    downloadPdfButtonText?: string;
+    emailButtonLabel?: string;
+    linkedInButtonLabel?: string;
+    aboutSectionTitle?: string;
+    statsSectionTitle?: string;
+    mediaSectionTitle?: string;
+    productsSectionTitle?: string;
+    verificationSectionTitle?: string;
+    teamSectionTitle?: string;
+    addToCartButtonText?: string;
+  };
+  sections: Array<{
+    id: OurPeopleSectionId;
+    label: string;
+    visible: boolean;
+    order: number;
+  }>;
+}
+
+export const defaultOurPeoplePageConfig: OurPeoplePageConfig = {
+  active: true,
+  seo: {
+    metaTitle: "Our People, Our Strength — Queens Care Laboratories",
+    metaDescription: "Meet the visionary leaders, formulation scientists, regulatory directors, and care specialists driving pharmaceutical excellence at Queens Care Laboratories.",
+    ogImage: "/images/hero/dr-queens-hd.webp",
+    keywords: "Queens Care Team, Pharmaceutical Formulators, Healthcare Leadership India, Dr Queens",
+  },
+  theme: {
+    primaryBg: "#FAF8F5",
+    heroBgGradient: "linear-gradient(135deg, #180927 0%, #2A0F3A 45%, #150522 100%)",
+    cultureBgGradient: "linear-gradient(135deg, #1C0A2E 0%, #2A0F3A 50%, #150522 100%)",
+    cardBg: "#FFFFFF",
+    textColor: "#180927",
+    headingColor: "#2A0F3A",
+    goldAccent: "#D4AF37",
+    borderColor: "#E5E7EB",
+    fontFamilyDisplay: "var(--font-display, 'Playfair Display', Georgia, serif)",
+    fontFamilyBody: "var(--font-sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif)",
+    fontFamilyCursive: "var(--font-cursive, 'Brush Script MT', 'Caveat', cursive)",
+  },
+  animations: {
+    masterEnabled: true,
+    particlesEnabled: true,
+    intensity: 1.0,
+    speed: 1.0,
+    drQueensBlink: true,
+    parallaxAmount: 16,
+    reducedMotion: false,
+  },
+  hero: {
+    enabled: true,
+    eyebrow: "QUEENS CARE LABORATORIES",
+    heading: "Our People",
+    highlightedHeading: "Our Strength",
+    description: "A diverse team of passionate professionals working together to create better health outcomes and a brighter tomorrow.",
+    primaryCta: {
+      label: "Join Our Journey →",
+      url: "/careers",
+      enabled: true,
+      openInNewTab: false,
+      bgColor: "linear-gradient(135deg, #D4AF37 0%, #F59E0B 100%)",
+      textColor: "#180927",
+      icon: "→",
+    },
+    secondaryCta: {
+      label: "Watch Our Team Story",
+      url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      enabled: true,
+      openInNewTab: false,
+      icon: "▶",
+      modalTitle: "Queens Care Team Story",
+    },
+    features: [
+      { id: "feat-1", title: "One Vision", subtitle: "Better Health", icon: "✦", visible: true },
+      { id: "feat-2", title: "Collaborative", subtitle: "Culture", icon: "👥", visible: true },
+      { id: "feat-3", title: "Growth", subtitle: "Opportunities", icon: "📈", visible: true },
+      { id: "feat-4", title: "Meaningful", subtitle: "Impact", icon: "💖", visible: true },
+    ],
+    teamPlaqueTitle: "PEOPLE IDEAS SCIENCE CARE IMPACT",
+    teamPlaqueSubtitle: "QUEENS CARE LABORATORIES",
+    plaque: {
+      enabled: true,
+      eyebrow: "Core Ideals",
+      title: "PEOPLE\nIDEAS\nSCIENCE\nCARE\nIMPACT",
+      subtext: "QUEENS CARE LABORATORIES",
+      icon: "👑",
+      companyName: "QUEENS CARE LABORATORIES",
+    },
+    character: {
+      enabled: true,
+      imageUrl: "/images/hero/dr-queens-hd.webp",
+      blinkImageUrl: "/images/hero/dr-queens-blink-hd.webp",
+      altText: "Dr. Queens Character",
+      speechBubble: "Hi! I'm Dr. Queens 💜 Meet the amazing people behind a healthier India.",
+      cursiveTagline: "People Behind a Healthier Tomorrow ♡",
+      scale: 1.0,
+      positionX: 50,
+      positionY: 50,
+    },
+    topCard: {
+      enabled: true,
+      title: "Great ideas,",
+      subtitle: "dedicated people, healthier tomorrow!",
+      icon: "👑",
+    },
+    rightCard: {
+      enabled: true,
+      title: "Great ideas,",
+      subtitle: "dedicated people, healthier tomorrow!",
+      icon: "👑",
+    },
+    particlesEnabled: true,
+    animationIntensity: 1.0,
+    parallaxAmount: 16,
+    animationSpeed: 1.0,
+    styles: {
+      background: "linear-gradient(135deg, #180927 0%, #2A0F3A 45%, #150522 100%)",
+      textColor: "#ffffff",
+      goldColor: "#E8C88A",
+      paddingTop: "70px",
+      paddingBottom: "80px",
+    },
+  },
+  filterBar: {
+    enabled: true,
+    searchPlaceholder: "Search by name, role, department...",
+    searchIcon: "🔍",
+    allDepartmentsLabel: "All Departments",
+    allLocationsLabel: "All Locations",
+    sortOptions: [
+      { id: "featured", label: "Sort by: Featured" },
+      { id: "name_asc", label: "Name: A to Z" },
+      { id: "name_desc", label: "Name: Z to A" },
+      { id: "dept", label: "Department" },
+    ],
+    departments: [
+      "All Departments",
+      "Leadership",
+      "Operations",
+      "Finance",
+      "Research & Innovation",
+      "Quality & Compliance",
+      "Regulatory Affairs",
+      "Supply Chain",
+      "Human Resources",
+      "Sales & Marketing",
+      "Communications",
+      "Information Technology",
+      "Business Development",
+    ],
+    locations: [
+      "All Locations",
+      "Mumbai Central Hub",
+      "Delhi NCR Campus",
+      "Bengaluru R&D Centre",
+      "Hyderabad Formulation Labs",
+      "Pune Clinical Site",
+    ],
+    roles: [
+      "All Roles",
+      "Executive Leadership",
+      "Director & Head of Dept",
+      "Principal Scientist",
+      "Operations Lead",
+      "Specialist",
+    ],
+    buttonLabel: "Find People",
+    showDepartmentDropdown: true,
+    showLocationDropdown: true,
+    showRoleDropdown: true,
+    showSortDropdown: true,
+    showViewModeToggle: true,
+  },
+  categoryChips: [
+    { id: "all", label: "All Team Members", departmentKey: "all", icon: "👥", color: "#6B21A8", visible: true, sortOrder: 0 },
+    { id: "leadership", label: "Leadership", departmentKey: "Leadership", icon: "👑", color: "#B45309", visible: true, sortOrder: 1 },
+    { id: "rnd", label: "Research & Development", departmentKey: "Research & Innovation", icon: "🧪", color: "#7C3AED", visible: true, sortOrder: 2 },
+    { id: "quality", label: "Quality & Compliance", departmentKey: "Quality & Compliance", icon: "🛡️", color: "#2563EB", visible: true, sortOrder: 3 },
+    { id: "regulatory", label: "Regulatory Affairs", departmentKey: "Regulatory Affairs", icon: "📋", color: "#0D9488", visible: true, sortOrder: 4 },
+    { id: "manufacturing", label: "Manufacturing", departmentKey: "Manufacturing", icon: "🏭", color: "#D97706", visible: true, sortOrder: 5 },
+    { id: "sales", label: "Sales & Marketing", departmentKey: "Sales & Marketing", icon: "📢", color: "#E11D48", visible: true, sortOrder: 6 },
+    { id: "technology", label: "Technology", departmentKey: "Information Technology", icon: "💻", color: "#4F46E5", visible: true, sortOrder: 7 },
+  ],
+  directoryGrid: {
+    enabled: true,
+    cardsPerPage: 24,
+    columnsDesktop: 4,
+    columnsTablet: 2,
+    columnsMobile: 1,
+    viewProfileButtonLabel: "View Profile →",
+    verifiedBadgeLabel: "✓ Verified",
+    showDepartmentBadge: true,
+    showQuote: true,
+    showSocialLinks: true,
+    showLocationBadge: true,
+    showViewProfile: true,
+    emptyStateTitle: "No Team Members Found",
+    emptyStateDescription: "Try adjusting your filters, searching by a different name, or resetting.",
+    emptyStateResetButton: "Reset All Filters",
+  },
+  cultureSection: {
+    enabled: true,
+    eyebrow: "OUR SHARED COMMITMENT",
+    heading: "A Team United by a Greater Purpose",
+    subtitle: "Different backgrounds. Shared values. One mission — better health for a brighter tomorrow.",
+    cta: { label: "Explore Our Culture →", url: "/about", enabled: true, openInNewTab: false },
+    mapImageUrl: "/images/reference/trust-globe-hd.webp",
+    highFiveImageUrl: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80",
+    highFiveImageAlt: "Queens Care Collaborative Team",
+    stats: [
+      { id: "stat-1", value: "50+", label: "Team Members", icon: "👥", visible: true },
+      { id: "stat-2", value: "12+", label: "Departments", icon: "🌐", visible: true },
+      { id: "stat-3", value: "8+", label: "Locations", icon: "📍", visible: true },
+      { id: "stat-4", value: "50+", label: "Talents", icon: "⭐", visible: true },
+      { id: "stat-5", value: "100%", label: "Commitment", icon: "💖", visible: true },
+    ],
+    quoteTagline: "Together we make better health possible. ♡ — Queens Care Laboratories",
+    quoteCard: {
+      enabled: true,
+      quote: "Together we make better health possible. ♡",
+      author: "— Queens Care Laboratories",
+      cursiveFont: true,
+    },
+    styles: {
+      background: "linear-gradient(135deg, #1C0A2E 0%, #2A0F3A 50%, #150522 100%)",
+      textColor: "#ffffff",
+      goldColor: "#E8C88A",
+      padding: "70px 24px",
+    },
+  },
+  lifeSection: {
+    enabled: true,
+    heading: "Life at Queens Care",
+    subtitle: "A culture where people, ideas and innovation thrive.",
+    viewAllCta: { label: "View All Stories →", url: "/blog", enabled: true },
+    cards: [
+      {
+        id: "life-1",
+        title: "Collaborative Teams",
+        subtitle: "Better Ideas Together",
+        description: "Cross-functional research teams uniting pharmaceutical formulators, clinical dermatologists, and bioengineers.",
+        imageUrl: "/images/about/life-collaborative.jpg",
+        icon: "🤝",
+        url: "/about",
+        visible: true,
+      },
+      {
+        id: "life-2",
+        title: "World-Class Facilities",
+        subtitle: "Innovation in Action",
+        description: "State-of-the-art ISO Class 5 cleanrooms and precision spectrometry suites exceeding GMP benchmarks.",
+        imageUrl: "/images/about/life-facilities.jpg",
+        icon: "🔬",
+        url: "/manufacturing",
+        visible: true,
+      },
+      {
+        id: "life-3",
+        title: "Meaningful Impact",
+        subtitle: "Real People, Real Change",
+        description: "Directly touching over 50,000 families across India every month with rigorous, dependable wellness therapeutics.",
+        imageUrl: "/images/about/life-impact.jpg",
+        icon: "💜",
+        url: "/about",
+        visible: true,
+      },
+      {
+        id: "life-4",
+        title: "A Positive Culture",
+        subtitle: "Work. Grow. Belong.",
+        description: "Transparent leadership, continuous clinical learning stipends, and an uplifting atmosphere of collective celebration.",
+        imageUrl: "/images/about/life-culture.jpg",
+        icon: "🌱",
+        url: "/careers",
+        visible: true,
+      },
+    ],
+  },
+  ctaSection: {
+    enabled: true,
+    heading: "Ready to Make a Difference?",
+    subtitle: "Join a team that's passionate about science, people and a healthier tomorrow.",
+    cta: { label: "Explore Open Roles →", url: "/careers", enabled: true },
+    characterTagline: "Great People Build a Healthier Tomorrow 💜",
+    characterImageUrl: "/images/hero/dr-queens-hd.webp",
+    badges: [
+      { label: "People First", icon: "👥", visible: true },
+      { label: "Innovation Always", icon: "💡", visible: true },
+      { label: "Quality in Everything", icon: "🛡️", visible: true },
+      { label: "Growth Together", icon: "📈", visible: true },
+    ],
+  },
+  trustBadgesBar: {
+    enabled: true,
+    badges: [
+      { id: "tb-1", label: "Quality You Can Trust", subtitle: "Rigorous Testing Standards", icon: "🛡️", visible: true },
+      { id: "tb-2", label: "Quality Formulation", subtitle: "Controlled Lab Environment", icon: "🏭", visible: true },
+      { id: "tb-3", label: "Scientific Research", subtitle: "Targeted Bioactive Formulas", icon: "🔬", visible: true },
+      { id: "tb-4", label: "Fast Pan-India Delivery", subtitle: "Direct to Your Doorstep", icon: "🚀", visible: true },
+      { id: "tb-5", label: "Dedicated Support", subtitle: "Pharmacist Advisory Line", icon: "💬", visible: true },
+    ],
+  },
+  profileDefaults: {
+    breadcrumbHome: "Home",
+    breadcrumbPeople: "Our People",
+    verifiedBadgeText: "Official Staff Credential • Verified",
+    qrModalTitle: "Queens Care Staff Authentication",
+    qrModalSubtitle: "Cryptographically Verified Healthcare Credential",
+    qrModalInstructions: "Scan with any camera or QR reader to authenticate this employee's clinical credential on the Queens Care network.",
+    downloadPdfButtonText: "Download ID Card / Print PDF",
+    emailButtonLabel: "Email",
+    linkedInButtonLabel: "Connect on LinkedIn",
+    aboutSectionTitle: "About & Clinical Journey",
+    statsSectionTitle: "Key Performance & Research Milestones",
+    mediaSectionTitle: "Media & Keynotes",
+    productsSectionTitle: "Formulations & Therapeutics",
+    verificationSectionTitle: "Employment Verification & Credentials",
+    teamSectionTitle: "Related Team Leadership",
+    addToCartButtonText: "+ Add to Cart",
+  },
+  sections: [
+    { id: "hero", label: "Cinematic Hero Stage", visible: true, order: 0 },
+    { id: "filterBar", label: "Search & Filter Bar", visible: true, order: 1 },
+    { id: "categoryChips", label: "Team Categories Carousel", visible: true, order: 2 },
+    { id: "directoryGrid", label: "Employee Directory Grid", visible: true, order: 3 },
+    { id: "cultureSection", label: "Culture & Team Story", visible: true, order: 4 },
+    { id: "lifeSection", label: "Life at Queens Care", visible: true, order: 5 },
+    { id: "ctaSection", label: "Bottom Recruitment CTA", visible: true, order: 6 },
+    { id: "trustBadgesBar", label: "Trust Badges Strip", visible: true, order: 7 },
+  ],
+};
+
+export const ourPeoplePageStore = {
+  get: async (): Promise<OurPeoplePageConfig> => {
+    const s = fileDb.findOne("settings", (item: Record<string, unknown>) => item.key === "our_people_page_cms_config");
+    if (s?.value) {
+      try {
+        const parsed = typeof s.value === "string" ? JSON.parse(s.value) : s.value;
+        return {
+          ...defaultOurPeoplePageConfig,
+          ...parsed,
+          theme: { ...defaultOurPeoplePageConfig.theme, ...(parsed.theme || {}) },
+          animations: { ...defaultOurPeoplePageConfig.animations, ...(parsed.animations || {}) },
+          hero: {
+            ...defaultOurPeoplePageConfig.hero,
+            ...(parsed.hero || {}),
+            primaryCta: { ...defaultOurPeoplePageConfig.hero.primaryCta, ...(parsed.hero?.primaryCta || {}) },
+            secondaryCta: { ...defaultOurPeoplePageConfig.hero.secondaryCta, ...(parsed.hero?.secondaryCta || {}) },
+            features: Array.isArray(parsed.hero?.features) && parsed.hero.features.length > 0 ? parsed.hero.features : defaultOurPeoplePageConfig.hero.features,
+            plaque: { ...defaultOurPeoplePageConfig.hero.plaque, ...(parsed.hero?.plaque || {}) },
+            character: { ...defaultOurPeoplePageConfig.hero.character, ...(parsed.hero?.character || {}) },
+            topCard: { ...defaultOurPeoplePageConfig.hero.topCard, ...(parsed.hero?.topCard || parsed.hero?.rightCard || {}) },
+            rightCard: { ...defaultOurPeoplePageConfig.hero.rightCard, ...(parsed.hero?.rightCard || parsed.hero?.topCard || {}) },
+            styles: { ...defaultOurPeoplePageConfig.hero.styles, ...(parsed.hero?.styles || {}) },
+          },
+          filterBar: {
+            ...defaultOurPeoplePageConfig.filterBar,
+            ...(parsed.filterBar || {}),
+            departments: Array.isArray(parsed.filterBar?.departments) && parsed.filterBar.departments.length > 0 ? parsed.filterBar.departments : defaultOurPeoplePageConfig.filterBar.departments,
+            locations: Array.isArray(parsed.filterBar?.locations) && parsed.filterBar.locations.length > 0 ? parsed.filterBar.locations : defaultOurPeoplePageConfig.filterBar.locations,
+            roles: Array.isArray(parsed.filterBar?.roles) && parsed.filterBar.roles.length > 0 ? parsed.filterBar.roles : defaultOurPeoplePageConfig.filterBar.roles,
+            sortOptions: Array.isArray(parsed.filterBar?.sortOptions) && parsed.filterBar.sortOptions.length > 0 ? parsed.filterBar.sortOptions : defaultOurPeoplePageConfig.filterBar.sortOptions,
+          },
+          cultureSection: {
+            ...defaultOurPeoplePageConfig.cultureSection,
+            ...(parsed.cultureSection || {}),
+            cta: { ...defaultOurPeoplePageConfig.cultureSection.cta, ...(parsed.cultureSection?.cta || {}) },
+            quoteCard: { ...defaultOurPeoplePageConfig.cultureSection.quoteCard, ...(parsed.cultureSection?.quoteCard || {}) },
+            stats: Array.isArray(parsed.cultureSection?.stats) && parsed.cultureSection.stats.length > 0 ? parsed.cultureSection.stats : defaultOurPeoplePageConfig.cultureSection.stats,
+            styles: { ...defaultOurPeoplePageConfig.cultureSection.styles, ...(parsed.cultureSection?.styles || {}) },
+          },
+          lifeSection: {
+            ...defaultOurPeoplePageConfig.lifeSection,
+            ...(parsed.lifeSection || {}),
+            viewAllCta: { ...defaultOurPeoplePageConfig.lifeSection.viewAllCta, ...(parsed.lifeSection?.viewAllCta || {}) },
+            cards: Array.isArray(parsed.lifeSection?.cards) && parsed.lifeSection.cards.length > 0 ? parsed.lifeSection.cards : defaultOurPeoplePageConfig.lifeSection.cards,
+          },
+          ctaSection: {
+            ...defaultOurPeoplePageConfig.ctaSection,
+            ...(parsed.ctaSection || {}),
+            cta: { ...defaultOurPeoplePageConfig.ctaSection.cta, ...(parsed.ctaSection?.cta || {}) },
+            badges: Array.isArray(parsed.ctaSection?.badges) && parsed.ctaSection.badges.length > 0 ? parsed.ctaSection.badges : defaultOurPeoplePageConfig.ctaSection.badges,
+          },
+          trustBadgesBar: {
+            ...defaultOurPeoplePageConfig.trustBadgesBar,
+            ...(parsed.trustBadgesBar || {}),
+            badges: Array.isArray(parsed.trustBadgesBar?.badges) && parsed.trustBadgesBar.badges.length > 0 ? parsed.trustBadgesBar.badges : defaultOurPeoplePageConfig.trustBadgesBar?.badges,
+          },
+          directoryGrid: { ...defaultOurPeoplePageConfig.directoryGrid, ...(parsed.directoryGrid || {}) },
+          profileDefaults: { ...defaultOurPeoplePageConfig.profileDefaults, ...(parsed.profileDefaults || {}) },
+          seo: { ...defaultOurPeoplePageConfig.seo, ...(parsed.seo || {}) },
+          categoryChips: Array.isArray(parsed.categoryChips) && parsed.categoryChips.length > 0 ? parsed.categoryChips : defaultOurPeoplePageConfig.categoryChips,
+          sections: Array.isArray(parsed.sections) && parsed.sections.length > 0 ? parsed.sections : defaultOurPeoplePageConfig.sections,
+        };
+      } catch {}
+    }
+    try {
+      fileDb.update("settings", { key: "our_people_page_cms_config" }, {
+        key: "our_people_page_cms_config",
+        value: JSON.stringify(defaultOurPeoplePageConfig),
+        group: "cms",
+        updatedAt: new Date().toISOString(),
+      });
+    } catch {}
+    return defaultOurPeoplePageConfig;
+  },
+  save: async (config: Partial<OurPeoplePageConfig>): Promise<OurPeoplePageConfig> => {
+    const current = await ourPeoplePageStore.get();
+    const merged: OurPeoplePageConfig = {
+      ...current,
+      ...config,
+      theme: { ...current.theme, ...(config.theme || {}) },
+      animations: { ...current.animations, ...(config.animations || {}) },
+      hero: {
+        ...current.hero,
+        ...(config.hero || {}),
+        primaryCta: { ...current.hero.primaryCta, ...(config.hero?.primaryCta || {}) },
+        secondaryCta: { ...current.hero.secondaryCta, ...(config.hero?.secondaryCta || {}) },
+        features: config.hero?.features ?? current.hero.features,
+        plaque: { ...current.hero.plaque, ...(config.hero?.plaque || {}) },
+        character: { ...current.hero.character, ...(config.hero?.character || {}) },
+        topCard: { ...(current.hero.topCard || {}), ...(config.hero?.topCard || config.hero?.rightCard || {}) },
+        rightCard: { ...(current.hero.rightCard || {}), ...(config.hero?.rightCard || config.hero?.topCard || {}) },
+        styles: { ...current.hero.styles, ...(config.hero?.styles || {}) },
+      },
+      filterBar: {
+        ...current.filterBar,
+        ...(config.filterBar || {}),
+        departments: config.filterBar?.departments ?? current.filterBar.departments,
+        locations: config.filterBar?.locations ?? current.filterBar.locations,
+        roles: config.filterBar?.roles ?? current.filterBar.roles,
+        sortOptions: config.filterBar?.sortOptions ?? current.filterBar.sortOptions,
+      },
+      cultureSection: {
+        ...current.cultureSection,
+        ...(config.cultureSection || {}),
+        cta: { ...current.cultureSection.cta, ...(config.cultureSection?.cta || {}) },
+        quoteCard: { ...(current.cultureSection.quoteCard || {}), ...(config.cultureSection?.quoteCard || {}) },
+        stats: config.cultureSection?.stats ?? current.cultureSection.stats,
+        styles: { ...current.cultureSection.styles, ...(config.cultureSection?.styles || {}) },
+      },
+      lifeSection: {
+        ...current.lifeSection,
+        ...(config.lifeSection || {}),
+        viewAllCta: { ...current.lifeSection.viewAllCta, ...(config.lifeSection?.viewAllCta || {}) },
+        cards: config.lifeSection?.cards ?? current.lifeSection.cards,
+      },
+      ctaSection: {
+        ...current.ctaSection,
+        ...(config.ctaSection || {}),
+        cta: { ...current.ctaSection.cta, ...(config.ctaSection?.cta || {}) },
+        badges: config.ctaSection?.badges ?? current.ctaSection.badges,
+      },
+      trustBadgesBar: {
+        enabled: config.trustBadgesBar?.enabled ?? current.trustBadgesBar?.enabled ?? true,
+        badges: config.trustBadgesBar?.badges ?? current.trustBadgesBar?.badges ?? defaultOurPeoplePageConfig.trustBadgesBar?.badges ?? [],
+      },
+      directoryGrid: { ...current.directoryGrid, ...(config.directoryGrid || {}) },
+      profileDefaults: { ...current.profileDefaults, ...(config.profileDefaults || {}) },
+      seo: { ...current.seo, ...(config.seo || {}) },
+      categoryChips: config.categoryChips ?? current.categoryChips,
+      sections: config.sections ?? current.sections,
+    };
+    fileDb.update("settings", { key: "our_people_page_cms_config" }, {
+      key: "our_people_page_cms_config",
+      value: JSON.stringify(merged),
+      group: "cms",
+      updatedAt: new Date().toISOString(),
+    });
+    return merged;
+  },
+};
+
 // ─── ENHANCED CAREER APPLICATIONS STORE ─────────────────────────────────────
 
 export type CareerApplication = {
@@ -3706,7 +4950,7 @@ export const storeLocatorStore = {
     const userLat = params.latitude !== undefined && !isNaN(params.latitude) ? params.latitude : undefined;
     const userLng = params.longitude !== undefined && !isNaN(params.longitude) ? params.longitude : undefined;
 
-    let filtered = all.filter((item) => {
+    const filtered = all.filter((item) => {
       // Type match
       if (typeFilter && typeFilter !== "all") {
         if (item.type.toLowerCase() !== typeFilter) {
@@ -3753,6 +4997,399 @@ export const storeLocatorStore = {
     }
 
     return withDistance;
+  },
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   UNIVERSAL URL / SLUG MANAGEMENT & 301 REDIRECT ARCHITECTURE
+   ═══════════════════════════════════════════════════════════════ */
+
+export const RESERVED_ROUTE_NAMESPACES = new Set([
+  "admin",
+  "api",
+  "products",
+  "categories",
+  "blog",
+  "cart",
+  "checkout",
+  "account",
+  "login",
+  "register",
+  "auth",
+  "search",
+  "shop",
+  "health-a-z",
+  "manufacturing",
+  "quality-assurance",
+  "research-development",
+  "trust",
+  "quiz",
+  "store-locator",
+  "track-order",
+  "b2b",
+  "doctors",
+  "careers",
+  "privacy",
+  "terms",
+  "faq",
+  "order-success",
+  "order-cancelled",
+  "sitemap.xml",
+  "robots.txt",
+  "favicon.ico",
+]);
+
+export interface RedirectRule {
+  id: string;
+  source: string;
+  destination: string;
+  statusCode: 301 | 302 | 308;
+  contentType: "product" | "page" | "category" | "blog" | "custom";
+  contentId?: string;
+  active: boolean;
+  autoGenerated: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export function normalizePath(pathStr: string): string {
+  if (!pathStr) return "/";
+  // Strip query strings and hash anchors
+  let clean = pathStr.split("?")[0].split("#")[0].trim().toLowerCase();
+  // Ensure leading slash
+  if (!clean.startsWith("/")) clean = "/" + clean;
+  // Replace backslashes
+  clean = clean.replace(/\\/g, "/");
+  // Replace multiple slashes
+  clean = clean.replace(/\/+/g, "/");
+  // Strip trailing slash unless root
+  if (clean.length > 1 && clean.endsWith("/")) {
+    clean = clean.slice(0, -1);
+  }
+  return clean;
+}
+
+export function normalizeSlug(slugStr: string): string {
+  if (!slugStr) return "";
+  let s = slugStr.toLowerCase().trim();
+  // Strip query/hash
+  s = s.split("?")[0].split("#")[0];
+  // Replace spaces and special characters with hyphens
+  s = s.replace(/[^a-z0-9-/]/g, "-");
+  // Collapse hyphens and slashes
+  s = s.replace(/-+/g, "-").replace(/\/+/g, "/");
+  // Strip leading and trailing hyphens/slashes
+  s = s.replace(/^[-/]+|[-/]+$/g, "");
+  return s;
+}
+
+export const slugValidator = {
+  validate: async (
+    rawSlug: string,
+    contentType: "product" | "page" | "category" | "blog",
+    currentId?: string
+  ): Promise<{ valid: boolean; normalizedSlug: string; error?: string }> => {
+    const slug = normalizeSlug(rawSlug);
+    if (!slug) {
+      return { valid: false, normalizedSlug: "", error: "Slug cannot be empty." };
+    }
+
+    // Check path traversal attempts
+    if (slug.includes("..")) {
+      return { valid: false, normalizedSlug: slug, error: "Invalid path segments." };
+    }
+
+    // Check reserved routes across all content types
+    const firstSegment = slug.split("/")[0];
+    if (RESERVED_ROUTE_NAMESPACES.has(firstSegment)) {
+      return {
+        valid: false,
+        normalizedSlug: slug,
+        error: `"${firstSegment}" is a reserved system route and cannot be used as a slug.`,
+      };
+    }
+
+    // Check collisions depending on content type
+    if (contentType === "product") {
+      const allProducts = (fileDb.findMany("products") || []) as Array<Record<string, unknown>>;
+      const conflict = allProducts.find(
+        (p) => String(p.slug || "").toLowerCase() === slug && String(p.id) !== String(currentId)
+      );
+      if (conflict) {
+        return { valid: false, normalizedSlug: slug, error: "This URL is already in use." };
+      }
+    } else if (contentType === "category") {
+      const allCategories = (fileDb.findMany("categories") || []) as Array<Record<string, unknown>>;
+      const conflict = allCategories.find(
+        (c) => String(c.slug || "").toLowerCase() === slug && String(c.id) !== String(currentId)
+      );
+      if (conflict) {
+        return { valid: false, normalizedSlug: slug, error: "This URL is already in use." };
+      }
+    } else if (contentType === "blog") {
+      const allPosts = (fileDb.findMany("blogPosts") || []) as Array<Record<string, unknown>>;
+      const conflict = allPosts.find(
+        (b) => String(b.slug || "").toLowerCase() === slug && String(b.id) !== String(currentId)
+      );
+      if (conflict) {
+        return { valid: false, normalizedSlug: slug, error: "This URL is already in use." };
+      }
+    } else if (contentType === "page") {
+      const allPages = (fileDb.findMany("pageSettings") || []) as Array<Record<string, unknown>>;
+      const conflict = allPages.find(
+        (p) => {
+          const pSlug = normalizeSlug(String(p.slug || ""));
+          return pSlug === slug && String(p.id) !== String(currentId);
+        }
+      );
+      if (conflict) {
+        return { valid: false, normalizedSlug: slug, error: "This URL is already in use." };
+      }
+    }
+
+    return { valid: true, normalizedSlug: slug };
+  },
+};
+
+export const redirectStore = {
+  list: async (filter?: {
+    contentType?: string;
+    active?: boolean;
+    search?: string;
+  }): Promise<RedirectRule[]> => {
+    let rules = (fileDb.findMany("redirects") || []) as unknown as RedirectRule[];
+    if (filter) {
+      if (filter.contentType && filter.contentType !== "all") {
+        rules = rules.filter((r) => r.contentType === filter.contentType);
+      }
+      if (typeof filter.active === "boolean") {
+        rules = rules.filter((r) => r.active === filter.active);
+      }
+      if (filter.search) {
+        const q = filter.search.toLowerCase();
+        rules = rules.filter(
+          (r) => r.source.toLowerCase().includes(q) || r.destination.toLowerCase().includes(q)
+        );
+      }
+    }
+    return rules.sort((a, b) => new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime());
+  },
+
+  byId: async (id: string): Promise<RedirectRule | null> => {
+    const item = fileDb.findOne("redirects", (r) => r.id === id);
+    return (item as unknown as RedirectRule) || null;
+  },
+
+  bySource: async (sourcePath: string): Promise<RedirectRule | null> => {
+    const norm = normalizePath(sourcePath);
+    const item = fileDb.findOne("redirects", (r) => r.active !== false && normalizePath(String(r.source)) === norm);
+    return (item as unknown as RedirectRule) || null;
+  },
+
+  resolve: async (sourcePath: string): Promise<{ destination: string; statusCode: 301 | 308 } | null> => {
+    const norm = normalizePath(sourcePath);
+    const allRules = (fileDb.findMany("redirects") || []) as unknown as RedirectRule[];
+    const activeMap = new Map<string, RedirectRule>();
+    for (const r of allRules) {
+      if (r.active !== false) {
+        activeMap.set(normalizePath(r.source), r);
+      }
+    }
+
+    if (!activeMap.has(norm)) return null;
+
+    let current = norm;
+    const visited = new Set<string>();
+    let hops = 0;
+    const maxHops = 6;
+
+    while (activeMap.has(current) && hops < maxHops) {
+      if (visited.has(current)) {
+        // Prevent circular loop
+        break;
+      }
+      visited.add(current);
+      const rule = activeMap.get(current)!;
+      current = normalizePath(rule.destination);
+      hops++;
+    }
+
+    if (current === norm) return null;
+    return { destination: current, statusCode: 301 };
+  },
+
+  createOrUpdate: async (
+    rawSource: string,
+    rawDestination: string,
+    contentType: "product" | "page" | "category" | "blog" | "custom",
+    contentId?: string,
+    autoGenerated = true
+  ): Promise<{ ok: boolean; rule?: RedirectRule; error?: string }> => {
+    const trimmedSource = (rawSource || "").trim();
+    const trimmedDest = (rawDestination || "").trim();
+
+    if (!trimmedSource || !trimmedDest) {
+      return { ok: false, error: "Source and destination URLs are required." };
+    }
+
+    // Open redirect protection: destination and source must be internal paths
+    if (
+      trimmedDest.startsWith("//") ||
+      trimmedDest.includes("://") ||
+      trimmedDest.startsWith("\\\\") ||
+      !trimmedDest.startsWith("/")
+    ) {
+      return { ok: false, error: "Destination must be a valid internal path starting with '/'." };
+    }
+
+    if (
+      trimmedSource.startsWith("//") ||
+      trimmedSource.includes("://") ||
+      trimmedSource.startsWith("\\\\") ||
+      !trimmedSource.startsWith("/")
+    ) {
+      return { ok: false, error: "Source must be a valid internal path starting with '/'." };
+    }
+
+    const source = normalizePath(trimmedSource);
+    const destination = normalizePath(trimmedDest);
+
+    if (source === destination) {
+      return { ok: false, error: "Source and destination URLs cannot be identical." };
+    }
+
+    const allRules = (fileDb.findMany("redirects") || []) as unknown as RedirectRule[];
+
+    // 1. Loop Prevention: check if destination already redirects back to source
+    const wouldResolve = new Map<string, string>();
+    for (const r of allRules) {
+      if (r.active !== false) {
+        wouldResolve.set(normalizePath(r.source), normalizePath(r.destination));
+      }
+    }
+    wouldResolve.set(source, destination);
+
+    let checkCurrent = destination;
+    const checkVisited = new Set<string>([source]);
+    let checkHops = 0;
+    while (wouldResolve.has(checkCurrent) && checkHops < 6) {
+      if (checkVisited.has(checkCurrent)) {
+        return {
+          ok: false,
+          error: `Creating this redirect would cause an infinite redirect loop between "${source}" and "${destination}".`,
+        };
+      }
+      checkVisited.add(checkCurrent);
+      checkCurrent = wouldResolve.get(checkCurrent)!;
+      checkHops++;
+    }
+
+    const now = new Date().toISOString();
+
+    // 2. Chain Flattening:
+    // Any existing rule pointing to `source` should now point directly to `destination`
+    for (const r of allRules) {
+      if (normalizePath(r.destination) === source && normalizePath(r.source) !== destination) {
+        fileDb.update(
+          "redirects",
+          { id: r.id },
+          {
+            destination,
+            updatedAt: now,
+          }
+        );
+      }
+    }
+
+    // 3. Remove/deactivate any rule where source === destination (e.g. user moved back to an old URL)
+    const reversedRule = allRules.find((r) => normalizePath(r.source) === destination);
+    if (reversedRule && normalizePath(reversedRule.destination) === source) {
+      fileDb.remove("redirects", reversedRule.id);
+    }
+
+    // 4. Check if a rule for this source already exists
+    const existingSourceRule = allRules.find((r) => normalizePath(r.source) === source);
+    if (existingSourceRule) {
+      const updated = fileDb.update(
+        "redirects",
+        { id: existingSourceRule.id },
+        {
+          destination,
+          contentType,
+          contentId: contentId || existingSourceRule.contentId,
+          active: true,
+          autoGenerated,
+          statusCode: 301,
+          updatedAt: now,
+        }
+      );
+      return { ok: true, rule: updated as unknown as RedirectRule };
+    }
+
+    // 5. Insert new rule
+    const newRule: RedirectRule = {
+      id: `red-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+      source,
+      destination,
+      statusCode: 301,
+      contentType,
+      contentId,
+      active: true,
+      autoGenerated,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    const inserted = fileDb.insert("redirects", newRule as unknown as Record<string, unknown>);
+    return { ok: true, rule: inserted as unknown as RedirectRule };
+  },
+
+  update: async (id: string, patch: Partial<RedirectRule>): Promise<RedirectRule | null> => {
+    const existing = fileDb.findOne("redirects", (r) => r.id === id);
+    if (!existing) return null;
+    const now = new Date().toISOString();
+    const cleanPatch: Record<string, unknown> = { ...patch, updatedAt: now };
+    if (patch.source) {
+      const trimmed = patch.source.trim();
+      if (
+        trimmed.startsWith("//") ||
+        trimmed.includes("://") ||
+        trimmed.startsWith("\\\\") ||
+        !trimmed.startsWith("/")
+      ) {
+        return null;
+      }
+      cleanPatch.source = normalizePath(trimmed);
+    }
+    if (patch.destination) {
+      const trimmed = patch.destination.trim();
+      if (
+        trimmed.startsWith("//") ||
+        trimmed.includes("://") ||
+        trimmed.startsWith("\\\\") ||
+        !trimmed.startsWith("/")
+      ) {
+        return null;
+      }
+      cleanPatch.destination = normalizePath(trimmed);
+    }
+    const updated = fileDb.update("redirects", { id }, cleanPatch);
+    return (updated as unknown as RedirectRule) || null;
+  },
+
+  delete: async (id: string): Promise<boolean> => {
+    const removed = fileDb.remove("redirects", id);
+    return Boolean(removed);
+  },
+
+  toggleActive: async (id: string): Promise<RedirectRule | null> => {
+    const existing = fileDb.findOne("redirects", (r) => r.id === id) as unknown as RedirectRule | null;
+    if (!existing) return null;
+    const updated = fileDb.update("redirects", { id }, {
+      active: !existing.active,
+      updatedAt: new Date().toISOString(),
+    });
+    return (updated as unknown as RedirectRule) || null;
   },
 };
 

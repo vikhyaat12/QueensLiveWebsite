@@ -33,10 +33,15 @@ export type SocialLink = {
   platform: string;
   category: "social" | "marketplace" | "custom";
   label: string;
+  tooltip?: string;
   url: string;
   icon: string;
+  iconVariant?: "official" | "monochrome" | "circular" | "outline";
   customIconUrl?: string;
   visible: boolean;
+  desktopVisible?: boolean;
+  mobileVisible?: boolean;
+  placements?: string[];
   iconSize: number;
   desktopIconSize: number;
   mobileIconSize: number;
@@ -51,15 +56,21 @@ export default function SocialMediaLinksManager() {
   const [isError, setIsError] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [showUploader, setShowUploader] = useState(false);
   const [activeCategoryFilter, setActiveCategoryFilter] = useState<"all" | "social" | "marketplace" | "hidden">("all");
 
   const [form, setForm] = useState({
     platform: "instagram",
     category: "social" as "social" | "marketplace" | "custom",
     label: "Instagram",
+    tooltip: "",
     url: "",
+    iconVariant: "official" as "official" | "monochrome" | "circular" | "outline",
     customIconUrl: "",
     visible: true,
+    desktopVisible: true,
+    mobileVisible: true,
+    placements: ["header", "footer", "homepage", "contact", "about", "people", "blog", "affiliate", "all"],
     desktopIconSize: 22,
     mobileIconSize: 18,
     openNewTab: true,
@@ -87,9 +98,14 @@ export default function SocialMediaLinksManager() {
       platform: "instagram",
       category: "social",
       label: "Instagram",
+      tooltip: "",
       url: "",
+      iconVariant: "official",
       customIconUrl: "",
       visible: true,
+      desktopVisible: true,
+      mobileVisible: true,
+      placements: ["header", "footer", "homepage", "contact", "about", "people", "blog", "affiliate", "all"],
       desktopIconSize: 22,
       mobileIconSize: 18,
       openNewTab: true,
@@ -113,9 +129,14 @@ export default function SocialMediaLinksManager() {
       platform: link.platform || "instagram",
       category: link.category || "social",
       label: link.label || "",
+      tooltip: link.tooltip || "",
       url: link.url || "",
+      iconVariant: link.iconVariant || "official",
       customIconUrl: link.customIconUrl || "",
       visible: link.visible !== false,
+      desktopVisible: link.desktopVisible !== false,
+      mobileVisible: link.mobileVisible !== false,
+      placements: Array.isArray(link.placements) ? link.placements : ["header", "footer", "all"],
       desktopIconSize: Number(link.desktopIconSize || link.iconSize || 22),
       mobileIconSize: Number(link.mobileIconSize || 18),
       openNewTab: link.openNewTab !== false,
@@ -457,21 +478,200 @@ export default function SocialMediaLinksManager() {
               />
             </div>
 
-            {/* Custom Icon (if custom selected) */}
-            {(form.platform === "custom" || form.platform === "custom_marketplace") && (
-              <div style={{ gridColumn: "1 / -1", padding: 14, background: "#faf8f5", borderRadius: 8, border: "1px dashed #d1d5db" }}>
-                <GlobalMediaUploader
-                  label="Custom Brand Logo / Icon (Optional Image / SVG)"
-                  value={form.customIconUrl}
-                  onChange={(val) => {
-                    const url = typeof val === "string" ? val : Array.isArray(val) && val.length > 0 ? (typeof val[0] === "string" ? val[0] : val[0].url) : "";
-                    setForm((prev) => ({ ...prev, customIconUrl: url }));
+            {/* Accessible Tooltip */}
+            <div>
+              <label style={{ display: "block", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#4b5563", marginBottom: 6 }}>
+                Accessible Tooltip / Hover Hint
+              </label>
+              <input
+                value={form.tooltip}
+                onChange={(e) => setForm({ ...form, tooltip: e.target.value })}
+                placeholder="e.g. Follow Queens Care on Instagram for clinical research"
+                style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #d1d5db", fontSize: 14, color: "#1f2937" }}
+              />
+            </div>
+
+            {/* Icon Variant */}
+            <div>
+              <label style={{ display: "block", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#4b5563", marginBottom: 6 }}>
+                Icon Presentation Variant
+              </label>
+              <select
+                value={form.iconVariant}
+                onChange={(e) => setForm({ ...form, iconVariant: e.target.value as any })}
+                style={{ width: "100%", padding: "10px 12px", borderRadius: 6, border: "1px solid #d1d5db", fontSize: 14, color: "#1f2937", background: "#ffffff" }}
+              >
+                <option value="official">Official Brand Colors</option>
+                <option value="monochrome">Monochrome / Clean Neutral</option>
+                <option value="circular">Circular Floating Badge</option>
+                <option value="outline">Subtle Border Outline</option>
+              </select>
+            </div>
+
+            {/* ─── BRAND LOGO & PRESENTATION CONTROL (SECTION 25 REQUIREMENT) ─── */}
+            <div
+              data-testid="brand-logo-control-section"
+              style={{
+                gridColumn: "1 / -1",
+                padding: "16px 18px",
+                background: "#faf8f5",
+                borderRadius: 8,
+                border: "1px solid #e5e7eb",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <div>
+                  <h4 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#2A0F3A", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Brand Logo
+                  </h4>
+                  <p style={{ margin: "2px 0 0", fontSize: 12, color: "#6b7280" }}>
+                    Platform and Logo are separate controls. Choose the platform default or assign a custom approved logo.
+                  </p>
+                </div>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    padding: "3px 8px",
+                    borderRadius: 4,
+                    background: form.customIconUrl ? "#FEF3C7" : "#DCFCE7",
+                    color: form.customIconUrl ? "#92400E" : "#166534",
                   }}
-                  folder="logos"
-                  compact={true}
-                />
+                >
+                  {form.customIconUrl ? "Custom Logo Active" : "Platform Default Active"}
+                </span>
               </div>
-            )}
+
+              {/* Current Logo Preview Card */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: 16,
+                  padding: 14,
+                  background: "#fff",
+                  borderRadius: 6,
+                  border: "1px solid #e8e4df",
+                  marginBottom: 14,
+                }}
+              >
+                {/* Left: Current Live Preview */}
+                <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                  <div
+                    style={{
+                      width: 52,
+                      height: 52,
+                      borderRadius: 8,
+                      background: "#f9fafb",
+                      border: "1px solid #e5e7eb",
+                      display: "grid",
+                      placeItems: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <SocialBrandIcon platform={form.platform} customIconUrl={form.customIconUrl} size={32} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase" }}>
+                      Current Logo Preview
+                    </div>
+                    <b style={{ fontSize: 13, color: "#1f2937" }}>
+                      {form.customIconUrl ? "Custom Uploaded Logo" : `${PLATFORM_REGISTRY[form.platform]?.label || form.platform} Default Logo`}
+                    </b>
+                    <div style={{ fontSize: 11, color: "#6b7280" }}>
+                      {form.customIconUrl ? "Using custom SVG / image asset" : "Using official SVG vector asset"}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right: Platform Default Comparison */}
+                <div style={{ display: "flex", alignItems: "center", gap: 14, borderLeft: "1px solid #f3f4f6", paddingLeft: 14 }}>
+                  <div
+                    style={{
+                      width: 52,
+                      height: 52,
+                      borderRadius: 8,
+                      background: "#f9fafb",
+                      border: "1px solid #e5e7eb",
+                      display: "grid",
+                      placeItems: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <SocialBrandIcon platform={form.platform} size={32} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase" }}>
+                      Platform Default Logo
+                    </div>
+                    <b style={{ fontSize: 13, color: "#1f2937" }}>
+                      {PLATFORM_REGISTRY[form.platform]?.label || form.platform} Default
+                    </b>
+                    <div style={{ fontSize: 11, color: "#6b7280" }}>
+                      Pre-packaged official vector artwork
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons: Change Logo, Upload Custom Logo, Restore Platform Default */}
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                <button
+                  type="button"
+                  data-testid="upload-custom-logo-btn"
+                  onClick={() => setShowUploader((prev) => !prev)}
+                  style={{
+                    padding: "8px 14px",
+                    background: "var(--purple, #2A0F3A)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 6,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                >
+                  {showUploader ? "Hide Uploader" : "📁 Upload / Change Custom Logo"}
+                </button>
+
+                {form.customIconUrl && (
+                  <button
+                    type="button"
+                    data-testid="restore-platform-default-btn"
+                    onClick={() => setForm((prev) => ({ ...prev, customIconUrl: "" }))}
+                    style={{
+                      padding: "8px 14px",
+                      background: "#F1F5F9",
+                      color: "#475569",
+                      border: "1px solid #CBD5E1",
+                      borderRadius: 6,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                    }}
+                  >
+                    ↺ Restore Platform Default
+                  </button>
+                )}
+              </div>
+
+              {/* Expandable Uploader */}
+              {showUploader && (
+                <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px dashed #d1d5db" }}>
+                  <GlobalMediaUploader
+                    label="Upload Custom Brand Logo / Vector (Image or SVG)"
+                    value={form.customIconUrl}
+                    onChange={(val) => {
+                      const url = typeof val === "string" ? val : Array.isArray(val) && val.length > 0 ? (typeof val[0] === "string" ? val[0] : val[0].url) : "";
+                      setForm((prev) => ({ ...prev, customIconUrl: url }));
+                      setShowUploader(false);
+                    }}
+                    folder="logos"
+                    compact={true}
+                  />
+                </div>
+              )}
+            </div>
 
             {/* Icon Size Sliders */}
             <div style={{ padding: 14, background: "#f9fafb", borderRadius: 8, border: "1px solid #e5e7eb" }}>
@@ -516,6 +716,67 @@ export default function SocialMediaLinksManager() {
                   style={{ width: 18, height: 18, accentColor: "#2A0F3A" }}
                 />
                 <span>Visible on Website (Public Footer)</span>
+              </label>
+            </div>
+
+            {/* Placements Multi-Select Checkboxes */}
+            <div style={{ gridColumn: "1 / -1", padding: 14, background: "#fdfbf7", borderRadius: 8, border: "1px solid #eae6df" }}>
+              <div style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#2A0F3A", marginBottom: 10 }}>
+                Enabled Placements (Select where this icon appears)
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10 }}>
+                {[
+                  { id: "header", label: "Header Nav" },
+                  { id: "announcement", label: "Top Announcement" },
+                  { id: "footer", label: "Footer" },
+                  { id: "homepage", label: "Homepage" },
+                  { id: "contact", label: "Contact Page" },
+                  { id: "about", label: "About Page" },
+                  { id: "people", label: "Our People" },
+                  { id: "blog", label: "Blog" },
+                  { id: "affiliate", label: "Affiliate Pages" },
+                ].map((p) => {
+                  const checked = form.placements.includes(p.id) || form.placements.includes("all");
+                  return (
+                    <label key={p.id} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, cursor: "pointer" }}>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) => {
+                          let next = [...form.placements.filter((x) => x !== "all")];
+                          if (e.target.checked) next.push(p.id);
+                          else next = next.filter((x) => x !== p.id);
+                          setForm({ ...form, placements: next });
+                        }}
+                        style={{ accentColor: "#2A0F3A" }}
+                      />
+                      <span>{p.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Device Visibility Checkboxes */}
+            <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  checked={form.desktopVisible}
+                  onChange={(e) => setForm({ ...form, desktopVisible: e.target.checked })}
+                  style={{ width: 18, height: 18, accentColor: "#2A0F3A" }}
+                />
+                <span>Desktop Visible</span>
+              </label>
+
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  checked={form.mobileVisible}
+                  onChange={(e) => setForm({ ...form, mobileVisible: e.target.checked })}
+                  style={{ width: 18, height: 18, accentColor: "#2A0F3A" }}
+                />
+                <span>Mobile Visible</span>
               </label>
             </div>
 

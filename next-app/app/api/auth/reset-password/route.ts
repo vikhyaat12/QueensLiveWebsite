@@ -1,21 +1,39 @@
 import { json, safeText } from "@/lib/http";
-import { prisma } from "@/lib/prisma";
+import { store } from "@/lib/commerce/store";
 import { hashPassword } from "@/lib/auth";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
   const token = safeText(body.token, 128);
   const password = safeText(body.password, 128);
-  if (!token || !password) return json({ error: "Token and password required" }, 422);
-  if (password.length < 10) return json({ error: "Password must be at least 10 characters" }, 422);
+  const confirmPassword = safeText(body.confirmPassword, 128);
 
-  const emailToken = await prisma.emailToken.findUnique({ where: { token } });
-  if (!emailToken || emailToken.type !== "reset" || emailToken.used || emailToken.expiresAt < new Date()) {
-    return json({ error: "Invalid or expired reset token" }, 400);
+  if (!token) return json({ error: "Reset token is required." }, 422);
+  if (!password || password.length < 8) return json({ error: "Password must be at least 8 characters long." }, 422);
+  if (confirmPassword && password !== confirmPassword) {
+    return json({ error: "Passwords do not match." }, 422);
   }
 
-  await prisma.user.update({ where: { id: emailToken.userId }, data: { passwordHash: await hashPassword(password) } });
-  await prisma.emailToken.update({ where: { id: emailToken.id }, data: { used: true } });
+  const record = await store.passwordReset.verifyToken(token);
+  if (!record) {
+    return json({ error: "Invalid or expired reset token." }, 400);
+  }
 
-  return json({ message: "Password has been reset successfully." });
+  const user = await store.users.byId(record.userId);
+  if (!user) {
+    return json({ error: "Account not found." }, 404);
+  }
+
+  const nextTokenVersion = (user.tokenVersion || 1) + 1;
+  const newHash = await hashPassword(password);
+
+  await store.users.update(user.id, {
+    passwordHash: newHash,
+    tokenVersion: nextTokenVersion, // Invalidates all prior sessions across devices
+  });
+
+  await store.passwordReset.consumeToken(token);
+
+  return json({ ok: true, message: "Password has been reset successfully. Please sign in with your new password." });
 }
+

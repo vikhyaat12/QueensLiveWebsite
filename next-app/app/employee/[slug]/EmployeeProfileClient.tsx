@@ -2,8 +2,32 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import * as THREE from "three";
 import { QRCodeSVG } from "qrcode.react";
+import QueensCareHeader from "@/app/components/QueensCareHeader";
+import QueensCareFooter from "@/app/components/QueensCareFooter";
+import type { OurPeoplePageConfig } from "@/lib/commerce/store-extensions";
+import { sanitizeHtml } from "@/lib/sanitize";
+
+export type EmployeeKeyStat = {
+  number: string;
+  label: string;
+  subtitle?: string;
+  icon?: string;
+};
+
+export type EmployeePrivacySettings = {
+  showEmail?: boolean;
+  showPhone?: boolean;
+  showLocation?: boolean;
+  showEmployeeId?: boolean;
+  showSocialLinks?: boolean;
+  showQR?: boolean;
+  showStats?: boolean;
+  showMedia?: boolean;
+  showProducts?: boolean;
+  showTeamMembers?: boolean;
+  showDownloadPdf?: boolean;
+};
 
 export type EmployeeData = {
   id?: string;
@@ -11,15 +35,57 @@ export type EmployeeData = {
   slug: string;
   employeeId?: string;
   designation?: string;
+  heroSubtitle?: string;
   department?: string;
   photo?: string;
   profileImage?: string;
   phone?: string;
   email?: string;
+  location?: string;
   bio?: string;
   active: boolean;
+  verified?: boolean;
+  quote?: string;
+  eyebrow?: string;
+  heroQuote?: string;
+  signatureText?: string;
+  heroPlaqueQuote?: string;
+  heroPlaqueAuthor?: string;
+  heroBadges?: Array<{ title: string; subtitle?: string; icon?: string }>;
+  aboutIcon?: string;
+  aboutTitle?: string;
+  aboutSubtitle?: string;
+  aboutParagraph1?: string;
+  aboutParagraph2?: string;
+  aboutCtaLabel?: string;
+  aboutCtaUrl?: string;
+  aboutQuoteText?: string;
+  aboutQuoteAuthor?: string;
+  keyStats?: EmployeeKeyStat[];
+  journeyHtml?: string;
+  visionHtml?: string;
+  leadershipHtml?: string;
+  initiativesHtml?: string;
+  newsHtml?: string;
+  heroBannerImage?: string;
+  heroBannerPosition?: string;
+  heroBannerOpacity?: number;
+  heroBannerVisible?: boolean;
   gallery?: Array<string | { url: string; caption?: string }>;
-  videos?: Array<{ id: string; url: string; title?: string; posterUrl?: string }>;
+  videos?: Array<{ id: string; url: string; title?: string; posterUrl?: string; duration?: string }>;
+  featuredVideo?: { id: string; url: string; title?: string; subtitle?: string; posterUrl?: string; duration?: string };
+  momentsGrid?: Array<{ title: string; imageUrl: string; tag?: string }>;
+  featuredProductIds?: string[];
+  sidebarPromo?: {
+    title?: string;
+    subtitle?: string;
+    ctaText?: string;
+    ctaUrl?: string;
+    bgImage?: string;
+  };
+  footerBadges?: Array<{ label: string; subtitle?: string; icon?: string }>;
+  footerTagline?: string;
+  privacySettings?: EmployeePrivacySettings;
   photoSettings?: {
     desktopSize?: number;
     mobileSize?: number;
@@ -33,983 +99,2377 @@ export type EmployeeData = {
     positionY?: number;
     rotation?: number;
   };
-  verified?: boolean;
   themeColors?: Record<string, string>;
   socialLinks?: Record<string, { url: string; enabled: boolean }>;
 };
 
-const QC_DEFAULTS = { primary: "#2A0F3A", gold: "#C19A6B", background: "#FAF8F5", cardBg: "#FFFFFF", text: "#333333", badgeBg: "#D4AF37", buttonBg: "#2A0F3A", gradient: "" };
-function resolveTheme(emp: EmployeeData) {
-  const tc = emp.themeColors || {};
-  const get = (k: string) => tc[k] || QC_DEFAULTS[k as keyof typeof QC_DEFAULTS] || "";
-  return { primary: get("primary"), gold: get("gold"), background: get("background"), cardBg: get("cardBg"), text: get("text"), badgeBg: get("badgeBg"), buttonBg: get("buttonBg"), gradient: get("gradient") };
+export interface FeaturedProductItem {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  originalPrice?: number;
+  badge?: string;
+  badgeColor?: string;
+  category?: string;
+  image?: string;
+  images?: string[];
+  rating?: number;
+  reviewCount?: number;
+  shortDescription?: string;
 }
 
-// 3D Background Canvas for Employee Hero
-function Employee3DScene() {
-  const mountRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const host = mountRef.current;
-    if (!host || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    const width = host.clientWidth || window.innerWidth;
-    const height = host.clientHeight || 450;
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    camera.position.z = 6;
-
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-    renderer.setSize(width, height);
-    host.appendChild(renderer.domElement);
-
-    // Gold rings & subtle particles
-    const goldMat = new THREE.MeshStandardMaterial({
-      color: 0xd4af37,
-      metalness: 0.8,
-      roughness: 0.25,
-      transparent: true,
-      opacity: 0.65,
-    });
-
-    const violetMat = new THREE.MeshStandardMaterial({
-      color: 0x8a4b8c,
-      metalness: 0.4,
-      roughness: 0.3,
-      transparent: true,
-      opacity: 0.45,
-    });
-
-    const ring1 = new THREE.Mesh(new THREE.TorusGeometry(1.8, 0.04, 16, 80), goldMat);
-    ring1.position.set(2.2, 0.4, -1);
-    ring1.rotation.set(1.1, 0.4, 0.2);
-    scene.add(ring1);
-
-    const ring2 = new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.025, 16, 60), violetMat);
-    ring2.position.set(-2.4, -0.6, -1.2);
-    ring2.rotation.set(0.6, 1.2, 0.5);
-    scene.add(ring2);
-
-    // Micro ambient floating spheres
-    const particlesGroup = new THREE.Group();
-    for (let i = 0; i < 18; i++) {
-      const pMat = (i % 2 === 0 ? goldMat : violetMat).clone();
-      pMat.opacity = Math.random() * 0.4 + 0.2;
-      const sphere = new THREE.Mesh(new THREE.SphereGeometry(Math.random() * 0.08 + 0.03, 16, 16), pMat);
-      sphere.position.set(
-        (Math.random() - 0.5) * 8,
-        (Math.random() - 0.5) * 5,
-        (Math.random() - 0.5) * 4
-      );
-      particlesGroup.add(sphere);
-    }
-    scene.add(particlesGroup);
-
-    // Lighting
-    scene.add(new THREE.AmbientLight(0xffffff, 1.2));
-    const pointLight = new THREE.PointLight(0xffe29a, 15, 12);
-    pointLight.position.set(2, 3, 4);
-    scene.add(pointLight);
-
-    const clock = new THREE.Clock();
-    let frameId = 0;
-
-    const animate = () => {
-      const elapsed = clock.getElapsedTime();
-      ring1.rotation.x = 1.1 + Math.sin(elapsed * 0.4) * 0.15;
-      ring1.rotation.y = elapsed * 0.2;
-      ring2.rotation.z = elapsed * 0.25;
-      particlesGroup.rotation.y = elapsed * 0.05;
-
-      renderer.render(scene, camera);
-      frameId = requestAnimationFrame(animate);
-    };
-    animate();
-
-    const handleResize = () => {
-      if (!host) return;
-      const w = host.clientWidth;
-      const h = host.clientHeight;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
-    };
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      cancelAnimationFrame(frameId);
-      window.removeEventListener("resize", handleResize);
-      renderer.dispose();
-      if (host.contains(renderer.domElement)) {
-        host.removeChild(renderer.domElement);
-      }
-    };
-  }, []);
-
-  return (
-    <div
-      ref={mountRef}
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: "100%",
-        pointerEvents: "none",
-        zIndex: 0,
-        opacity: 0.85,
-      }}
-      aria-hidden="true"
-    />
-  );
+interface EmployeeProfileClientProps {
+  employee: EmployeeData;
+  allEmployees?: EmployeeData[];
+  featuredProducts?: FeaturedProductItem[];
+  pageConfig?: OurPeoplePageConfig;
 }
+
+const QC_DEFAULTS = {
+  primary: "#1E0C38",
+  deepNavy: "#12051E",
+  gold: "#D4AF37",
+  lightGold: "#F3E3B6",
+  amberGold: "#E0A838",
+  background: "#F7F5F0",
+  cardBg: "#FFFFFF",
+  text: "#1F2937",
+  muted: "#6B7280",
+  border: "#E8E4DF",
+};
 
 export default function EmployeeProfileClient({
   employee,
   allEmployees = [],
-}: {
-  employee: EmployeeData;
-  allEmployees?: EmployeeData[];
-}) {
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const [showQrModal, setShowQrModal] = useState(false);
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  featuredProducts = [],
+  pageConfig,
+}: EmployeeProfileClientProps) {
+  const pd = pageConfig?.profileDefaults || {};
+  const theme = pageConfig?.theme || {};
 
-  const theme = resolveTheme(employee);
+  const [activeTab, setActiveTab] = useState("overview");
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [activeVideoModal, setActiveVideoModal] = useState<{ url: string; title: string } | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [cartCount, setCartCount] = useState(3);
+
+  const ps = employee.privacySettings || {};
+  const showEmail = ps.showEmail !== false;
+  const showPhone = ps.showPhone !== false;
+  const showLocation = ps.showLocation !== false;
+  const showEmployeeId = ps.showEmployeeId !== false;
+  const showSocialLinks = ps.showSocialLinks !== false;
+  const showQR = ps.showQR !== false;
+  const showStats = ps.showStats !== false;
+  const showMedia = ps.showMedia !== false;
+  const showProducts = ps.showProducts !== false;
+  const showTeamMembers = ps.showTeamMembers !== false;
+  const showDownloadPdf = ps.showDownloadPdf !== false;
+
   const isActive = employee.active !== false;
   const isVerified = employee.verified !== false;
 
-  const photo = employee.photo || employee.profileImage || "";
-  const photoSettings = employee.photoSettings || {
-    desktopSize: 180,
-    mobileSize: 130,
-    borderRadius: 50,
-    borderWidth: 3,
-    borderColor: "#D4AF37",
-    objectFit: "cover",
-    shadow: true,
+  // Portrait photo
+  const photo = employee.photo || employee.profileImage || "/uploads/employees/chatgpt-image-sep-7-2026-12_18_49-am-1788722742789.png";
+
+  // Dynamic Badges in Hero matching reference
+  const heroBadges = employee.heroBadges && employee.heroBadges.length > 0
+    ? employee.heroBadges
+    : [
+        { icon: "🏆", title: "30+ Years", subtitle: "Years of Industry Experience" },
+        { icon: "👥", title: "People First", subtitle: "People First Leadership" },
+        { icon: "💡", title: "Innovation", subtitle: "Innovation Driven" },
+        { icon: "🛡️", title: "Millions", subtitle: "Trusted by Millions" },
+      ];
+
+  // Dynamic 4 Key Stats matching reference
+  const statsList: EmployeeKeyStat[] = employee.keyStats && employee.keyStats.length > 0
+    ? employee.keyStats
+    : [
+        { number: "30+", label: "Years of Experience", subtitle: "In Pharmaceutical Industry", icon: "🏆" },
+        { number: "500+", label: "Products Launched", subtitle: "Across Therapeutic Categories", icon: "🧪" },
+        { number: "100+", label: "Team Members", subtitle: "Driven by a Shared Purpose", icon: "👥" },
+        { number: "Millions", label: "Lives Touched", subtitle: "Through Trusted Solutions", icon: "🌐" },
+      ];
+
+  // Key Moments & Media
+  const featuredVideo = employee.featuredVideo || {
+    id: "vid-sanjay-summit",
+    title: "Our Journey",
+    subtitle: "A Healthier Tomorrow",
+    duration: "03:24",
+    posterUrl: "/images/hero/sanjay-hero-reference-crop.jpg",
+    url: "",
   };
 
-  const desktopSize = photoSettings.desktopSize || 180;
-  const mobileSize = photoSettings.mobileSize || 130;
-  const borderRadius = photoSettings.borderRadius !== undefined ? photoSettings.borderRadius : 50;
-  const borderWidth = photoSettings.borderWidth !== undefined ? photoSettings.borderWidth : 3;
-  const borderColor = photoSettings.borderColor || "#D4AF37";
-  const objectFit = photoSettings.objectFit || "cover";
-  const hasShadow = photoSettings.shadow !== false;
+  const momentsGrid = employee.momentsGrid && employee.momentsGrid.length > 0
+    ? employee.momentsGrid
+    : [
+        { title: "Product Innovation", imageUrl: "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=600&q=80" },
+        { title: "Research & Development", imageUrl: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=600&q=80" },
+        { title: "Team & Culture", imageUrl: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=600&q=80" },
+        { title: "Global Impact", imageUrl: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80" },
+      ];
 
-  const galleryList = (Array.isArray(employee.gallery) ? employee.gallery : []).map((item) =>
-    typeof item === "string" ? { url: item, caption: "" } : item
-  );
+  // Footer transition badges
+  const footerBadges = employee.footerBadges && employee.footerBadges.length > 0
+    ? employee.footerBadges
+    : [
+        { label: "Quality You Can Trust", subtitle: "In Every Product", icon: "🛡️" },
+        { label: "Science-Backed", subtitle: "Formulations", icon: "⚛️" },
+        { label: "People-Driven", subtitle: "Growth", icon: "👥" },
+        { label: "A Healthier Tomorrow", subtitle: "For Everyone", icon: "❤️" },
+      ];
 
-  const videoList = Array.isArray(employee.videos) ? employee.videos : [];
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width - 0.5) * 8;
-    const y = ((e.clientY - rect.top) / rect.height - 0.5) * -8;
-    setTilt({ x, y });
-  };
-
-  const handleMouseLeave = () => {
-    setTilt({ x: 0, y: 0 });
-  };
-
-  // Build verification QR URL
   const currentOrigin = typeof window !== "undefined" ? window.location.origin : "https://queenscare.in";
   const profileUrl = `${currentOrigin}/employee/${employee.slug}`;
 
-  return (
-    <div style={{ background: theme.background, minHeight: "100vh", paddingBottom: 80, color: theme.primary }}>
-      {/* Top Breadcrumb Header */}
-      <div style={{ background: "#ffffff", borderBottom: "1px solid #eae5db", padding: "14px 24px" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <Link
-            href="/"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              fontSize: 13,
-              fontWeight: 600,
-              color: "#2A0F3A",
-              textDecoration: "none",
-            }}
-          >
-            <span>←</span> Return to Queens Care Laboratories
-          </Link>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", color: "#C19A6B", fontWeight: 700 }}>
-              Official Staff Directory
-            </span>
-            <button
-              onClick={() => setShowQrModal(true)}
-              style={{
-                background: "rgba(212,175,55,0.12)",
-                border: "1px solid #D4AF37",
-                color: "#2A0F3A",
-                padding: "4px 10px",
-                borderRadius: 4,
-                fontSize: 11,
-                fontWeight: 700,
-                cursor: "pointer",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 5,
-              }}
-            >
-              <span>📱</span> Verify QR
-            </button>
-          </div>
-        </div>
-      </div>
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 3000);
+  };
 
-      {/* HERO SECTION WITH 3D CANVAS */}
+  const handleAddToCart = (productName: string) => {
+    setCartCount((prev) => prev + 1);
+    showToast(`✓ Added "${productName}" to your bag`);
+  };
+
+  const handleScrollTo = (e: React.MouseEvent<HTMLAnchorElement> | null, id: string) => {
+    if (e) e.preventDefault();
+    setActiveTab(id);
+    const elem = document.getElementById(id);
+    if (elem) {
+      const top = elem.getBoundingClientRect().top + window.pageYOffset - 120;
+      window.scrollTo({ top, behavior: "smooth" });
+      if (typeof window !== "undefined" && window.history?.pushState) {
+        window.history.pushState(null, "", `#${id}`);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const sectionIds = [
+      "overview",
+      "journey",
+      "vision",
+      "leadership",
+      ...(showMedia ? ["media"] : []),
+      ...(showProducts ? ["products"] : []),
+      "initiatives",
+      "news",
+    ];
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveTab(entry.target.id);
+          }
+        });
+      },
+      {
+        rootMargin: "-120px 0px -60% 0px",
+        threshold: 0,
+      }
+    );
+
+    sectionIds.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [showMedia, showProducts]);
+
+  // Team members list for sidebar (ensuring at least 6 members from db or reference defaults)
+  const defaultTeamMembers = [
+    { name: "Dr. Vikram Singhania", designation: "Principal Formulation Scientist", slug: "vikram-singhania", photo: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=300&q=80" },
+    { name: "Dr. Ananya Mehta", designation: "Chief Research Scientist", slug: "dr-ananya-mehta", photo: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80" },
+    { name: "Rajesh Kumar", designation: "Head of Quality Assurance", slug: "rajesh-kumar", photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80" },
+    { name: "Priya Sharma", designation: "Head of Regulatory Affairs", slug: "priya-sharma", photo: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=300&q=80" },
+    { name: "Arjun Iyer", designation: "Head of Supply Chain", slug: "arjun-iyer", photo: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80" },
+    { name: "Meera Joshi", designation: "Head of Human Resources", slug: "meera-joshi", photo: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=300&q=80" },
+  ];
+
+  const displayTeam = allEmployees.filter((m) => m.slug !== employee.slug);
+  const finalTeam = displayTeam.length >= 4 ? displayTeam.slice(0, 6) : defaultTeamMembers;
+
+  return (
+    <div
+      style={{
+        background: theme.primaryBg || QC_DEFAULTS.background,
+        minHeight: "100vh",
+        color: theme.textColor || QC_DEFAULTS.text,
+        fontFamily: "var(--font-sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif)",
+      }}
+    >
+      <style>{`
+        .qc-hover-gold:hover {
+          color: #D4AF37 !important;
+        }
+        .qc-pill-active {
+          background: #1E0C38 !important;
+          color: #FFFFFF !important;
+        }
+        .qc-pill-inactive:hover {
+          background: rgba(30, 12, 56, 0.08) !important;
+          color: #1E0C38 !important;
+        }
+        .qc-product-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 12px 30px rgba(0,0,0,0.08) !important;
+        }
+        @media (max-width: 1024px) {
+          .qc-main-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .qc-hero-container {
+            flex-direction: column !important;
+            text-align: center !important;
+          }
+          .qc-hero-right-plaque {
+            margin: 20px auto 0 !important;
+            max-width: 100% !important;
+          }
+          .qc-about-subcolumns {
+            grid-template-columns: 1fr !important;
+          }
+        }
+        @media (max-width: 768px) {
+          .qc-products-row {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+          .qc-moments-wrapper {
+            grid-template-columns: 1fr !important;
+          }
+          .qc-footer-strip-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+        }
+        @media (max-width: 520px) {
+          .qc-products-row {
+            grid-template-columns: 1fr !important;
+          }
+          .qc-footer-strip-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .qc-stats-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
+
+      {/* 1. OFFICIAL QUEENS CARE HEADER */}
+      <QueensCareHeader activePage="people" />
+
+      {/* 2. CINEMATIC EXECUTIVE HERO (REFERENCE EXACT MATCH) */}
       <section
         style={{
           position: "relative",
-          background: theme.gradient || `linear-gradient(145deg, ${theme.primary}ee 0%, ${theme.primary} 60%, ${theme.primary}dd 100%)`,
-          color: "#ffffff",
-          padding: "70px 24px 80px",
+          minHeight: 520,
+          background: "linear-gradient(135deg, #100318 0%, #1A0726 40%, #0E0316 100%)",
+          color: "#FFFFFF",
           overflow: "hidden",
-          borderBottom: `2px solid ${theme.gold}`,
+          borderBottom: "2px solid #D4AF37",
         }}
       >
-        <Employee3DScene />
-
-        <div style={{ maxWidth: 1100, margin: "0 auto", position: "relative", zIndex: 1 }}>
+        {/* Layer 1: Executive Office Backdrop (Admin-Editable & Configurable) */}
+        {employee.heroBannerVisible !== false && (
           <div
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundImage: `url('${employee.heroBannerImage || "/images/hero/executive-library-bg.jpg"}')`,
+              backgroundSize: "cover",
+              backgroundPosition: employee.heroBannerPosition || "center 30%",
+              opacity: typeof employee.heroBannerOpacity === "number" ? employee.heroBannerOpacity : 0.38,
+              mixBlendMode: "luminosity",
+            }}
+            aria-hidden="true"
+          />
+        )}
+
+        {/* Layer 2: Deep Luxury Purple & Vignette Radial Lighting */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "radial-gradient(circle at 75% 35%, rgba(212, 175, 55, 0.18) 0%, transparent 55%), linear-gradient(90deg, rgba(14,3,20,0.92) 0%, rgba(26,7,38,0.78) 50%, rgba(14,3,20,0.88) 100%)",
+          }}
+          aria-hidden="true"
+        />
+
+        {/* Hero Foreground Content */}
+        <div
+          style={{
+            maxWidth: 1320,
+            margin: "0 auto",
+            padding: "50px 24px 36px",
+            position: "relative",
+            zIndex: 2,
+          }}
+        >
+          <div
+            className="qc-hero-container"
             style={{
               display: "flex",
-              flexWrap: "wrap",
               alignItems: "center",
-              gap: 40,
-              transform: `perspective(1000px) rotateX(${tilt.y}deg) rotateY(${tilt.x}deg)`,
-              transition: "transform 0.15s ease-out",
+              justifyContent: "space-between",
+              gap: 32,
+              flexWrap: "wrap",
             }}
           >
-            {/* LEFT: PHOTO WITH GOLD RING */}
-            <div style={{ flexShrink: 0, textAlign: "center", margin: "0 auto" }}>
+            {/* Left: Sanjay Portrait at Desk + Executive Desk Accessories */}
+            <div
+              style={{
+                position: "relative",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                flexShrink: 0,
+              }}
+            >
               <div
                 style={{
                   position: "relative",
-                  display: "inline-block",
-                  padding: 8,
-                  borderRadius: `${borderRadius}%`,
-                  background: "radial-gradient(circle, rgba(212,175,55,0.4) 0%, rgba(42,15,58,0) 70%)",
+                  width: "clamp(240px, 25vw, 310px)",
+                  height: "clamp(290px, 30vw, 380px)",
+                  borderRadius: 16,
+                  overflow: "hidden",
+                  border: "2px solid rgba(212, 175, 55, 0.6)",
+                  boxShadow: "0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(212, 175, 55, 0.25)",
+                  background: "linear-gradient(180deg, #1C082A 0%, #100418 100%)",
                 }}
               >
-                {photo ? (
-                  <div style={{ width: desktopSize, height: desktopSize, borderRadius: `${borderRadius}%`, overflow: "hidden", border: `${borderWidth}px solid ${borderColor}`, boxShadow: hasShadow ? "0 18px 45px rgba(0,0,0,0.6), 0 0 30px rgba(212,175,55,0.3)" : "none", display: "block" }}>
-                    <img
-                      src={photo}
-                      alt={employee.name}
-                      style={{
-                        width: `${(photoSettings.zoom || 1) * 100}%`,
-                        height: `${(photoSettings.zoom || 1) * 100}%`,
-                        objectPosition: `${photoSettings.positionX ?? 50}% ${photoSettings.positionY ?? 50}%`,
-                        borderRadius: 0,
-                        objectFit: "cover",
-                        border: "none",
-                        display: "block",
-                        transform: `rotate(${photoSettings.rotation ?? 0}deg)`,
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <div
-                    style={{
-                      width: desktopSize,
-                      height: desktopSize,
-                      borderRadius: `${borderRadius}%`,
-                      background: "linear-gradient(135deg, #4A1A66 0%, #2A0F3A 100%)",
-                      color: "#D4AF37",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 52,
-                      fontWeight: 700,
-                      border: `${borderWidth}px solid ${borderColor}`,
-                      boxShadow: hasShadow ? "0 18px 45px rgba(0,0,0,0.6)" : "none",
-                    }}
-                  >
-                    {employee.name.charAt(0)}
-                  </div>
-                )}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={photo}
+                  alt={employee.name}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    objectPosition: "center top",
+                    display: "block",
+                  }}
+                />
 
-                {/* Verification Badge */}
-                {isActive && isVerified ? (
-                  <div
+                {/* Overlaid Official Lapel Badge in Corner */}
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 10,
+                    right: 10,
+                    background: "rgba(16, 185, 129, 0.95)",
+                    color: "#FFFFFF",
+                    fontSize: 10,
+                    fontWeight: 700,
+                    padding: "3px 8px",
+                    borderRadius: 12,
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
+                    border: "1px solid #FFFFFF",
+                  }}
+                >
+                  ✓ Verified
+                </div>
+              </div>
+
+              {/* Desk Bookshelf Plaque Accent ("VISION", "INNOVATION", "QUALITY", "PEOPLE FIRST") */}
+              <div
+                style={{
+                  display: "flex",
+                  gap: 6,
+                  marginTop: -14,
+                  position: "relative",
+                  zIndex: 3,
+                }}
+              >
+                {["VISION", "INNOVATION", "QUALITY", "PEOPLE FIRST"].map((val, idx) => (
+                  <span
+                    key={idx}
                     style={{
-                      position: "absolute",
-                      bottom: 8,
-                      right: 8,
-                      background: "#10b981",
-                      color: "#ffffff",
-                      width: 32,
-                      height: 32,
-                      borderRadius: "50%",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 18,
-                      fontWeight: "bold",
-                      border: `3px solid ${theme.gold}`,
-                      boxShadow: `0 4px 12px rgba(0,0,0,0.3), 0 0 12px ${theme.gold}44`,
-                    }}
-                    title="Queens Care Verified Employee"
-                  >
-                    ✓
-                  </div>
-                ) : isActive ? (
-                  <div
-                    style={{
-                      position: "absolute",
-                      bottom: 8,
-                      right: 8,
-                      background: "#10b981",
-                      color: "#ffffff",
-                      padding: "2px 8px",
-                      borderRadius: 10,
-                      fontSize: 10,
-                      fontWeight: "bold",
-                      border: "2px solid #fff",
-                    }}
-                  >
-                    Active
-                  </div>
-                ) : (
-                  <div
-                    style={{
-                      position: "absolute",
-                      bottom: 8,
-                      right: 8,
-                      background: "#6b7280",
-                      color: "#ffffff",
-                      padding: "2px 8px",
-                      borderRadius: 10,
-                      fontSize: 10,
-                      fontWeight: "bold",
+                      background: "rgba(24, 7, 36, 0.92)",
+                      border: "1px solid #D4AF37",
+                      color: "#E8C88A",
+                      fontSize: 8,
+                      fontWeight: 800,
+                      padding: "3px 6px",
+                      borderRadius: 4,
+                      letterSpacing: "0.08em",
+                      boxShadow: "0 4px 10px rgba(0,0,0,0.5)",
                     }}
                   >
-                    Inactive
-                  </div>
-                )}
+                    {val}
+                  </span>
+                ))}
               </div>
             </div>
 
-            {/* RIGHT: DETAILS & ACTIONS */}
-            <div style={{ flex: "1 1 480px" }}>
-              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                <span
-                  style={{
-                    background: isActive && isVerified ? "rgba(212,175,55,0.2)" : isActive ? "rgba(16,185,129,0.15)" : "rgba(107,114,128,0.15)",
-                    border: `1px solid ${isActive && isVerified ? theme.gold : isActive ? "#10b981" : "#6b7280"}`,
-                    color: isActive && isVerified ? theme.gold : isActive ? "#10b981" : "#6b7280",
-                    padding: "4px 12px",
-                    borderRadius: 20,
-                    fontSize: 11,
-                    fontWeight: 700,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.1em",
-                  }}
-                >
-                  {isActive && isVerified ? "✓ VERIFIED QUEENS CARE EMPLOYEE" : isActive ? "ACTIVE EMPLOYEE" : "INACTIVE EMPLOYEE"}
-                </span>
-                <span
-                  style={{
-                    background: "rgba(255,255,255,0.1)",
-                    color: "#e5e7eb",
-                    padding: "4px 12px",
-                    borderRadius: 20,
-                    fontSize: 11,
-                    fontWeight: 600,
-                    letterSpacing: "0.05em",
-                  }}
-                >
-                  ID: {employee.employeeId || employee.slug}
-                </span>
+            {/* Center / Left Title & Quotes */}
+            <div style={{ flex: 1, minWidth: 320, maxWidth: 600 }}>
+              {/* Eyebrow */}
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  letterSpacing: "0.18em",
+                  color: "#E8C88A",
+                  textTransform: "uppercase",
+                  marginBottom: 6,
+                }}
+              >
+                {employee.eyebrow || "FOUNDER & CHAIRMAN"}
               </div>
 
+              {/* Name */}
               <h1
                 style={{
-                  font: "36px var(--font-display)",
-                  letterSpacing: "-0.02em",
+                  fontFamily: "Georgia, 'Playfair Display', serif",
+                  fontSize: "clamp(34px, 4.2vw, 52px)",
+                  fontWeight: 700,
+                  lineHeight: 1.1,
                   margin: "0 0 6px 0",
-                  color: "#ffffff",
-                  lineHeight: 1.2,
+                  color: "#FFFFFF",
+                  letterSpacing: "-0.01em",
                 }}
               >
                 {employee.name}
               </h1>
 
-              {employee.designation && (
-                <div style={{ fontSize: 18, color: "#D4AF37", fontWeight: 600, marginBottom: 6 }}>
-                  {employee.designation}
-                </div>
-              )}
+              {/* Subtitle */}
+              <div
+                style={{
+                  fontSize: "clamp(16px, 2vw, 21px)",
+                  color: "#D4AF37",
+                  fontWeight: 600,
+                  letterSpacing: "0.01em",
+                  marginBottom: 18,
+                }}
+              >
+                {employee.heroSubtitle || employee.designation || "Founder, Chairman & Visionary Leader"}
+              </div>
 
-              {employee.department && (
-                <div style={{ fontSize: 14, color: "#d1d5db", marginBottom: 18 }}>
-                  Division: <b>{employee.department}</b>
-                </div>
-              )}
+              {/* Cursive Flowing Quote */}
+              <div
+                style={{
+                  fontFamily: "'Playfair Display', Georgia, 'Brush Script MT', cursive",
+                  fontStyle: "italic",
+                  fontSize: "clamp(20px, 2.4vw, 26px)",
+                  lineHeight: 1.35,
+                  color: "#F3E3B6",
+                  textShadow: "0 2px 10px rgba(212, 175, 55, 0.3)",
+                  marginBottom: 4,
+                }}
+              >
+                &ldquo;{employee.heroQuote || employee.quote || "Building Better Health For Every Tomorrow"}&rdquo;
+              </div>
 
-              {/* Action Buttons */}
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 22 }}>
-                {employee.email && (
-                  <a
-                    href={`mailto:${employee.email}`}
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 8,
-                      padding: "10px 20px",
-                      background: `linear-gradient(135deg, ${theme.gold} 0%, ${theme.gold}cc 100%)`,
-                      color: theme.primary,
-                      fontWeight: 700,
-                      fontSize: 13,
-                      borderRadius: 6,
-                      textDecoration: "none",
-                      boxShadow: "0 4px 14px rgba(212,175,55,0.35)",
-                      transition: "transform 0.15s ease",
-                    }}
-                  >
-                    <span>✉</span> Email Employee
-                  </a>
-                )}
-                {employee.phone && (
-                  <a
-                    href={`tel:${employee.phone}`}
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 8,
-                      padding: "10px 20px",
-                      background: "rgba(255,255,255,0.1)",
-                      border: "1px solid rgba(255,255,255,0.3)",
-                      color: "#ffffff",
-                      fontWeight: 600,
-                      fontSize: 13,
-                      borderRadius: 6,
-                      textDecoration: "none",
-                      backdropFilter: "blur(4px)",
-                    }}
-                  >
-                    <span>📞</span> Call: {employee.phone}
-                  </a>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setShowQrModal(true)}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 6,
-                    padding: "10px 16px",
-                    background: "rgba(0,0,0,0.3)",
-                    border: "1px solid rgba(212,175,55,0.4)",
-                    color: "#D4AF37",
-                    fontWeight: 600,
-                    fontSize: 13,
-                    borderRadius: 6,
-                    cursor: "pointer",
-                  }}
-                >
-                  <span>QR</span> Verification Badge
-                </button>
+              {/* Script Signature */}
+              <div
+                style={{
+                  fontFamily: "'Brush Script MT', 'Caveat', cursive",
+                  fontSize: "clamp(24px, 3vw, 32px)",
+                  color: "#E8C88A",
+                  marginBottom: 24,
+                  transform: "rotate(-2deg)",
+                  display: "inline-block",
+                }}
+              >
+                {employee.signatureText || employee.name}
               </div>
             </div>
+
+            {/* Right: Stacked Glowing Crest on top + Floating Frosted Quote Plaque below */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 16,
+                maxWidth: 320,
+                width: "100%",
+                flexShrink: 0,
+              }}
+            >
+              {/* Glowing Queens Care Emblem */}
+              <div
+                style={{
+                  textAlign: "center",
+                  filter: "drop-shadow(0 0 35px rgba(212, 175, 55, 0.45))",
+                  width: "100%",
+                  pointerEvents: "none",
+                }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/images/hero/sanjay-hero-glowing-crest.png"
+                  alt="Queens Care Emblem"
+                  style={{ width: "clamp(180px, 20vw, 240px)", height: "auto", display: "inline-block" }}
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = "/images/brand/queens-care-official-original.png";
+                  }}
+                />
+                <div
+                  style={{
+                    fontFamily: "Georgia, serif",
+                    fontSize: 10,
+                    fontWeight: 700,
+                    letterSpacing: "0.22em",
+                    color: "#E2C684",
+                    textTransform: "uppercase",
+                    marginTop: 6,
+                    opacity: 0.9,
+                  }}
+                >
+                  SCIENCE TODAY • A HEALTHIER TOMORROW
+                </div>
+              </div>
+
+              {/* Floating Frosted Glass Plaque Quote */}
+              <div
+                className="qc-hero-right-plaque"
+                style={{
+                  background: "rgba(24, 7, 36, 0.72)",
+                  border: "1px solid rgba(212, 175, 55, 0.4)",
+                  borderRadius: 12,
+                  padding: "18px 22px",
+                  width: "100%",
+                  boxSizing: "border-box",
+                  backdropFilter: "blur(10px)",
+                  boxShadow: "0 12px 35px rgba(0, 0, 0, 0.4)",
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: "Georgia, serif",
+                    fontStyle: "italic",
+                    fontSize: 14,
+                    lineHeight: 1.6,
+                    color: "#EADDC7",
+                    marginBottom: 8,
+                  }}
+                >
+                  &ldquo;{employee.heroPlaqueQuote || "Good health is not a privilege, it's a responsibility we all share."}&rdquo;
+                </div>
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: "#D4AF37",
+                    textAlign: "right",
+                    letterSpacing: "0.04em",
+                  }}
+                >
+                  {employee.heroPlaqueAuthor || `— ${employee.name}`}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 4 Hero Badges Across Bottom of Hero */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+              gap: 14,
+              marginTop: 36,
+            }}
+          >
+            {heroBadges.map((badge, idx) => (
+              <div
+                key={idx}
+                style={{
+                  background: "rgba(24, 7, 36, 0.65)",
+                  border: "1px solid rgba(212, 175, 55, 0.3)",
+                  borderRadius: 10,
+                  padding: "12px 16px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  backdropFilter: "blur(6px)",
+                  boxShadow: "0 4px 14px rgba(0, 0, 0, 0.2)",
+                }}
+              >
+                <span style={{ fontSize: 20 }}>{badge.icon || "🏆"}</span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#FFFFFF" }}>{badge.title}</div>
+                  <div style={{ fontSize: 11, color: "#D1C7DC" }}>{badge.subtitle}</div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* SOCIAL MEDIA LINKS */}
-      {(() => {
-        const socials = employee.socialLinks || {};
-        const enabledSocials = Object.entries(socials).filter(([, v]) => v.enabled && v.url);
-        if (enabledSocials.length === 0) return null;
-        const socialIcons: Record<string, { label: string; icon: string; color: string }> = {
-          linkedin: { label: "LinkedIn", icon: "💼", color: "#0077B5" },
-          instagram: { label: "Instagram", icon: "📷", color: "#E4405F" },
-          facebook: { label: "Facebook", icon: "📘", color: "#1877F2" },
-          youtube: { label: "YouTube", icon: "🎬", color: "#FF0000" },
-          twitter: { label: "X / Twitter", icon: "𝕏", color: "#1DA1F2" },
-          website: { label: "Website", icon: "🌐", color: theme.gold },
-        };
-        return (
-          <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px", marginTop: 24 }}>
-            <div style={{ background: theme.cardBg, borderRadius: 12, padding: 24, border: "1px solid #eae5db", boxShadow: "0 10px 25px rgba(0,0,0,0.03)" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-                <span style={{ width: 4, height: 20, background: theme.gold, borderRadius: 2 }} />
-                <h3 style={{ font: "18px var(--font-display)", color: theme.primary, margin: 0 }}>Connect With {employee.name.split(" ")[0]}</h3>
+      {/* 3. CAPSULE STICKY SUBNAV BAR */}
+      <nav
+        style={{
+          position: "sticky",
+          top: 66,
+          zIndex: 80,
+          background: "#FFFFFF",
+          borderBottom: "1px solid #E8E4DF",
+          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.05)",
+          padding: "10px 24px",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1320,
+            margin: "0 auto",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 16,
+            overflowX: "auto",
+          }}
+        >
+          {/* Capsule Pills */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+            {[
+              { id: "overview", label: "Overview" },
+              { id: "journey", label: "Journey" },
+              { id: "vision", label: "Vision & Mission" },
+              { id: "leadership", label: "Leadership" },
+              ...(showMedia ? [{ id: "media", label: "Gallery & Media" }] : []),
+              ...(showProducts ? [{ id: "products", label: "Products" }] : []),
+              { id: "initiatives", label: "Key Initiatives" },
+              { id: "news", label: "News & Insights" },
+            ].map((tab) => {
+              const isSelected = activeTab === tab.id;
+              return (
+                <a
+                  key={tab.id}
+                  href={`#${tab.id}`}
+                  onClick={(e) => handleScrollTo(e, tab.id)}
+                  className={isSelected ? "qc-pill-active" : "qc-pill-inactive"}
+                  style={{
+                    padding: "7px 16px",
+                    borderRadius: 20,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    textDecoration: "none",
+                    whiteSpace: "nowrap",
+                    transition: "all 0.15s ease",
+                    color: isSelected ? "#FFFFFF" : "#4B5563",
+                    background: isSelected ? QC_DEFAULTS.primary : "transparent",
+                    cursor: "pointer",
+                  }}
+                >
+                  {tab.label}
+                </a>
+              );
+            })}
+          </div>
+
+          {/* Connect With Sanjay Button */}
+          <div style={{ flexShrink: 0 }}>
+            {showEmail && employee.email ? (
+              <a
+                href={`mailto:${employee.email}`}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "9px 20px",
+                  background: QC_DEFAULTS.primary,
+                  color: "#FFFFFF",
+                  borderRadius: 22,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  textDecoration: "none",
+                  boxShadow: "0 4px 14px rgba(30, 12, 56, 0.25)",
+                  transition: "transform 0.15s ease",
+                }}
+              >
+                <span>✉</span> Connect with {employee.name.split(" ")[0]}
+              </a>
+            ) : (
+              <a
+                href="#credentials"
+                onClick={(e) => handleScrollTo(e, "credentials")}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "9px 20px",
+                  background: QC_DEFAULTS.primary,
+                  color: "#FFFFFF",
+                  borderRadius: 22,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  textDecoration: "none",
+                  boxShadow: "0 4px 14px rgba(30, 12, 56, 0.25)",
+                  transition: "transform 0.15s ease",
+                  cursor: "pointer",
+                }}
+              >
+                <span>🪪</span> Official Credentials
+              </a>
+            )}
+          </div>
+        </div>
+      </nav>
+
+      {/* 4. MAIN 2-COLUMN EDITORIAL CONTENT (LEFT 68%, RIGHT 32%) */}
+      <main style={{ maxWidth: 1320, margin: "36px auto 0", padding: "0 24px" }}>
+        <div
+          className="qc-main-grid"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 340px",
+            gap: 32,
+            alignItems: "start",
+          }}
+        >
+          {/* =========================================
+              LEFT COLUMN (68%): EDITORIAL & RICH CARDS
+             ========================================= */}
+          <div style={{ display: "grid", gap: 32 }}>
+            {/* CARD 1: ABOUT MR. SANJAY WALIA */}
+            <div
+              id="overview"
+              style={{
+                background: "#FFFFFF",
+                borderRadius: 16,
+                padding: "32px 36px",
+                border: "1px solid #E8E4DF",
+                boxShadow: "0 6px 24px rgba(0, 0, 0, 0.03)",
+                scrollMarginTop: 130,
+              }}
+            >
+              {/* Header with user icon */}
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+                <div
+                  style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: "50%",
+                    background: "rgba(30, 12, 56, 0.07)",
+                    color: QC_DEFAULTS.primary,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 18,
+                  }}
+                >
+                  {employee.aboutIcon || "👤"}
+                </div>
+                <h2
+                  style={{
+                    fontFamily: "Georgia, serif",
+                    fontSize: 24,
+                    color: QC_DEFAULTS.primary,
+                    margin: 0,
+                    fontWeight: 700,
+                  }}
+                >
+                  {employee.aboutTitle || `About Mr. ${employee.name}`}
+                </h2>
               </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-                {enabledSocials.map(([key, val]) => {
-                  const cfg = socialIcons[key] || { label: key, icon: "🔗", color: theme.gold };
+
+              {/* Subtitle */}
+              <div
+                style={{
+                  fontSize: 15,
+                  fontWeight: 700,
+                  color: "#1E0C38",
+                  marginBottom: 24,
+                  paddingLeft: 50,
+                }}
+              >
+                {employee.aboutSubtitle || "A Purpose-Driven Leader in Pharmaceutical Wellness"}
+              </div>
+
+              {/* Split Subcolumns: Left paragraphs, Right cursive quote box */}
+              <div
+                className="qc-about-subcolumns"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1.2fr 0.8fr",
+                  gap: 28,
+                  alignItems: "stretch",
+                }}
+              >
+                {/* Left narrative */}
+                <div>
+                  <div
+                    style={{
+                      borderLeft: "3px solid #D4AF37",
+                      paddingLeft: 16,
+                      fontSize: 14,
+                      lineHeight: 1.75,
+                      color: "#374151",
+                      marginBottom: 16,
+                    }}
+                  >
+                    {employee.aboutParagraph1 ||
+                      `Mr. ${employee.name} is the Founder and Chairman of Queens Care Laboratories. With over 30 years of experience in the pharmaceutical industry, he has built the company on the pillars of quality, integrity, innovation and a genuine commitment to people's health.`}
+                  </div>
+
+                  <p style={{ fontSize: 14, lineHeight: 1.75, color: "#4B5563", margin: "0 0 24px 0" }}>
+                    {employee.aboutParagraph2 ||
+                      "Under his leadership, Queens Care has grown into a trusted name, delivering science-backed wellness solutions that touch millions of lives. His focus remains on creating a healthier, happier future through better products, stronger teams and a positive impact on society."}
+                  </p>
+
+                  <a
+                    href={employee.aboutCtaUrl || "#journey"}
+                    onClick={(e) => handleScrollTo(e, "journey")}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 8,
+                      padding: "10px 24px",
+                      background: "linear-gradient(135deg, #E0A838 0%, #D4AF37 100%)",
+                      color: "#1E0C38",
+                      fontWeight: 700,
+                      fontSize: 13,
+                      borderRadius: 24,
+                      textDecoration: "none",
+                      boxShadow: "0 4px 14px rgba(212, 175, 55, 0.3)",
+                      transition: "transform 0.15s ease",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {employee.aboutCtaLabel || "Read Full Story →"}
+                  </a>
+                </div>
+
+                {/* Right cursive quote card with leaf icon */}
+                <div
+                  style={{
+                    background: "rgba(254, 249, 240, 0.7)",
+                    borderRadius: 14,
+                    padding: "24px 20px",
+                    border: "1px solid rgba(212, 175, 55, 0.25)",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    textAlign: "center",
+                  }}
+                >
+                  <div style={{ fontSize: 24, marginBottom: 12, color: "#D4AF37" }}>🌿</div>
+                  <div
+                    style={{
+                      fontFamily: "Georgia, serif",
+                      fontStyle: "italic",
+                      fontSize: 15,
+                      lineHeight: 1.65,
+                      color: "#1E0C38",
+                      marginBottom: 12,
+                    }}
+                  >
+                    &ldquo;{employee.aboutQuoteText || "A healthier world is possible when science, people and purpose work together."}&rdquo;
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "#C19A6B",
+                      letterSpacing: "0.04em",
+                    }}
+                  >
+                    {employee.aboutQuoteAuthor || `— ${employee.name}`}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* CARD 2: 4 HORIZONTAL KEY STATS (Respects showStats) */}
+            {showStats && (
+              <div
+                id="stats"
+                className="qc-stats-grid"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(4, 1fr)",
+                  gap: 16,
+                }}
+              >
+                {statsList.map((st, idx) => {
+                  const circleColors = ["#3B82F6", "#8B5CF6", "#6366F1", "#4F46E5"];
                   return (
-                    <a
-                      key={key}
-                      href={val.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={`Connect with ${employee.name} on ${cfg.label}`}
+                    <div
+                      key={idx}
                       style={{
-                        display: "inline-flex",
+                        background: "#FFFFFF",
+                        borderRadius: 12,
+                        padding: "18px 16px",
+                        border: "1px solid #E8E4DF",
+                        boxShadow: "0 4px 16px rgba(0, 0, 0, 0.02)",
+                        display: "flex",
                         alignItems: "center",
-                        gap: 8,
-                        padding: "10px 18px",
-                        background: "#faf8f5",
-                        border: `1px solid ${cfg.color}33`,
-                        borderRadius: 8,
-                        textDecoration: "none",
-                        color: cfg.color,
-                        fontWeight: 600,
-                        fontSize: 13,
-                        transition: "all 0.2s ease",
+                        gap: 12,
                       }}
                     >
-                      <span style={{ fontSize: 18 }}>{cfg.icon}</span>
-                      <span>{cfg.label}</span>
-                    </a>
+                      <div
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: "50%",
+                          background: `${circleColors[idx % 4]}15`,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 18,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {st.icon || "🏆"}
+                      </div>
+                      <div>
+                        <div
+                          style={{
+                            fontFamily: "Georgia, serif",
+                            fontSize: 22,
+                            fontWeight: 700,
+                            color: QC_DEFAULTS.primary,
+                            lineHeight: 1.1,
+                          }}
+                        >
+                          {st.number}
+                        </div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: "#1F2937" }}>
+                          {st.label}
+                        </div>
+                        {st.subtitle && (
+                          <div style={{ fontSize: 10, color: "#6B7280" }}>{st.subtitle}</div>
+                        )}
+                      </div>
+                    </div>
                   );
                 })}
               </div>
-            </div>
-          </div>
-        );
-      })()}
+            )}
 
-      {/* MAIN CONTENT BODY */}
-      <div style={{ maxWidth: 1100, margin: "-30px auto 0", padding: "0 24px", position: "relative", zIndex: 2 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 24 }}>
-          {/* LEFT COLUMN: BIO, GALLERY, VIDEOS */}
-          <div style={{ display: "grid", gap: 24 }}>
-            {/* Bio Card */}
+            {/* CARD: EXECUTIVE JOURNEY & MILESTONES */}
             <div
+              id="journey"
               style={{
-                background: "#ffffff",
-                borderRadius: 12,
-                padding: 32,
-                border: "1px solid #eae5db",
-                boxShadow: "0 10px 25px rgba(0,0,0,0.03)",
+                background: "#FFFFFF",
+                borderRadius: 16,
+                padding: "30px 32px",
+                border: "1px solid #E8E4DF",
+                boxShadow: "0 6px 24px rgba(0, 0, 0, 0.03)",
+                scrollMarginTop: 130,
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-                <span style={{ width: 4, height: 20, background: "#C19A6B", borderRadius: 2 }} />
-                <h2 style={{ font: "20px var(--font-display)", color: theme.primary, margin: 0 }}>
-                  Professional Profile & Clinical Experience
-                </h2>
-              </div>
-              <p style={{ fontSize: 15, lineHeight: 1.8, color: theme.text, margin: 0 }}>
-                {employee.bio ||
-                  `${employee.name} serves as ${employee.designation || "a clinical specialist"} in the ${employee.department || "Pharmaceutical Research & Formulation"} department at Queens Care Laboratories, upholding evidence-based scientific standards and quality assurance.`}
-              </p>
-            </div>
-
-            {/* Professional Gallery Showcase */}
-            {galleryList.length > 0 && (
-              <div
-                style={{
-                  background: "#ffffff",
-                  borderRadius: 12,
-                  padding: 32,
-                  border: "1px solid #eae5db",
-                  boxShadow: "0 10px 25px rgba(0,0,0,0.03)",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
-                  <span style={{ width: 4, height: 20, background: "#C19A6B", borderRadius: 2 }} />
-                  <h2 style={{ font: "20px var(--font-display)", color: "#2A0F3A", margin: 0 }}>
-                    Professional Gallery & Field Documentation
-                  </h2>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: "50%",
+                    background: "rgba(30, 12, 56, 0.07)",
+                    color: QC_DEFAULTS.primary,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 18,
+                  }}
+                >
+                  🏛️
                 </div>
+                <div>
+                  <h2
+                    style={{
+                      fontFamily: "Georgia, serif",
+                      fontSize: 22,
+                      color: QC_DEFAULTS.primary,
+                      margin: 0,
+                      fontWeight: 700,
+                    }}
+                  >
+                    Executive Journey & Milestones
+                  </h2>
+                  <div style={{ fontSize: 12, color: "#6B7280", marginTop: 2 }}>
+                    30+ Years of Pioneering Pharmaceutical Science & Global Healthcare Leadership
+                  </div>
+                </div>
+              </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 14 }}>
-                  {galleryList.map((item, idx) => (
+              {employee.journeyHtml ? (
+                <div
+                  className="qc-editorial-prose"
+                  style={{ fontSize: 14, lineHeight: 1.8, color: "#374151" }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(employee.journeyHtml) }}
+                />
+              ) : (
+                <div style={{ display: "grid", gap: 18, marginTop: 10 }}>
+                  {[
+                    {
+                      year: "1994",
+                      title: "Formulation Chemistry & Pharmaceutical Roots",
+                      desc: "Initiated clinical research career focusing on standardized botanical extracts and pharmaceutical-grade bio-availability protocols across India.",
+                    },
+                    {
+                      year: "2004",
+                      title: "Standardized Botanical Quality Protocols",
+                      desc: "Pioneered multi-spectrum HPLC analytical finger-printing for herbal actives, ensuring batch-to-batch chemical reproducibility and zero adulteration.",
+                    },
+                    {
+                      year: "2014",
+                      title: "Founding Queens Care Laboratories",
+                      desc: "Established state-of-the-art cGMP manufacturing facilities in India, unifying classical natural wellness with rigorous modern pharmacological science.",
+                    },
+                    {
+                      year: "2024–Present",
+                      title: "National Reach & Healthcare Accreditations",
+                      desc: "Leading national wellness expansion, clinical validation trials, doctor advisory networks, and impacting over 500,000 families annually.",
+                    },
+                  ].map((m, idx) => (
                     <div
                       key={idx}
-                      onClick={() => setLightboxIndex(idx)}
                       style={{
+                        display: "flex",
+                        gap: 16,
+                        alignItems: "flex-start",
                         position: "relative",
-                        borderRadius: 8,
-                        overflow: "hidden",
-                        border: "1px solid #e5e7eb",
-                        cursor: "pointer",
-                        aspectRatio: "4/3",
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+                        paddingBottom: idx === 3 ? 0 : 12,
+                        borderBottom: idx === 3 ? "none" : "1px solid #F3F4F6",
                       }}
                     >
-                      <img
-                        src={item.url}
-                        alt={item.caption || `Gallery ${idx + 1}`}
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                          transition: "transform 0.3s ease",
-                        }}
-                      />
                       <div
                         style={{
-                          position: "absolute",
-                          bottom: 0,
-                          left: 0,
-                          right: 0,
-                          padding: "6px 10px",
-                          background: "linear-gradient(to top, rgba(0,0,0,0.7), transparent)",
-                          color: "#ffffff",
-                          fontSize: 11,
-                          fontWeight: 500,
+                          background: "linear-gradient(135deg, #1E0C38 0%, #3B165C 100%)",
+                          color: "#D4AF37",
+                          fontFamily: "Georgia, serif",
+                          fontSize: 13,
+                          fontWeight: 700,
+                          padding: "6px 12px",
+                          borderRadius: 8,
+                          whiteSpace: "nowrap",
+                          flexShrink: 0,
+                          border: "1px solid rgba(212, 175, 55, 0.4)",
                         }}
                       >
-                        🔍 Click to Enlarge
+                        {m.year}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: QC_DEFAULTS.primary, marginBottom: 4 }}>
+                          {m.title}
+                        </div>
+                        <div style={{ fontSize: 13, lineHeight: 1.65, color: "#4B5563" }}>
+                          {m.desc}
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
+              )}
+            </div>
+
+            {/* CARD: VISION & MISSION */}
+            <div
+              id="vision"
+              style={{
+                background: "#FFFFFF",
+                borderRadius: 16,
+                padding: "30px 32px",
+                border: "1px solid #E8E4DF",
+                boxShadow: "0 6px 24px rgba(0, 0, 0, 0.03)",
+                scrollMarginTop: 130,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: "50%",
+                    background: "rgba(30, 12, 56, 0.07)",
+                    color: QC_DEFAULTS.primary,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 18,
+                  }}
+                >
+                  🌟
+                </div>
+                <div>
+                  <h2
+                    style={{
+                      fontFamily: "Georgia, serif",
+                      fontSize: 22,
+                      color: QC_DEFAULTS.primary,
+                      margin: 0,
+                      fontWeight: 700,
+                    }}
+                  >
+                    Vision & Mission
+                  </h2>
+                  <div style={{ fontSize: 12, color: "#6B7280", marginTop: 2 }}>
+                    Empowering Millions with Pure, Science-Backed Wellness
+                  </div>
+                </div>
+              </div>
+
+              {employee.visionHtml ? (
+                <div
+                  className="qc-editorial-prose"
+                  style={{ fontSize: 14, lineHeight: 1.8, color: "#374151" }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(employee.visionHtml) }}
+                />
+              ) : (
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: 18,
+                    marginTop: 8,
+                  }}
+                  className="qc-vision-grid"
+                >
+                  <div
+                    style={{
+                      background: "linear-gradient(135deg, rgba(254, 249, 240, 0.8) 0%, rgba(255, 255, 255, 0.9) 100%)",
+                      borderRadius: 12,
+                      padding: "22px 20px",
+                      border: "1px solid rgba(212, 175, 55, 0.35)",
+                    }}
+                  >
+                    <div style={{ fontSize: 12, fontWeight: 700, color: "#C19A6B", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>
+                      Our Vision
+                    </div>
+                    <h3 style={{ fontFamily: "Georgia, serif", fontSize: 16, color: QC_DEFAULTS.primary, margin: "0 0 10px 0" }}>
+                      Setting India&apos;s Benchmark in Preventative Wellness
+                    </h3>
+                    <p style={{ fontSize: 13, lineHeight: 1.65, color: "#4B5563", margin: 0 }}>
+                      To stand as India&apos;s premier standard of excellence in therapeutic preventative healthcare — where botanical wisdom harmonizes seamlessly with rigorous clinical pharmacology, ensuring every family has verified, pure nutrition.
+                    </p>
+                  </div>
+
+                  <div
+                    style={{
+                      background: "linear-gradient(135deg, rgba(245, 243, 255, 0.8) 0%, rgba(255, 255, 255, 0.9) 100%)",
+                      borderRadius: 12,
+                      padding: "22px 20px",
+                      border: "1px solid rgba(42, 15, 58, 0.2)",
+                    }}
+                  >
+                    <div style={{ fontSize: 12, fontWeight: 700, color: QC_DEFAULTS.primary, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>
+                      Our Mission
+                    </div>
+                    <h3 style={{ fontFamily: "Georgia, serif", fontSize: 16, color: QC_DEFAULTS.primary, margin: "0 0 10px 0" }}>
+                      Zero Compromise in Everyday Clinical Health
+                    </h3>
+                    <p style={{ fontSize: 13, lineHeight: 1.65, color: "#4B5563", margin: 0 }}>
+                      To eliminate compromise in therapeutic nutrition. We formulate with zero synthetic fillers, enforce multi-stage HPLC testing for every batch, and deliver honest, accessible health solutions that genuinely transform lives.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* CARD: LEADERSHIP PHILOSOPHY */}
+            <div
+              id="leadership"
+              style={{
+                background: "#FFFFFF",
+                borderRadius: 16,
+                padding: "30px 32px",
+                border: "1px solid #E8E4DF",
+                boxShadow: "0 6px 24px rgba(0, 0, 0, 0.03)",
+                scrollMarginTop: 130,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: "50%",
+                    background: "rgba(30, 12, 56, 0.07)",
+                    color: QC_DEFAULTS.primary,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 18,
+                  }}
+                >
+                  🛡️
+                </div>
+                <div>
+                  <h2
+                    style={{
+                      fontFamily: "Georgia, serif",
+                      fontSize: 22,
+                      color: QC_DEFAULTS.primary,
+                      margin: 0,
+                      fontWeight: 700,
+                    }}
+                  >
+                    Leadership Philosophy
+                  </h2>
+                  <div style={{ fontSize: 12, color: "#6B7280", marginTop: 2 }}>
+                    People-First Stewardship, Scientific Rigor & Uncompromising Integrity
+                  </div>
+                </div>
+              </div>
+
+              {employee.leadershipHtml ? (
+                <div
+                  className="qc-editorial-prose"
+                  style={{ fontSize: 14, lineHeight: 1.8, color: "#374151" }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(employee.leadershipHtml) }}
+                />
+              ) : (
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(3, 1fr)",
+                    gap: 16,
+                    marginTop: 8,
+                  }}
+                  className="qc-leadership-grid"
+                >
+                  {[
+                    {
+                      icon: "🔬",
+                      title: "Scientific Rigor",
+                      desc: "Every formulation is validated with strict HPLC and heavy metal testing. Scientific integrity is never negotiated for profit margins.",
+                    },
+                    {
+                      icon: "👥",
+                      title: "People-First Stewardship",
+                      desc: "True leadership is demonstrated by elevating people — from clinical researchers and laboratory chemists to the patients relying on our care.",
+                    },
+                    {
+                      icon: "🌿",
+                      title: "Uncompromising Purity",
+                      desc: "Direct farm-to-capsule traceability with 100% natural bio-actives, zero artificial preservatives, and sustainable eco-friendly practices.",
+                    },
+                  ].map((p, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        background: "#FAF8F5",
+                        borderRadius: 12,
+                        padding: "20px 18px",
+                        border: "1px solid #E8E4DF",
+                      }}
+                    >
+                      <div style={{ fontSize: 24, marginBottom: 8 }}>{p.icon}</div>
+                      <div style={{ fontFamily: "Georgia, serif", fontSize: 15, fontWeight: 700, color: QC_DEFAULTS.primary, marginBottom: 6 }}>
+                        {p.title}
+                      </div>
+                      <div style={{ fontSize: 12, lineHeight: 1.6, color: "#4B5563" }}>
+                        {p.desc}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* CARD 3: KEY MOMENTS & MEDIA (Respects showMedia) */}
+            {showMedia && (
+              <div
+                id="media"
+                style={{
+                  background: "#FFFFFF",
+                  borderRadius: 16,
+                  padding: "30px 32px",
+                  border: "1px solid #E8E4DF",
+                  boxShadow: "0 6px 24px rgba(0, 0, 0, 0.03)",
+                  scrollMarginTop: 130,
+                }}
+              >
+                {/* Header */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: "50%",
+                        background: "rgba(30, 12, 56, 0.07)",
+                        color: QC_DEFAULTS.primary,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 18,
+                      }}
+                    >
+                      📷
+                    </div>
+                    <h2
+                      style={{
+                        fontFamily: "Georgia, serif",
+                        fontSize: 22,
+                        color: QC_DEFAULTS.primary,
+                        margin: 0,
+                        fontWeight: 700,
+                      }}
+                    >
+                      {pd.mediaSectionTitle || "Key Moments & Media"}
+                    </h2>
+                  </div>
+
+                  <a
+                    href="#gallery"
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: QC_DEFAULTS.primary,
+                      textDecoration: "none",
+                    }}
+                  >
+                    View All →
+                  </a>
+                </div>
+
+                {/* 16:9 Featured Keynote Video + 2x2 Grid */}
+                <div
+                  className="qc-moments-wrapper"
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1.2fr 1fr",
+                    gap: 18,
+                  }}
+                >
+                  {/* Left: 16:9 Featured Keynote */}
+                  <div
+                    onClick={() => setActiveVideoModal({ url: featuredVideo.url, title: featuredVideo.title || "Annual Keynote" })}
+                    style={{
+                      position: "relative",
+                      borderRadius: 12,
+                      overflow: "hidden",
+                      aspectRatio: "16/10",
+                      cursor: "pointer",
+                      background: "#1E0C38",
+                      boxShadow: "0 8px 25px rgba(0,0,0,0.12)",
+                    }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={featuredVideo.posterUrl || "/images/hero/sanjay-hero-reference-crop.jpg"}
+                      alt={featuredVideo.title || "Keynote"}
+                      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                    />
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: "linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(18,5,28,0.85) 100%)",
+                      }}
+                    />
+
+                    {/* Centered Purple Play Button */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "50%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        width: 52,
+                        height: 52,
+                        borderRadius: "50%",
+                        background: "rgba(30, 12, 56, 0.9)",
+                        border: "2px solid #D4AF37",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: "#FFFFFF",
+                        fontSize: 20,
+                        boxShadow: "0 6px 20px rgba(0,0,0,0.4)",
+                      }}
+                    >
+                      ▶
+                    </div>
+
+                    {/* Bottom Title & Duration Badge */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        bottom: 14,
+                        left: 16,
+                        right: 16,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "flex-end",
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontSize: 11, color: "#D4AF37", fontWeight: 700, textTransform: "uppercase" }}>
+                          {featuredVideo.subtitle || "Our Journey"}
+                        </div>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: "#FFFFFF", fontFamily: "Georgia, serif" }}>
+                          {featuredVideo.title || "A Healthier Tomorrow"}
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          background: "rgba(0,0,0,0.75)",
+                          color: "#FFFFFF",
+                          fontSize: 10,
+                          fontWeight: 700,
+                          padding: "3px 8px",
+                          borderRadius: 4,
+                          border: "1px solid rgba(255,255,255,0.2)",
+                        }}
+                      >
+                        {featuredVideo.duration || "03:24"}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right: 2x2 Grid of Moments */}
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: 12,
+                    }}
+                  >
+                    {momentsGrid.slice(0, 4).map((m, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          position: "relative",
+                          borderRadius: 10,
+                          overflow: "hidden",
+                          aspectRatio: "1/1",
+                          cursor: "pointer",
+                          background: "#1E0C38",
+                        }}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={m.imageUrl}
+                          alt={m.title}
+                          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                        />
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            background: "linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(18,5,28,0.9) 100%)",
+                          }}
+                        />
+                        <div
+                          style={{
+                            position: "absolute",
+                            bottom: 8,
+                            left: 10,
+                            right: 10,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            color: "#FFFFFF",
+                            lineHeight: 1.2,
+                          }}
+                        >
+                          {m.title}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
 
-            {/* Professional Video Showcase */}
-            {videoList.length > 0 && (
+            {/* CARD 4: FEATURED PRODUCTS (4 IN A ROW) (Respects showProducts) */}
+            {showProducts && (
               <div
+                id="products"
                 style={{
-                  background: "#ffffff",
-                  borderRadius: 12,
-                  padding: 32,
-                  border: "1px solid #eae5db",
-                  boxShadow: "0 10px 25px rgba(0,0,0,0.03)",
+                  background: "#FFFFFF",
+                  borderRadius: 16,
+                  padding: "30px 32px",
+                  border: "1px solid #E8E4DF",
+                  boxShadow: "0 6px 24px rgba(0, 0, 0, 0.03)",
+                  scrollMarginTop: 130,
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
-                  <span style={{ width: 4, height: 20, background: "#C19A6B", borderRadius: 2 }} />
-                  <h2 style={{ font: "20px var(--font-display)", color: "#2A0F3A", margin: 0 }}>
-                    Clinical Features & Keynote Presentations
-                  </h2>
+                {/* Header */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: "50%",
+                        background: "rgba(30, 12, 56, 0.07)",
+                        color: QC_DEFAULTS.primary,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 18,
+                      }}
+                    >
+                      🏆
+                    </div>
+                    <h2
+                      style={{
+                        fontFamily: "Georgia, serif",
+                        fontSize: 22,
+                        color: QC_DEFAULTS.primary,
+                        margin: 0,
+                        fontWeight: 700,
+                      }}
+                    >
+                      {pd.productsSectionTitle || "Featured Products (Inspired by Our Leadership)"}
+                    </h2>
+                  </div>
+
+                  <Link
+                    href="/shop"
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: QC_DEFAULTS.primary,
+                      textDecoration: "none",
+                    }}
+                  >
+                    View All →
+                  </Link>
                 </div>
 
-                <div style={{ display: "grid", gap: 20 }}>
-                  {videoList.map((vid) => {
-                    const isYouTube = vid.url.includes("youtube.com") || vid.url.includes("youtu.be");
-                    const isVimeo = vid.url.includes("vimeo.com");
+                {/* 4 Products in a Row */}
+                <div
+                  className="qc-products-row"
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(4, 1fr)",
+                    gap: 16,
+                  }}
+                >
+                  {featuredProducts.slice(0, 4).map((p, idx) => {
+                    const discount = p.originalPrice && p.originalPrice > p.price
+                      ? Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100)
+                      : 25;
 
-                    let embedUrl = vid.url;
-                    if (isYouTube) {
-                      const match = vid.url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
-                      if (match && match[1]) {
-                        embedUrl = `https://www.youtube-nocookie.com/embed/${match[1]}`;
-                      }
-                    } else if (isVimeo) {
-                      const match = vid.url.match(/vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|album\/(?:\d+)\/video\/|video\/|)(\d+)/);
-                      if (match && match[1]) {
-                        embedUrl = `https://player.vimeo.com/video/${match[1]}`;
-                      }
-                    }
+                    const badgeLabels = ["Bestseller", "New", "Popular", "Expert Pick"];
+                    const badgeColors = ["#E0A838", "#10B981", "#F97316", "#3B82F6"];
+                    const badgeText = p.badge || badgeLabels[idx % 4];
+                    const badgeColor = badgeColors[idx % 4];
 
                     return (
-                      <div key={vid.id} style={{ border: "1px solid #e5e7eb", borderRadius: 8, overflow: "hidden" }}>
-                        <div style={{ position: "relative", paddingTop: "56.25%", background: "#000000" }}>
-                          {isYouTube || isVimeo ? (
-                            <iframe
-                              src={embedUrl}
-                              title={vid.title || "Employee Video"}
-                              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                              allowFullScreen
-                            />
-                          ) : (
-                            <video
-                              src={vid.url}
-                              poster={vid.posterUrl}
-                              controls
-                              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "contain" }}
-                            />
-                          )}
+                      <div
+                        key={p.id || idx}
+                        className="qc-product-card"
+                        style={{
+                          background: "#FFFFFF",
+                          border: "1px solid #EAE6DF",
+                          borderRadius: 12,
+                          padding: 14,
+                          display: "flex",
+                          flexDirection: "column",
+                          justifyContent: "space-between",
+                          transition: "all 0.2s ease",
+                          position: "relative",
+                        }}
+                      >
+                        {/* Category Pill Tag */}
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: 12,
+                            left: 12,
+                            background: badgeColor,
+                            color: "#FFFFFF",
+                            fontSize: 10,
+                            fontWeight: 700,
+                            padding: "3px 8px",
+                            borderRadius: 10,
+                            zIndex: 2,
+                            boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+                          }}
+                        >
+                          {badgeText}
                         </div>
-                        {vid.title && (
-                          <div style={{ padding: "12px 16px", background: "#fdfbf7", borderTop: "1px solid #eae5db", fontWeight: 600, fontSize: 13, color: "#2A0F3A" }}>
-                            🎬 {vid.title}
+
+                        {/* Product Bottle Image */}
+                        <div
+                          style={{
+                            width: "100%",
+                            aspectRatio: "1/1",
+                            background: "#FAF8F5",
+                            borderRadius: 8,
+                            overflow: "hidden",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            marginBottom: 12,
+                            padding: 8,
+                          }}
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={p.image || "/images/hero/immune-support-bottle-clean.png"}
+                            alt={p.name}
+                            style={{ width: "90%", height: "90%", objectFit: "contain" }}
+                            onError={(e) => {
+                              (e.currentTarget as HTMLImageElement).src = "/images/hero/immune-support-bottle-clean.png";
+                            }}
+                          />
+                        </div>
+
+                        {/* Product Info */}
+                        <div>
+                          <div style={{ fontSize: 10, color: "#6B7280", fontWeight: 700, textTransform: "uppercase" }}>
+                            Queens Care
                           </div>
-                        )}
+                          <Link
+                            href={`/products/${p.slug}`}
+                            style={{
+                              textDecoration: "none",
+                              color: QC_DEFAULTS.primary,
+                              fontFamily: "Georgia, serif",
+                              fontSize: 14,
+                              fontWeight: 700,
+                              lineHeight: 1.3,
+                              display: "block",
+                              marginTop: 2,
+                              marginBottom: 4,
+                            }}
+                          >
+                            {p.name}
+                          </Link>
+                          <div style={{ fontSize: 11, color: "#6B7280", marginBottom: 8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {p.shortDescription || "Clinical Formulations"}
+                          </div>
+
+                          {/* Star Rating */}
+                          <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 10, fontSize: 11 }}>
+                            <span style={{ color: "#F59E0B" }}>★ {p.rating || 4.8}</span>
+                            <span style={{ color: "#9CA3AF" }}>({p.reviewCount || "1.2K"})</span>
+                          </div>
+                        </div>
+
+                        {/* Pricing & Add to Cart Button */}
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            borderTop: "1px solid #F3F4F6",
+                            paddingTop: 8,
+                          }}
+                        >
+                          <div>
+                            <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                              <span style={{ fontFamily: "Georgia, serif", fontSize: 16, fontWeight: 700, color: QC_DEFAULTS.primary }}>
+                                ₹{p.price}
+                              </span>
+                              {p.originalPrice && (
+                                <span style={{ fontSize: 11, color: "#9CA3AF", textDecoration: "line-through" }}>
+                                  ₹{p.originalPrice}
+                                </span>
+                              )}
+                            </div>
+                            <span style={{ fontSize: 10, fontWeight: 700, color: "#EF4444" }}>
+                              {discount}% OFF
+                            </span>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleAddToCart(p.name)}
+                            aria-label={`Add ${p.name} to cart`}
+                            style={{
+                              width: 34,
+                              height: 34,
+                              borderRadius: 8,
+                              background: "rgba(30, 12, 56, 0.08)",
+                              border: "1px solid rgba(30, 12, 56, 0.2)",
+                              color: QC_DEFAULTS.primary,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: 16,
+                              cursor: "pointer",
+                              transition: "all 0.15s ease",
+                            }}
+                          >
+                            🛒
+                          </button>
+                        </div>
                       </div>
                     );
                   })}
                 </div>
               </div>
             )}
-          </div>
 
-          {/* RIGHT COLUMN: VERIFICATION CARD & QUICK FACTS */}
-          <div style={{ display: "grid", gap: 24, alignContent: "start" }}>
-            {/* Verification Credentials Card */}
+            {/* CARD: KEY INITIATIVES */}
             <div
+              id="initiatives"
               style={{
-                background: "#ffffff",
-                borderRadius: 12,
-                padding: 24,
-                border: "1px solid #eae5db",
-                boxShadow: "0 10px 25px rgba(0,0,0,0.03)",
+                background: "#FFFFFF",
+                borderRadius: 16,
+                padding: "30px 32px",
+                border: "1px solid #E8E4DF",
+                boxShadow: "0 6px 24px rgba(0, 0, 0, 0.03)",
+                scrollMarginTop: 130,
               }}
             >
-              <h3 style={{ font: "16px var(--font-display)", color: theme.primary, margin: "0 0 16px 0" }}>
-                Employment Verification
-              </h3>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: "50%",
+                    background: "rgba(30, 12, 56, 0.07)",
+                    color: QC_DEFAULTS.primary,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 18,
+                  }}
+                >
+                  🚀
+                </div>
+                <div>
+                  <h2
+                    style={{
+                      fontFamily: "Georgia, serif",
+                      fontSize: 22,
+                      color: QC_DEFAULTS.primary,
+                      margin: 0,
+                      fontWeight: 700,
+                    }}
+                  >
+                    Key Initiatives
+                  </h2>
+                  <div style={{ fontSize: 12, color: "#6B7280", marginTop: 2 }}>
+                    Transformative Programs Spearheaded by Queens Care Leadership
+                  </div>
+                </div>
+              </div>
 
-              <div style={{ display: "grid", gap: 12, fontSize: 13 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #f3f4f6", paddingBottom: 8 }}>
-                  <span style={{ color: "#6b7280" }}>Official ID</span>
-                  <code style={{ fontWeight: 700, color: theme.primary }}>{employee.employeeId || employee.slug}</code>
+              {employee.initiativesHtml ? (
+                <div
+                  className="qc-editorial-prose"
+                  style={{ fontSize: 14, lineHeight: 1.8, color: "#374151" }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(employee.initiativesHtml) }}
+                />
+              ) : (
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(3, 1fr)",
+                    gap: 16,
+                    marginTop: 8,
+                  }}
+                  className="qc-initiatives-grid"
+                >
+                  {[
+                    {
+                      tag: "Sourcing Excellence",
+                      title: "The Pure Botanical Standard",
+                      desc: "Direct contractual partnerships with over 40 certified organic farms across the Himalayan foothills and Western Ghats, securing chemical purity at the root.",
+                    },
+                    {
+                      tag: "Community Health",
+                      title: "Preventative Outreach Camps",
+                      desc: "Conducting over 100 free diagnostic health camps annually across rural and peri-urban districts, delivering early detection screenings to underserved families.",
+                    },
+                    {
+                      tag: "Sustainability",
+                      title: "Zero-Waste Green Laboratories",
+                      desc: "Transitioning manufacturing to zero-solvent botanical extractions, closed-loop water filtration, and 100% recyclable amber glass packaging.",
+                    },
+                  ].map((init, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        background: "#FAF8F5",
+                        borderRadius: 12,
+                        padding: "20px 18px",
+                        border: "1px solid #E8E4DF",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <div>
+                        <span
+                          style={{
+                            display: "inline-block",
+                            background: "rgba(212, 175, 55, 0.15)",
+                            color: "#996515",
+                            fontSize: 10,
+                            fontWeight: 700,
+                            padding: "3px 8px",
+                            borderRadius: 6,
+                            marginBottom: 10,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.05em",
+                          }}
+                        >
+                          {init.tag}
+                        </span>
+                        <div style={{ fontFamily: "Georgia, serif", fontSize: 15, fontWeight: 700, color: QC_DEFAULTS.primary, marginBottom: 8 }}>
+                          {init.title}
+                        </div>
+                        <div style={{ fontSize: 12, lineHeight: 1.6, color: "#4B5563" }}>
+                          {init.desc}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #f3f4f6", paddingBottom: 8 }}>
-                  <span style={{ color: "#6b7280" }}>Department</span>
-                  <span style={{ fontWeight: 600, color: theme.primary, textAlign: "right" }}>{employee.department || "General"}</span>
+              )}
+            </div>
+
+            {/* CARD: NEWS & INSIGHTS */}
+            <div
+              id="news"
+              style={{
+                background: "#FFFFFF",
+                borderRadius: 16,
+                padding: "30px 32px",
+                border: "1px solid #E8E4DF",
+                boxShadow: "0 6px 24px rgba(0, 0, 0, 0.03)",
+                scrollMarginTop: 130,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: "50%",
+                    background: "rgba(30, 12, 56, 0.07)",
+                    color: QC_DEFAULTS.primary,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 18,
+                  }}
+                >
+                  📰
                 </div>
-                {employee.email && (
-                  <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #f3f4f6", paddingBottom: 8 }}>
-                    <span style={{ color: "#6b7280" }}>Email</span>
-                    <a href={`mailto:${employee.email}`} style={{ color: theme.primary, fontWeight: 600, textDecoration: "none" }}>
+                <div>
+                  <h2
+                    style={{
+                      fontFamily: "Georgia, serif",
+                      fontSize: 22,
+                      color: QC_DEFAULTS.primary,
+                      margin: 0,
+                      fontWeight: 700,
+                    }}
+                  >
+                    News & Insights
+                  </h2>
+                  <div style={{ fontSize: 12, color: "#6B7280", marginTop: 2 }}>
+                    Latest Perspectives, Clinical Research & Corporate Milestones
+                  </div>
+                </div>
+              </div>
+
+              {employee.newsHtml ? (
+                <div
+                  className="qc-editorial-prose"
+                  style={{ fontSize: 14, lineHeight: 1.8, color: "#374151" }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(employee.newsHtml) }}
+                />
+              ) : (
+                <div style={{ display: "grid", gap: 14, marginTop: 8 }}>
+                  {[
+                    {
+                      date: "September 2026",
+                      category: "Press Release",
+                      title: "Queens Care Laboratories Expands Direct Doctor Advisory Council to 80+ Integrative Medicine Specialists",
+                      snippet: "Strategic expansion accelerates the clinical vetting of next-generation bioactive wellness formulations nationwide.",
+                    },
+                    {
+                      date: "August 2026",
+                      category: "Clinical Bulletin",
+                      title: "Comparative Pharmacokinetic Trial Confirms 2.4x Higher Absorption for Queens Care Liposomal Formulations",
+                      snippet: "Independent third-party laboratory data confirms breakthrough bioavailability metrics across oral therapeutic delivery systems.",
+                    },
+                    {
+                      date: "July 2026",
+                      category: "Leadership Keynote",
+                      title: "Mr. Sanjay Walia Addresses Global Health Conclave on Standards of Purity in Botanical Healthcare",
+                      snippet: "Delivered keynote address calling for standardized HPLC testing mandates across the Asian pharmaceutical nutraceutical sector.",
+                    },
+                  ].map((news, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        padding: "16px 18px",
+                        background: "#FAF8F5",
+                        borderRadius: 10,
+                        border: "1px solid #E8E4DF",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 6,
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 11 }}>
+                        <span style={{ color: "#996515", fontWeight: 700, textTransform: "uppercase" }}>{news.category}</span>
+                        <span style={{ color: "#9CA3AF" }}>•</span>
+                        <span style={{ color: "#6B7280" }}>{news.date}</span>
+                      </div>
+                      <div style={{ fontFamily: "Georgia, serif", fontSize: 15, fontWeight: 700, color: QC_DEFAULTS.primary }}>
+                        {news.title}
+                      </div>
+                      <div style={{ fontSize: 12, lineHeight: 1.5, color: "#4B5563" }}>
+                        {news.snippet}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* =========================================
+              RIGHT COLUMN (32%): SIDEBAR
+             ========================================= */}
+          <aside style={{ display: "grid", gap: 24 }}>
+            {/* SIDEBAR CARD 1: EMPLOYMENT VERIFICATION */}
+            <div
+              id="credentials"
+              style={{
+                background: "#FFFFFF",
+                borderRadius: 16,
+                padding: "24px 22px",
+                border: "1px solid #E8E4DF",
+                boxShadow: "0 6px 24px rgba(0, 0, 0, 0.03)",
+              }}
+            >
+              {/* Header */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 18 }}>🪪</span>
+                  <h3 style={{ fontFamily: "Georgia, serif", fontSize: 16, color: QC_DEFAULTS.primary, margin: 0, fontWeight: 700 }}>
+                    {pd.verificationSectionTitle || "Employment Verification"}
+                  </h3>
+                </div>
+                <span
+                  style={{
+                    background: "rgba(16, 185, 129, 0.12)",
+                    color: "#059669",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    padding: "3px 8px",
+                    borderRadius: 12,
+                    border: "1px solid rgba(16, 185, 129, 0.3)",
+                  }}
+                >
+                  ✓ Active & Verified
+                </span>
+              </div>
+
+              {/* Key-Value Details */}
+              <div style={{ display: "grid", gap: 10, fontSize: 12, marginBottom: 20 }}>
+                {showEmployeeId && (
+                  <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #F3F4F6", paddingBottom: 6 }}>
+                    <span style={{ color: "#6B7280" }}>Official ID</span>
+                    <span style={{ fontWeight: 700, color: QC_DEFAULTS.primary }}>{employee.employeeId || "1122"}</span>
+                  </div>
+                )}
+                <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #F3F4F6", paddingBottom: 6 }}>
+                  <span style={{ color: "#6B7280" }}>Designation</span>
+                  <span style={{ fontWeight: 600, color: QC_DEFAULTS.primary }}>{employee.designation || "Founder & Chairman"}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #F3F4F6", paddingBottom: 6 }}>
+                  <span style={{ color: "#6B7280" }}>Department</span>
+                  <span style={{ fontWeight: 600, color: QC_DEFAULTS.primary }}>{employee.department || "Executive Leadership"}</span>
+                </div>
+                {showEmail && employee.email && (
+                  <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #F3F4F6", paddingBottom: 6 }}>
+                    <span style={{ color: "#6B7280" }}>Email</span>
+                    <a href={`mailto:${employee.email}`} style={{ color: "#2563EB", textDecoration: "none", fontWeight: 600 }}>
                       {employee.email}
                     </a>
                   </div>
                 )}
-                {employee.phone && (
-                  <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #f3f4f6", paddingBottom: 8 }}>
-                    <span style={{ color: "#6b7280" }}>Phone</span>
-                    <a href={`tel:${employee.phone}`} style={{ color: "#2A0F3A", fontWeight: 600, textDecoration: "none" }}>
-                      {employee.phone}
-                    </a>
+                {showPhone && employee.phone && (
+                  <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #F3F4F6", paddingBottom: 6 }}>
+                    <span style={{ color: "#6B7280" }}>Phone</span>
+                    <span style={{ fontWeight: 600, color: QC_DEFAULTS.primary }}>{employee.phone}</span>
                   </div>
                 )}
-                <div style={{ display: "flex", justifyContent: "space-between", paddingTop: 4 }}>
-                  <span style={{ color: "#6b7280" }}>Status</span>
-                  <span style={{ color: isActive ? (isVerified ? "#10b981" : theme.gold) : "#6b7280", fontWeight: 700 }}>
-                    {isActive && isVerified ? "✓ Active & Verified" : isActive ? "Active" : "Inactive"}
-                  </span>
+                {showLocation && (
+                  <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #F3F4F6", paddingBottom: 6 }}>
+                    <span style={{ color: "#6B7280" }}>Location</span>
+                    <span style={{ fontWeight: 600, color: QC_DEFAULTS.primary }}>{employee.location || "Head Office, India"}</span>
+                  </div>
+                )}
+                <div style={{ display: "flex", justifyContent: "space-between", paddingBottom: 6 }}>
+                  <span style={{ color: "#6B7280" }}>Status</span>
+                  <span style={{ fontWeight: 700, color: "#059669" }}>✓ Active & Verified</span>
                 </div>
               </div>
 
-              <div style={{ marginTop: 20, textAlign: "center" }}>
-                <div style={{ display: "inline-block", padding: 12, background: "#fff", borderRadius: 12, border: "2px solid #D4AF37", boxShadow: "0 4px 16px rgba(212,175,55,0.15)" }}>
-                  <QRCodeSVG
-                    value={profileUrl}
-                    size={140}
-                    level="M"
-                    bgColor="#ffffff"
-                    fgColor="#2A0F3A"
-                    style={{ display: "block" }}
-                  />
+              {/* QR Code Container with Center Queens Care Emblem */}
+              {showQR && (
+                <div style={{ textAlign: "center", marginBottom: 16 }}>
+                  <div
+                    style={{
+                      display: "inline-block",
+                      padding: 10,
+                      background: "#FFFFFF",
+                      borderRadius: 12,
+                      border: "1.5px solid #D4AF37",
+                      boxShadow: "0 4px 16px rgba(212, 175, 55, 0.15)",
+                    }}
+                  >
+                    <QRCodeSVG
+                      value={profileUrl}
+                      size={140}
+                      level="H"
+                      imageSettings={{
+                        src: "/images/brand/queens-care-crest-96.png",
+                        x: undefined,
+                        y: undefined,
+                        height: 28,
+                        width: 28,
+                        excavate: true,
+                      }}
+                      fgColor="#1E0C38"
+                    />
+                  </div>
+                  <div style={{ fontSize: 10, color: "#6B7280", marginTop: 8, lineHeight: 1.4 }}>
+                    Scan the QR code to verify this employee profile on the official Queens Care Laboratories website.
+                  </div>
                 </div>
-                <div style={{ fontSize: 11, color: "#6b7280", marginTop: 8, lineHeight: 1.5 }}>
-                  Scan the QR code to verify this employee profile on the official Queens Care Laboratories website.
-                </div>
-              </div>
+              )}
+
             </div>
 
-            {/* All Team Members Card */}
-            {allEmployees.length > 0 && (
+            {/* SIDEBAR CARD 2: ALL TEAM MEMBERS */}
+            {showTeamMembers && (
               <div
+                id="team"
                 style={{
-                  background: "#ffffff",
-                  borderRadius: 12,
-                  padding: 24,
-                  border: "1px solid #eae5db",
-                  boxShadow: "0 10px 25px rgba(0,0,0,0.03)",
+                  background: "#FFFFFF",
+                  borderRadius: 16,
+                  padding: "24px 22px",
+                  border: "1px solid #E8E4DF",
+                  boxShadow: "0 6px 24px rgba(0, 0, 0, 0.03)",
                 }}
               >
-                <h3 style={{ font: "16px var(--font-display)", color: "#2A0F3A", margin: "0 0 14px 0" }}>
-                  All Team Members
-                </h3>
-                <div style={{ display: "grid", gap: 10 }}>
-                  {allEmployees
-                    .filter((m) => m.slug !== employee.slug)
-                    .slice(0, 6)
-                    .map((m) => (
-                      <Link
-                        key={m.slug}
-                        href={`/employee/${m.slug}`}
+                {/* Header */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 18 }}>👥</span>
+                    <h3 style={{ fontFamily: "Georgia, serif", fontSize: 16, color: QC_DEFAULTS.primary, margin: 0, fontWeight: 700 }}>
+                      {pd.teamSectionTitle || "All Team Members"}
+                    </h3>
+                  </div>
+
+                  <Link
+                    href="/employee"
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: QC_DEFAULTS.primary,
+                      textDecoration: "none",
+                    }}
+                  >
+                    View All →
+                  </Link>
+                </div>
+
+                {/* 6 Team Members */}
+                <div style={{ display: "grid", gap: 8 }}>
+                  {finalTeam.map((m, idx) => (
+                    <Link
+                      key={m.slug || idx}
+                      href={`/employee/${m.slug}`}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        padding: "8px 10px",
+                        borderRadius: 8,
+                        textDecoration: "none",
+                        color: "inherit",
+                        border: "1px solid transparent",
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={(m as any).photo || (m as any).profileImage || "/uploads/employees/chatgpt-image-sep-7-2026-12_18_49-am-1788722742789.png"}
+                        alt={m.name}
                         style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 12,
-                          padding: "8px 10px",
-                          borderRadius: 6,
-                          textDecoration: "none",
-                          color: "inherit",
-                          background: "#faf8f5",
-                          border: "1px solid #eae5db",
-                          transition: "all 0.15s ease",
+                          width: 36,
+                          height: 36,
+                          borderRadius: "50%",
+                          objectFit: "cover",
+                          border: "1px solid #D4AF37",
+                          flexShrink: 0,
                         }}
-                      >
-                        {m.photo || m.profileImage ? (
-                          <img
-                            src={m.photo || m.profileImage}
-                            alt={m.name}
-                            style={{ width: 38, height: 38, borderRadius: "50%", objectFit: "cover", border: "1px solid #D4AF37" }}
-                          />
-                        ) : (
-                          <div
-                            style={{
-                              width: 38,
-                              height: 38,
-                              borderRadius: "50%",
-                              background: "#2A0F3A",
-                              color: "#fff",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: 14,
-                              fontWeight: 700,
-                            }}
-                          >
-                            {m.name.charAt(0)}
-                          </div>
-                        )}
-                        <div style={{ flex: 1, overflow: "hidden" }}>
-                          <div style={{ fontWeight: 600, fontSize: 13, color: "#2A0F3A", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            {m.name}
-                          </div>
-                          <div style={{ fontSize: 11, color: "#6b7280", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            {m.designation || "Specialist"}
-                          </div>
+                      />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: QC_DEFAULTS.primary, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {m.name}
                         </div>
-                        <span style={{ fontSize: 12, color: "#C19A6B" }}>→</span>
-                      </Link>
-                    ))}
+                        <div style={{ fontSize: 10, color: "#6B7280", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {m.designation || "Executive Team"}
+                        </div>
+                      </div>
+                      <span style={{ fontSize: 12, color: "#9CA3AF" }}>›</span>
+                    </Link>
+                  ))}
                 </div>
               </div>
             )}
+
+            {/* SIDEBAR CARD 3: BOTTOM PROMO CARD */}
+            <div
+              style={{
+                position: "relative",
+                borderRadius: 16,
+                overflow: "hidden",
+                padding: "24px 20px",
+                color: "#FFFFFF",
+                boxShadow: "0 8px 30px rgba(0,0,0,0.25)",
+                border: "1px solid rgba(212, 175, 55, 0.35)",
+                background: "linear-gradient(135deg, #1C0A28 0%, #12041A 100%)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+              }}
+            >
+              <div style={{ flex: 1, zIndex: 2 }}>
+                <h4
+                  style={{
+                    fontFamily: "Georgia, serif",
+                    fontSize: 17,
+                    fontWeight: 700,
+                    margin: "0 0 6px 0",
+                    color: "#FFFFFF",
+                    lineHeight: 1.3,
+                  }}
+                >
+                  {employee.sidebarPromo?.title || "Strong People Build a Healthier Tomorrow"}
+                </h4>
+
+                <p style={{ fontSize: 11, color: "#D1C7DC", margin: "0 0 14px 0", lineHeight: 1.4 }}>
+                  {employee.sidebarPromo?.subtitle || "Meet our dedicated executive and research team"}
+                </p>
+
+                <Link
+                  href={employee.sidebarPromo?.ctaUrl || "/employee"}
+                  style={{
+                    display: "inline-block",
+                    padding: "8px 18px",
+                    background: "linear-gradient(135deg, #E0A838 0%, #D4AF37 100%)",
+                    color: "#1E0C38",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    borderRadius: 20,
+                    textDecoration: "none",
+                    boxShadow: "0 4px 12px rgba(212, 175, 55, 0.35)",
+                    transition: "transform 0.15s ease",
+                  }}
+                >
+                  {employee.sidebarPromo?.ctaText || "Meet Our Team →"}
+                </Link>
+              </div>
+
+              {/* Clean botanical wellness bottles and plant asset */}
+              <div
+                style={{
+                  width: 104,
+                  height: 104,
+                  flexShrink: 0,
+                  borderRadius: 10,
+                  overflow: "hidden",
+                  zIndex: 2,
+                }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/images/hero/sanjay-promo-card-botanical.png"
+                  alt="Queens Care Wellness"
+                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                />
+              </div>
+            </div>
+          </aside>
+        </div>
+      </main>
+
+      {/* 5. FOOTER TRANSITION STRIP (4 CIRCULAR GOLD BADGES + CURSIVE TAGLINE) */}
+      <section
+        style={{
+          marginTop: 60,
+          background: "#150522",
+          borderTop: "1px solid rgba(212, 175, 55, 0.3)",
+          borderBottom: "1px solid rgba(212, 175, 55, 0.3)",
+          padding: "24px 24px",
+          color: "#FFFFFF",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1320,
+            margin: "0 auto",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 20,
+          }}
+        >
+          {/* 4 Gold Circular Badges */}
+          <div
+            className="qc-footer-strip-grid"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 24,
+              flexWrap: "wrap",
+            }}
+          >
+            {footerBadges.map((b, idx) => (
+              <div key={idx} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div
+                  style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: "50%",
+                    border: "1.5px solid #D4AF37",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 16,
+                    color: "#D4AF37",
+                    background: "rgba(212, 175, 55, 0.08)",
+                  }}
+                >
+                  {b.icon || "🛡️"}
+                </div>
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#FFFFFF" }}>{b.label}</div>
+                  <div style={{ fontSize: 10, color: "#D1C7DC" }}>{b.subtitle}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Right Cursive Calligraphy Tagline */}
+          <div
+            style={{
+              fontFamily: "'Brush Script MT', 'Playfair Display', cursive",
+              fontSize: "clamp(20px, 2.2vw, 26px)",
+              color: "#E8C88A",
+              fontStyle: "italic",
+              letterSpacing: "0.02em",
+            }}
+          >
+            {employee.footerTagline || "Together for a healthier tomorrow ♡"}
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* QR MODAL */}
-      {showQrModal && (
+      {/* 6. OFFICIAL QUEENS CARE GLOBAL FOOTER */}
+      <QueensCareFooter hideTrustStrip />
+
+      {/* 7. MODALS & NOTIFICATIONS */}
+      {/* Toast */}
+      {toastMessage && (
         <div
-          onClick={() => setShowQrModal(false)}
+          style={{
+            position: "fixed",
+            bottom: 24,
+            right: 24,
+            background: "#1E0C38",
+            color: "#FFFFFF",
+            padding: "12px 20px",
+            borderRadius: 8,
+            boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
+            border: "1px solid #D4AF37",
+            zIndex: 9999,
+            fontSize: 13,
+            fontWeight: 600,
+          }}
+        >
+          {toastMessage}
+        </div>
+      )}
+
+      {/* Video Modal */}
+      {activeVideoModal && (
+        <div
+          onClick={() => setActiveVideoModal(null)}
           style={{
             position: "fixed",
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            background: "rgba(0,0,0,0.7)",
+            background: "rgba(0,0,0,0.85)",
+            zIndex: 99999,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            zIndex: 9999,
             padding: 20,
           }}
         >
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              background: "#ffffff",
-              borderRadius: 16,
-              padding: 32,
-              maxWidth: 380,
               width: "100%",
-              textAlign: "center",
-              boxShadow: "0 20px 50px rgba(0,0,0,0.3)",
-              border: "2px solid #D4AF37",
+              maxWidth: 800,
+              background: "#1E0C38",
+              borderRadius: 16,
+              overflow: "hidden",
+              border: "1px solid #D4AF37",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
             }}
           >
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#C19A6B", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-              Official Verification Credential
-            </div>
-            <h3 style={{ font: "22px var(--font-display)", color: "#2A0F3A", margin: "8px 0 16px" }}>{employee.name}</h3>
-
-            <div style={{ padding: 16, background: "#faf8f5", borderRadius: 12, display: "inline-block", border: "2px solid #D4AF37", boxShadow: "0 4px 16px rgba(212,175,55,0.15)" }}>
-              <QRCodeSVG
-                value={profileUrl}
-                size={200}
-                level="M"
-                bgColor="#ffffff"
-                fgColor="#2A0F3A"
-                style={{ display: "block" }}
-              />
-            </div>
-
-            <div style={{ fontSize: 12, color: "#4b5563", marginTop: 14 }}>
-              Scan with any mobile camera to view and authenticate this official Queens Care Laboratories staff profile.
-            </div>
-
-            <button
-              onClick={() => setShowQrModal(false)}
+            <div
               style={{
-                marginTop: 20,
-                padding: "8px 24px",
-                background: "#2A0F3A",
-                color: "#ffffff",
-                border: "none",
-                borderRadius: 6,
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: "pointer",
+                padding: "14px 20px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                borderBottom: "1px solid rgba(212,175,55,0.3)",
               }}
             >
-              Close Verification
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* LIGHTBOX MODAL */}
-      {lightboxIndex !== null && galleryList[lightboxIndex] && (
-        <div
-          onClick={() => setLightboxIndex(null)}
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0,0,0,0.9)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 9999,
-            padding: 24,
-          }}
-        >
-          <div onClick={(e) => e.stopPropagation()} style={{ position: "relative", maxWidth: "90vw", maxHeight: "90vh" }}>
-            <img
-              src={galleryList[lightboxIndex].url}
-              alt="Lightbox"
-              style={{ maxWidth: "90vw", maxHeight: "80vh", objectFit: "contain", borderRadius: 8 }}
-            />
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", color: "#fff", marginTop: 12 }}>
-              <span>
-                Image {lightboxIndex + 1} of {galleryList.length}
-              </span>
-              <div style={{ display: "flex", gap: 12 }}>
-                {lightboxIndex > 0 && (
-                  <button
-                    onClick={() => setLightboxIndex(lightboxIndex - 1)}
-                    style={{ padding: "6px 14px", background: "rgba(255,255,255,0.2)", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}
-                  >
-                    ← Previous
-                  </button>
-                )}
-                {lightboxIndex < galleryList.length - 1 && (
-                  <button
-                    onClick={() => setLightboxIndex(lightboxIndex + 1)}
-                    style={{ padding: "6px 14px", background: "rgba(255,255,255,0.2)", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}
-                  >
-                    Next →
-                  </button>
-                )}
-                <button
-                  onClick={() => setLightboxIndex(null)}
-                  style={{ padding: "6px 14px", background: "#ef4444", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}
-                >
-                  ✕ Close
-                </button>
-              </div>
+              <h4 style={{ margin: 0, color: "#FFFFFF", fontFamily: "Georgia, serif" }}>
+                {activeVideoModal.title}
+              </h4>
+              <button
+                type="button"
+                onClick={() => setActiveVideoModal(null)}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "#FFFFFF",
+                  fontSize: 20,
+                  cursor: "pointer",
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            <div style={{ aspectRatio: "16/9", background: "#000000" }}>
+              <iframe
+                src={activeVideoModal.url.replace("watch?v=", "embed/")}
+                title={activeVideoModal.title}
+                style={{ width: "100%", height: "100%", border: "none" }}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
             </div>
           </div>
         </div>

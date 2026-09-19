@@ -460,7 +460,7 @@ export default function HealthQuizModal({
                       ₹{primaryProduct.price.toLocaleString("en-IN")}
                     </span>
                     <span style={{ fontSize: 11, color: "#2e7d32", fontWeight: 600 }}>
-                      ● {primaryProduct.stock > 0 ? "In Stock · Cold-Chain Dispatched" : "Preserved Formulation"}
+                      ● {primaryProduct.stock > 0 ? "In Stock · Direct Dispatch" : "Preserved Formulation"}
                     </span>
                   </div>
                 </div>

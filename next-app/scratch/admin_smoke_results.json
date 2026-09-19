@@ -1,0 +1,150 @@
+{
+  "adminResults": {
+    "loginPage": "PASS",
+    "authentication": "FAIL",
+    "dashboardOpen": "FAIL",
+    "sidebarRendered": "FAIL",
+    "sections": {
+      "Dashboard": {
+        "status": "PASS",
+        "details": "Loaded successfully (420 chars)"
+      },
+      "Products": {
+        "status": "PASS",
+        "details": "Loaded successfully (420 chars)"
+      },
+      "Bulk Products": {
+        "status": "PASS",
+        "details": "Loaded successfully (420 chars) [Bulk controls count: 0]"
+      },
+      "Orders": {
+        "status": "PASS",
+        "details": "Loaded successfully (420 chars)"
+      },
+      "Customers": {
+        "status": "PASS",
+        "details": "Loaded successfully (420 chars)"
+      },
+      "Inventory": {
+        "status": "PASS",
+        "details": "Loaded successfully (420 chars)"
+      },
+      "Homepage CMS": {
+        "status": "PASS",
+        "details": "Loaded successfully (420 chars)"
+      },
+      "Footer Builder": {
+        "status": "PASS",
+        "details": "Loaded successfully (420 chars)"
+      },
+      "A+ Content": {
+        "status": "PASS",
+        "details": "Loaded successfully (420 chars)"
+      },
+      "Promotions": {
+        "status": "PASS",
+        "details": "Loaded successfully (420 chars)"
+      },
+      "Social Media": {
+        "status": "PASS",
+        "details": "Loaded successfully (420 chars)"
+      },
+      "Support / Chat": {
+        "status": "PASS",
+        "details": "Loaded successfully (420 chars)"
+      },
+      "Payments": {
+        "status": "PASS",
+        "details": "Loaded successfully (420 chars)"
+      },
+      "Shipping": {
+        "status": "PASS",
+        "details": "Loaded successfully (420 chars)"
+      },
+      "GST / Tax": {
+        "status": "PASS",
+        "details": "Loaded successfully (420 chars)"
+      },
+      "Invoices": {
+        "status": "PASS",
+        "details": "Loaded successfully (420 chars)"
+      },
+      "Integrations": {
+        "status": "PASS",
+        "details": "Loaded successfully (420 chars)"
+      },
+      "Tracking / Pixels": {
+        "status": "PASS",
+        "details": "Loaded successfully (420 chars)"
+      },
+      "Settings": {
+        "status": "PASS",
+        "details": "Loaded successfully (420 chars)"
+      }
+    },
+    "footerBuilder": {
+      "Trust Strip": {
+        "present": false,
+        "clickable": false
+      },
+      "Brand": {
+        "present": false,
+        "clickable": false
+      },
+      "Social": {
+        "present": false,
+        "clickable": false
+      },
+      "Navigation": {
+        "present": false,
+        "clickable": false
+      },
+      "CMS Page Picker": {
+        "present": false,
+        "clickable": false
+      },
+      "Support": {
+        "present": true,
+        "clickable": true
+      },
+      "Statutory": {
+        "present": false,
+        "clickable": false
+      },
+      "Clinical Notice": {
+        "present": false,
+        "clickable": false
+      },
+      "Copyright": {
+        "present": false,
+        "clickable": false
+      },
+      "Styling": {
+        "present": false,
+        "clickable": false
+      },
+      "Version History": {
+        "present": false,
+        "clickable": false
+      }
+    },
+    "adminSupport": {
+      "ticketsPageLoaded": false,
+      "ticketCount": 0,
+      "replyComposerPresent": false,
+      "attachmentButtonPresent": true
+    },
+    "customerSupport": {
+      "accountPageRendered": true,
+      "composerPresent": false,
+      "fileAttachmentPresent": false
+    },
+    "authorization": {
+      "anonymousAdminBlocked": "PASS",
+      "customerAdminBlocked": "PASS",
+      "adminAllowed": "FAIL",
+      "anonymousApiBlocked": "PASS"
+    }
+  },
+  "consoleErrors": []
+}

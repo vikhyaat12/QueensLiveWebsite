@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════
    PREMIUM ANIMATIONS — CSS
-   Scroll-reveal text masks, custom cursor, marquee,
+   Scroll-reveal text masks, marquee,
    magnetic button effects, stagger animations.
    ═══════════════════════════════════════════════════════════════ */
 
@@ -14,46 +14,49 @@
   will-change: transform;
 }
 
-/* ── Custom cursor ──────────────────────────────────────────── */
-.premium-cursor {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 99999;
-  pointer-events: none;
-  mix-blend-mode: difference;
-}
-.premium-cursor__dot {
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #fff;
-  transform: translate(-50%, -50%);
-}
+/* ── Native Browser Cursor Restored Everywhere ──────────────── */
+/* Custom cursor effect removed; default browser cursor restored across all devices. */
+/* Zero cursor-following dots, rings, trails or mouse-tracking overlays.             */
+.premium-cursor,
+.premium-cursor__dot,
 .premium-cursor__ring {
-  position: absolute;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  transform: translate(-50%, -50%);
-  transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-    height 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-    background 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.premium-cursor.is-hover .premium-cursor__ring {
-  width: 72px;
-  height: 72px;
-  background: rgba(255, 255, 255, 0.08);
-  border-color: transparent;
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
-/* Hide on touch devices and small screens */
-@media (hover: none), (max-width: 900px) {
-  .premium-cursor {
-    display: none;
+html,
+body {
+  cursor: auto;
+}
+
+a,
+button,
+[role="button"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+  cursor: pointer;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+input[type="password"],
+input[type="search"],
+textarea {
+  cursor: text;
+}
+
+/* Touch & mobile devices: ensure zero cursor-following, dot, ring, or tracking effects */
+@media (hover: none), (pointer: coarse) {
+  .premium-cursor,
+  .premium-cursor__dot,
+  .premium-cursor__ring {
+    display: none !important;
+    visibility: hidden !important;
   }
 }
 

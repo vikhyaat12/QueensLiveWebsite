@@ -34,6 +34,11 @@ export default function PaymentGatewayManager() {
   const [testingId, setTestingId] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<{ id: string; success: boolean; message: string } | null>(null);
   const [globalNotice, setGlobalNotice] = useState<{ text: string; isError: boolean } | null>(null);
+  const [showAdd, setShowAdd] = useState(false);
+  const [addForm, setAddForm] = useState({ provider: "", displayName: "", icon: "💳", description: "", mode: "test" as "test" | "live", sort: 10 });
+  const [addCreds, setAddCreds] = useState<Array<{ key: string; value: string }>>([]);
+  const [adding, setAdding] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchGateways = async () => {
     try {
@@ -138,6 +143,69 @@ export default function PaymentGatewayManager() {
     setTestingId(null);
   };
 
+  const addGateway = async () => {
+    const provider = addForm.provider.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "");
+    if (!provider || !addForm.displayName.trim()) {
+      setGlobalNotice({ text: "Provider key and display name are required.", isError: true });
+      return;
+    }
+    setAdding(true);
+    setGlobalNotice(null);
+    try {
+      const credentials = Object.fromEntries(addCreds.filter(c => c.key.trim()).map(c => [c.key.trim(), c.value]));
+      const res = await fetch("/api/admin/payments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          provider,
+          displayName: addForm.displayName.trim(),
+          icon: addForm.icon || "💳",
+          description: addForm.description.trim(),
+          mode: addForm.mode,
+          sort: Number(addForm.sort) || 10,
+          enabled: false,
+          credentials,
+        }),
+      });
+      const d = await res.json();
+      if (res.ok) {
+        setGlobalNotice({ text: `${addForm.displayName.trim()} added. Configure its credentials, then enable it.`, isError: false });
+        setShowAdd(false);
+        setAddForm({ provider: "", displayName: "", icon: "💳", description: "", mode: "test", sort: 10 });
+        setAddCreds([]);
+        fetchGateways();
+      } else {
+        setGlobalNotice({ text: d.error || "Failed to add the payment partner.", isError: true });
+      }
+    } catch {
+      setGlobalNotice({ text: "Network error while adding the partner.", isError: true });
+    }
+    setAdding(false);
+  };
+
+  const deleteGateway = async (gw: PaymentGateway) => {
+    if (gw.provider === "cod") {
+      setGlobalNotice({ text: "The built-in Cash on Delivery method cannot be deleted — disable it instead.", isError: true });
+      return;
+    }
+    if (!window.confirm(`Delete the payment partner “${gw.displayName}”? Customers will no longer see it at checkout. This cannot be undone.`)) return;
+    setDeletingId(gw.id);
+    try {
+      const res = await fetch(`/api/admin/payments?id=${encodeURIComponent(gw.id)}`, { method: "DELETE" });
+      const d = await res.json();
+      if (res.ok && d.success) {
+        setGlobalNotice({ text: `${gw.displayName} deleted.`, isError: false });
+        if (editingId === gw.id) closeEdit();
+        fetchGateways();
+      } else {
+        setGlobalNotice({ text: d.error || "Failed to delete the partner.", isError: true });
+      }
+    } catch {
+      setGlobalNotice({ text: "Network error while deleting.", isError: true });
+    }
+    setDeletingId(null);
+  };
+
   if (loading) {
     return <p style={{ color: "var(--muted)", fontSize: 13 }}>Loading payment gateways…</p>;
   }
@@ -148,9 +216,9 @@ export default function PaymentGatewayManager() {
       <div style={{ background: "#fbf9f5", border: "1px solid var(--line)", padding: "18px 22px", marginBottom: 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
           <div>
-            <h3 style={{ margin: 0, font: "18px var(--font-display)", color: "var(--purple)" }}>Payment Gateways & Checkout Control</h3>
+            <h3 style={{ margin: 0, font: "18px var(--font-display)", color: "var(--purple)" }}>Payment Partners & Checkout Control</h3>
             <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--muted)" }}>
-              Enable multiple payment gateways for customer checkout. API secrets are safely stored server-side and never exposed publicly.
+              Add unlimited payment partners, configure credentials, and control what customers see at checkout. Secrets are stored server-side and never exposed publicly.
             </p>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
@@ -160,8 +228,69 @@ export default function PaymentGatewayManager() {
             <span style={{ fontSize: 11, padding: "4px 10px", background: "#f3f4f6", color: "#666", border: "1px solid #e5e7eb" }}>
               ⚪ {gateways.filter(g => !g.isConfigured && g.enabled).length} Not Configured
             </span>
+            <button
+              onClick={() => setShowAdd(v => !v)}
+              style={{ fontSize: 11, padding: "5px 12px", background: "var(--purple)", color: "#fff", border: "none", cursor: "pointer", fontWeight: 600 }}
+            >
+              {showAdd ? "Close" : "+ Add payment partner"}
+            </button>
           </div>
         </div>
+
+        {/* Add new partner */}
+        {showAdd && (
+          <div style={{ marginTop: 16, padding: 18, background: "#fff", border: "1px solid var(--purple)" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
+              <div>
+                <label style={labelStyle}>Provider key * <span style={{ fontWeight: 400, color: "var(--muted)" }}>(lowercase id, e.g. juspay)</span></label>
+                <input value={addForm.provider} onChange={e => setAddForm({ ...addForm, provider: e.target.value })} style={inputStyle} placeholder="e.g. cashfree" />
+              </div>
+              <div>
+                <label style={labelStyle}>Display name *</label>
+                <input value={addForm.displayName} onChange={e => setAddForm({ ...addForm, displayName: e.target.value })} style={inputStyle} placeholder="e.g. Cashfree Payments" />
+              </div>
+              <div>
+                <label style={labelStyle}>Icon (emoji)</label>
+                <input value={addForm.icon} onChange={e => setAddForm({ ...addForm, icon: e.target.value })} style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Mode</label>
+                <select value={addForm.mode} onChange={e => setAddForm({ ...addForm, mode: e.target.value as "test" | "live" })} style={inputStyle}>
+                  <option value="test">test</option>
+                  <option value="live">live</option>
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Sort order (lower = earlier)</label>
+                <input type="number" value={addForm.sort} onChange={e => setAddForm({ ...addForm, sort: Number(e.target.value) })} style={inputStyle} />
+              </div>
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label style={labelStyle}>Description</label>
+                <input value={addForm.description} onChange={e => setAddForm({ ...addForm, description: e.target.value })} style={inputStyle} placeholder="Shown to customers at checkout" />
+              </div>
+            </div>
+            <div style={{ marginTop: 14 }}>
+              <label style={labelStyle}>Credentials (never shown to customers; masked after save)</label>
+              {addCreds.map((c, i) => (
+                <div key={i} style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                  <input placeholder="Key (e.g. appId)" value={c.key} onChange={e => setAddCreds(addCreds.map((x, j) => j === i ? { ...x, key: e.target.value } : x))} style={{ ...inputStyle, maxWidth: 220 }} />
+                  <input placeholder="Value" value={c.value} onChange={e => setAddCreds(addCreds.map((x, j) => j === i ? { ...x, value: e.target.value } : x))} style={inputStyle} />
+                  <button onClick={() => setAddCreds(addCreds.filter((_, j) => j !== i))} style={{ padding: "0 12px", border: "1px solid var(--line)", background: "#fff", cursor: "pointer" }}>✕</button>
+                </div>
+              ))}
+              <button onClick={() => setAddCreds([...addCreds, { key: "", value: "" }])} style={{ fontSize: 12, padding: "6px 12px", border: "1px dashed var(--line)", background: "#fbf9f5", cursor: "pointer" }}>
+                + Add credential field
+              </button>
+            </div>
+            <button
+              onClick={addGateway}
+              disabled={adding}
+              style={{ marginTop: 16, padding: "9px 20px", background: "var(--purple)", color: "#fff", border: "none", cursor: adding ? "wait" : "pointer", fontSize: 12, fontWeight: 600 }}
+            >
+              {adding ? "Adding…" : "Add partner"}
+            </button>
+          </div>
+        )}
       </div>
 
       {globalNotice && (
@@ -267,6 +396,24 @@ export default function PaymentGatewayManager() {
                   >
                     {testingId === gw.id ? "Testing…" : "Test Connection 🔌"}
                   </button>
+
+                  {gw.provider !== "cod" && (
+                    <button
+                      onClick={() => deleteGateway(gw)}
+                      disabled={deletingId === gw.id}
+                      title="Delete this payment partner"
+                      style={{
+                        padding: "6px 12px",
+                        border: "1px solid #f8b4b4",
+                        background: "#fff",
+                        cursor: deletingId === gw.id ? "wait" : "pointer",
+                        fontSize: 12,
+                        color: "#b34141"
+                      }}
+                    >
+                      Delete
+                    </button>
+                  )}
                 </div>
               </div>
 

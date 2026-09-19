@@ -304,7 +304,7 @@ async function testFlow14() {
   assert.ok([200, 201].includes(res.status));
   const pubRes = await fetch(`${BASE}/api/banners`);
   const pubData = await pubRes.json();
-  const found = pubData.banners?.find((b) => b.title === "Interactive Clinical Laboratory Video Banner");
+  const found = pubData.banners?.slice().reverse().find((b) => b.title === "Interactive Clinical Laboratory Video Banner");
   assert.ok(found?.videoUrl, "Banner video must appear in public banners list");
   console.log("✓ Flow 14 Passed: Banner with video created and verified publicly");
 }

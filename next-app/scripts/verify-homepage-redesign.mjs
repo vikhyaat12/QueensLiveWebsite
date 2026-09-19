@@ -54,7 +54,7 @@ async function run() {
     doctorAnimation: "gaze_and_breath",
     doctorGreeting: "Hi! I'm Dr. Queens 💙",
     doctorSubtext: "Let me help you find the right products for your needs. 💙",
-    doctorBadge: "BOARD-CERTIFIED CLINICAL SPECIALIST",
+    doctorBadge: "",
     doctorBubble: true,
   };
 
@@ -116,7 +116,7 @@ async function run() {
   const pubHero = pubHpData.sections.find((s) => s.type === "hero");
   const parsedPubHero = typeof pubHero?.content === "string" ? JSON.parse(pubHero.content) : pubHero?.content;
   assert.strictEqual(parsedPubHero.enableFemaleDoctor, true, "enableFemaleDoctor must be true");
-  assert.strictEqual(parsedPubHero.doctorBadge, "BOARD-CERTIFIED CLINICAL SPECIALIST", "doctorBadge must match");
+  assert.strictEqual(parsedPubHero.doctorBadge, "", "doctorBadge must not fabricate medical credentials");
   console.log("✓ Test 5 Passed: Public Homepage API reflects live CMS settings perfectly");
 
   // 6. Test AI Health Assistant / Chatbot API

@@ -76,6 +76,12 @@ export default function BrandLogo({
     };
   }, [overrideUrl]);
 
+  const effectiveUrl = inverse && logoUrl.includes("purple")
+    ? "/uploads/logos/queens-care-horizontal-white.png"
+    : logoUrl;
+
+  const isFullLockup = Boolean(effectiveUrl && (effectiveUrl.includes("horizontal") || effectiveUrl.includes("official") || effectiveUrl.includes("logo")));
+
   return (
     <Link
       href="/"
@@ -83,9 +89,9 @@ export default function BrandLogo({
       aria-label="Queens Care Laboratories home"
       style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 10 }}
     >
-      {logoUrl && !imgFailed ? (
+      {effectiveUrl && !imgFailed ? (
         <img
-          src={logoUrl}
+          src={effectiveUrl}
           alt="Queens Care Laboratories"
           className="brand-logo-img"
           style={{
@@ -99,7 +105,7 @@ export default function BrandLogo({
           }}
           onLoad={() => setLoaded(true)}
           onError={() => {
-            console.warn("Brand logo failed to load from:", logoUrl);
+            console.warn("Brand logo failed to load from:", effectiveUrl);
             setImgFailed(true);
           }}
         />
@@ -109,7 +115,7 @@ export default function BrandLogo({
         </i>
       )}
 
-      {showText && (
+      {showText && !isFullLockup && (
         <span style={{ lineHeight: 1.05 }}>
           QUEENS
           <br />

@@ -4,7 +4,7 @@ import { store } from "@/lib/commerce/store";
 
 export async function POST(request: Request) {
   const raw = await request.text();
-  if (!verifyWebhook(raw, request.headers.get("x-razorpay-signature"))) return json({ error: "Invalid webhook signature" }, 401);
+  if (!(await verifyWebhook(raw, request.headers.get("x-razorpay-signature")))) return json({ error: "Invalid webhook signature" }, 401);
   try {
     const event = JSON.parse(raw) as { event?: string; payload?: { payment?: { entity?: { id?: string; notes?: { orderId?: string } } } } };
     const orderId = event.payload?.payment?.entity?.notes?.orderId;

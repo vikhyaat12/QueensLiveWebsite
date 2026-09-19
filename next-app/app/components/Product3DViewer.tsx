@@ -75,7 +75,7 @@ export default function Product3DViewer({
     try {
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setSize(width, h);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
       renderer.shadowMap.enabled = enableShadow;
       if (enableShadow) renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -103,6 +103,28 @@ export default function Product3DViewer({
     const rimLight = new THREE.PointLight(0x7e22ce, 1.5 * lightingIntensity, 20);
     rimLight.position.set(0, -4, -4);
     scene.add(rimLight);
+
+    // Viewport Visibility Observer
+    let isVisible = true;
+    let activeAnimate: (() => void) | null = null;
+    let observer: IntersectionObserver | null = null;
+    if (typeof IntersectionObserver !== "undefined") {
+      observer = new IntersectionObserver(
+        (entries) => {
+          const entry = entries[0];
+          const visible = entry ? entry.isIntersecting : true;
+          if (visible && !isVisible) {
+            isVisible = true;
+            if (activeAnimate) activeAnimate();
+          } else if (!visible && isVisible) {
+            isVisible = false;
+            if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+          }
+        },
+        { threshold: 0.05 }
+      );
+      observer.observe(mount);
+    }
 
     // Load GLB/GLTF model
     let cancelled = false;
@@ -163,7 +185,7 @@ export default function Product3DViewer({
             // Animation loop
             let time = 0;
             const animate = () => {
-              if (cancelled) return;
+              if (cancelled || !isVisible) return;
               animFrameRef.current = requestAnimationFrame(animate);
               if (autoRotate && !prefersReducedMotion && enableAnimation) {
                 time += 0.01 * rotationSpeed;
@@ -171,6 +193,7 @@ export default function Product3DViewer({
               }
               renderer.render(scene, camera);
             };
+            activeAnimate = animate;
             animate();
           },
           undefined,
@@ -195,6 +218,7 @@ export default function Product3DViewer({
 
     return () => {
       cancelled = true;
+      if (observer) observer.disconnect();
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
       scene.traverse((child) => {
         if (child instanceof THREE.Mesh) {

@@ -5,13 +5,11 @@ import { useEffect, useRef, useCallback } from "react";
 /* ═══════════════════════════════════════════════════════════════
    PREMIUM ANIMATIONS — GSAP + Lenis layer
    Adds: smooth scroll, scroll-reveal, text mask, marquee,
-         custom cursor, magnetic buttons.
+         magnetic buttons (native browser cursor restored).
    Does NOT modify any existing component.
    ═══════════════════════════════════════════════════════════════ */
 
 export default function PremiumAnimations() {
-  const cursorRef = useRef<HTMLDivElement>(null);
-  const ringRef = useRef<HTMLDivElement>(null);
   const lenisRef = useRef<unknown>(null);
   const initialized = useRef(false);
 
@@ -101,48 +99,57 @@ export default function PremiumAnimations() {
       });
 
     /* ── 3. FADE-IN REVEALS (data-fade-reveal) ───────────────── */
-    document
-      .querySelectorAll<HTMLElement>(
-        ".eyebrow, .lead, .hero-ctas, .ratings, .section-head, .science-copy > p:not(.eyebrow), .ritual-card-hover, .consult .button"
-      )
-      .forEach((el) => {
-        if (el.dataset.premiumFade) return;
-        el.dataset.premiumFade = "true";
-        gsap.set(el, { y: 28, opacity: 0 });
-        ScrollTrigger.create({
-          trigger: el,
-          start: "top 88%",
-          once: true,
-          onEnter: () =>
-            gsap.to(el, {
-              y: 0,
-              opacity: 1,
-              duration: 0.9,
-              ease: "power3.out",
-            }),
+    if (!REDUCED) {
+      document
+        .querySelectorAll<HTMLElement>(
+          ".eyebrow, .lead, .hero-ctas, .ratings, .section-head, .science-copy > p:not(.eyebrow), .consult .button"
+        )
+        .forEach((el) => {
+          if (el.dataset.premiumFade) return;
+          el.dataset.premiumFade = "true";
+          ScrollTrigger.create({
+            trigger: el,
+            start: "top 92%",
+            once: true,
+            onEnter: () =>
+              gsap.fromTo(
+                el,
+                { y: 20, opacity: 0.3 },
+                {
+                  y: 0,
+                  opacity: 1,
+                  duration: 0.7,
+                  ease: "power2.out",
+                  overwrite: "auto",
+                }
+              ),
+          });
         });
-      });
+    }
 
     /* ── 4. STAGGER REVEALS (product cards, ritual cards) ─────── */
-    ScrollTrigger.batch(
-      ".collection article, .ritual-card-hover, .journal-reference-section article",
-      {
-        start: "top 88%",
-        onEnter: (batch) =>
-          gsap.to(batch, {
-            y: 0,
-            opacity: 1,
-            duration: 0.9,
-            ease: "power3.out",
-            stagger: 0.07,
-            overwrite: true,
-          }),
-      }
-    );
-    gsap.set(
-      ".collection article, .ritual-card-hover, .journal-reference-section article",
-      { y: 40, opacity: 0 }
-    );
+    if (!REDUCED) {
+      ScrollTrigger.batch(
+        ".collection article, .ritual-card-hover, .journal-reference-section article",
+        {
+          start: "top 95%",
+          once: true,
+          onEnter: (batch) =>
+            gsap.fromTo(
+              batch,
+              { y: 20, opacity: 0.3 },
+              {
+                y: 0,
+                opacity: 1,
+                duration: 0.6,
+                ease: "power2.out",
+                stagger: 0.04,
+                overwrite: "auto",
+              }
+            ),
+        }
+      );
+    }
 
     /* ── 5. PARALLAX on hero visual ───────────────────────────── */
     if (!REDUCED) {
@@ -285,48 +292,94 @@ export default function PremiumAnimations() {
       );
     }
 
-    /* ── 12. CUSTOM CURSOR ────────────────────────────────────── */
-    if (
-      !REDUCED &&
-      window.matchMedia("(hover:hover)").matches &&
-      cursorRef.current &&
-      ringRef.current
-    ) {
-      const dot = gsap.quickTo(cursorRef.current, "x", {
-        duration: 0.15,
-        ease: "power3",
-      });
-      const dotY = gsap.quickTo(cursorRef.current, "y", {
-        duration: 0.15,
-        ease: "power3",
-      });
-      const rng = gsap.quickTo(ringRef.current, "x", {
-        duration: 0.45,
-        ease: "power3",
-      });
-      const rngY = gsap.quickTo(ringRef.current, "y", {
-        duration: 0.45,
-        ease: "power3",
+    /* ── 12. CINEMATIC PAGE MOTION EXTENSIONS ─────────────────── */
+    if (!REDUCED) {
+      // A. Hero entrance sequence
+      gsap.fromTo(
+        ".cinematic-hero-stage-root",
+        { scale: 0.95, opacity: 0.7 },
+        { scale: 1, opacity: 1, duration: 1.2, ease: "power2.out" }
+      );
+
+      // B. Category reveal
+      ScrollTrigger.batch("#qc-cat-track button", {
+        start: "top 95%",
+        once: true,
+        onEnter: (batch) =>
+          gsap.fromTo(
+            batch,
+            { y: 16, opacity: 0.4 },
+            { y: 0, opacity: 1, duration: 0.5, stagger: 0.03, ease: "power2.out" }
+          ),
       });
 
-      window.addEventListener("mousemove", (e: MouseEvent) => {
-        dot(e.clientX);
-        dotY(e.clientY);
-        rng(e.clientX);
-        rngY(e.clientY);
-      });
-
-      /* Hover state on interactive elements */
-      const addHoverClass = () => cursorRef.current?.classList.add("is-hover");
-      const removeHoverClass = () =>
-        cursorRef.current?.classList.remove("is-hover");
-      document
-        .querySelectorAll<HTMLElement>("a, button, .product, .ritual-card")
-        .forEach((el) => {
-          el.addEventListener("mouseenter", addHoverClass);
-          el.addEventListener("mouseleave", removeHoverClass);
+      // C. Product Card 3D Depth & Tilt on Hover
+      if (window.matchMedia("(hover:hover)").matches) {
+        document.querySelectorAll<HTMLElement>(".collection article").forEach((card) => {
+          card.style.transformStyle = "preserve-3d";
+          card.addEventListener("mousemove", (e: MouseEvent) => {
+            const rect = card.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width - 0.5) * 10;
+            const y = ((e.clientY - rect.top) / rect.height - 0.5) * -10;
+            card.style.transform = `perspective(1000px) rotateY(${x}deg) rotateX(${y}deg) translateY(-4px)`;
+          });
+          card.addEventListener("mouseleave", () => {
+            card.style.transform = "perspective(1000px) rotateY(0deg) rotateX(0deg) translateY(0)";
+          });
         });
+      }
+
+      // D. Science Scene Reveal
+      const scienceCard = document.querySelector<HTMLElement>(".science-results-card");
+      if (scienceCard) {
+        ScrollTrigger.create({
+          trigger: scienceCard,
+          start: "top 88%",
+          once: true,
+          onEnter: () =>
+            gsap.fromTo(
+              scienceCard,
+              { y: 24, opacity: 0.6 },
+              { y: 0, opacity: 1, duration: 0.8, ease: "power2.out" }
+            ),
+        });
+      }
+
+      // E. Trust Section Transition
+      const trustSec = document.querySelector<HTMLElement>(".trust-section");
+      if (trustSec) {
+        ScrollTrigger.create({
+          trigger: trustSec,
+          start: "top 90%",
+          once: true,
+          onEnter: () =>
+            gsap.fromTo(
+              trustSec,
+              { y: 20, opacity: 0.6 },
+              { y: 0, opacity: 1, duration: 0.7, ease: "power2.out" }
+            ),
+        });
+      }
+
+      // F. AI Assistant Card Reveal
+      const aiBanner = document.querySelector<HTMLElement>(".dr-queens-banner-card");
+      if (aiBanner) {
+        ScrollTrigger.create({
+          trigger: aiBanner,
+          start: "top 88%",
+          once: true,
+          onEnter: () =>
+            gsap.fromTo(
+              aiBanner,
+              { y: 24, opacity: 0.6 },
+              { y: 0, opacity: 1, duration: 0.8, ease: "power2.out" }
+            ),
+        });
+      }
     }
+
+    /* ── 12. CUSTOM CURSOR (REMOVED) ─────────────────────────── */
+    /* Native browser cursor restored; zero cursor-following, dot, ring, or tracking overlays */
 
     /* ── 13. STAGE BACKGROUND — scroll-linked colour morph ────── */
     const stage = document.querySelector<HTMLElement>(".stage-bg");
@@ -465,13 +518,5 @@ export default function PremiumAnimations() {
     };
   }, [initAnimations]);
 
-  return (
-    <>
-      {/* Custom cursor */}
-      <div ref={cursorRef} className="premium-cursor" aria-hidden="true">
-        <span className="premium-cursor__dot" />
-        <span ref={ringRef} className="premium-cursor__ring" />
-      </div>
-    </>
-  );
+  return null;
 }

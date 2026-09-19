@@ -1,0 +1,364 @@
+{
+  "sections": [
+    {
+      "section": "Dashboard",
+      "tabId": "dashboard",
+      "coldFirstVisibleMs": 369,
+      "coldInteractiveMs": 456,
+      "apiRequestsCount": 7,
+      "duplicateRequests": 2,
+      "slowestApiMs": 67,
+      "slowestApiUrl": "/api/analytics",
+      "totalNetTimeMs": 67,
+      "status": "PASS",
+      "warmOpenMs": 66
+    },
+    {
+      "section": "Products",
+      "tabId": "products",
+      "coldFirstVisibleMs": 301,
+      "coldInteractiveMs": 367,
+      "apiRequestsCount": 7,
+      "duplicateRequests": 2,
+      "slowestApiMs": 48,
+      "slowestApiUrl": "/api/analytics",
+      "totalNetTimeMs": 48,
+      "status": "PASS",
+      "warmOpenMs": 125
+    },
+    {
+      "section": "Bulk Products",
+      "tabId": "bulk-products",
+      "coldFirstVisibleMs": 297,
+      "coldInteractiveMs": 836,
+      "apiRequestsCount": 10,
+      "duplicateRequests": 3,
+      "slowestApiMs": 137,
+      "slowestApiUrl": "/api/analytics/config",
+      "totalNetTimeMs": 787,
+      "status": "PASS"
+    },
+    {
+      "section": "Orders",
+      "tabId": "orders",
+      "coldFirstVisibleMs": 356,
+      "coldInteractiveMs": 418,
+      "apiRequestsCount": 7,
+      "duplicateRequests": 2,
+      "slowestApiMs": 45,
+      "slowestApiUrl": "/api/analytics",
+      "totalNetTimeMs": 45,
+      "status": "PASS",
+      "warmOpenMs": 146
+    },
+    {
+      "section": "Customers",
+      "tabId": "customers",
+      "coldFirstVisibleMs": 328,
+      "coldInteractiveMs": 395,
+      "apiRequestsCount": 7,
+      "duplicateRequests": 2,
+      "slowestApiMs": 52,
+      "slowestApiUrl": "/api/analytics/config",
+      "totalNetTimeMs": 102,
+      "status": "PASS",
+      "warmOpenMs": 83
+    },
+    {
+      "section": "Inventory",
+      "tabId": "inventory",
+      "coldFirstVisibleMs": 300,
+      "coldInteractiveMs": 368,
+      "apiRequestsCount": 7,
+      "duplicateRequests": 2,
+      "slowestApiMs": 51,
+      "slowestApiUrl": "/api/analytics",
+      "totalNetTimeMs": 51,
+      "status": "PASS",
+      "warmOpenMs": 115
+    },
+    {
+      "section": "Homepage CMS",
+      "tabId": "homepage",
+      "coldFirstVisibleMs": 306,
+      "coldInteractiveMs": 361,
+      "apiRequestsCount": 7,
+      "duplicateRequests": 2,
+      "slowestApiMs": 0,
+      "slowestApiUrl": "none",
+      "totalNetTimeMs": 0,
+      "status": "PASS"
+    },
+    {
+      "section": "Footer Builder",
+      "tabId": "footer-builder",
+      "coldFirstVisibleMs": 344,
+      "coldInteractiveMs": 396,
+      "apiRequestsCount": 6,
+      "duplicateRequests": 2,
+      "slowestApiMs": 0,
+      "slowestApiUrl": "none",
+      "totalNetTimeMs": 0,
+      "status": "PASS",
+      "warmOpenMs": 42
+    },
+    {
+      "section": "A+ Content",
+      "tabId": "aplus",
+      "coldFirstVisibleMs": 365,
+      "coldInteractiveMs": 444,
+      "apiRequestsCount": 7,
+      "duplicateRequests": 2,
+      "slowestApiMs": 0,
+      "slowestApiUrl": "none",
+      "totalNetTimeMs": 0,
+      "status": "PASS"
+    },
+    {
+      "section": "Promotions",
+      "tabId": "coupons",
+      "coldFirstVisibleMs": 322,
+      "coldInteractiveMs": 379,
+      "apiRequestsCount": 7,
+      "duplicateRequests": 2,
+      "slowestApiMs": 0,
+      "slowestApiUrl": "none",
+      "totalNetTimeMs": 0,
+      "status": "PASS"
+    },
+    {
+      "section": "Social Media",
+      "tabId": "social-links",
+      "coldFirstVisibleMs": 359,
+      "coldInteractiveMs": 418,
+      "apiRequestsCount": 7,
+      "duplicateRequests": 2,
+      "slowestApiMs": 0,
+      "slowestApiUrl": "none",
+      "totalNetTimeMs": 0,
+      "status": "PASS"
+    },
+    {
+      "section": "Support/Chat",
+      "tabId": "support-inbox",
+      "coldFirstVisibleMs": 413,
+      "coldInteractiveMs": 474,
+      "apiRequestsCount": 7,
+      "duplicateRequests": 2,
+      "slowestApiMs": 0,
+      "slowestApiUrl": "none",
+      "totalNetTimeMs": 0,
+      "status": "PASS",
+      "warmOpenMs": 71
+    },
+    {
+      "section": "Payments",
+      "tabId": "payments",
+      "coldFirstVisibleMs": 298,
+      "coldInteractiveMs": 364,
+      "apiRequestsCount": 7,
+      "duplicateRequests": 2,
+      "slowestApiMs": 47,
+      "slowestApiUrl": "/api/analytics/config",
+      "totalNetTimeMs": 91,
+      "status": "PASS",
+      "warmOpenMs": 115
+    },
+    {
+      "section": "Shipping",
+      "tabId": "shipping",
+      "coldFirstVisibleMs": 327,
+      "coldInteractiveMs": 399,
+      "apiRequestsCount": 7,
+      "duplicateRequests": 2,
+      "slowestApiMs": 0,
+      "slowestApiUrl": "none",
+      "totalNetTimeMs": 0,
+      "status": "PASS",
+      "warmOpenMs": 60
+    },
+    {
+      "section": "GST/Tax",
+      "tabId": "tax-rules",
+      "coldFirstVisibleMs": 332,
+      "coldInteractiveMs": 396,
+      "apiRequestsCount": 7,
+      "duplicateRequests": 2,
+      "slowestApiMs": 0,
+      "slowestApiUrl": "none",
+      "totalNetTimeMs": 0,
+      "status": "PASS",
+      "warmOpenMs": 142
+    },
+    {
+      "section": "Invoices",
+      "tabId": "invoice-designer",
+      "coldFirstVisibleMs": 374,
+      "coldInteractiveMs": 463,
+      "apiRequestsCount": 6,
+      "duplicateRequests": 2,
+      "slowestApiMs": 0,
+      "slowestApiUrl": "none",
+      "totalNetTimeMs": 0,
+      "status": "PASS"
+    },
+    {
+      "section": "Integrations",
+      "tabId": "integrations",
+      "coldFirstVisibleMs": 335,
+      "coldInteractiveMs": 387,
+      "apiRequestsCount": 7,
+      "duplicateRequests": 2,
+      "slowestApiMs": 0,
+      "slowestApiUrl": "none",
+      "totalNetTimeMs": 0,
+      "status": "PASS"
+    },
+    {
+      "section": "Tracking/Pixels",
+      "tabId": "analytics-tracking",
+      "coldFirstVisibleMs": 296,
+      "coldInteractiveMs": 358,
+      "apiRequestsCount": 7,
+      "duplicateRequests": 2,
+      "slowestApiMs": 43,
+      "slowestApiUrl": "/api/analytics",
+      "totalNetTimeMs": 43,
+      "status": "PASS"
+    },
+    {
+      "section": "Settings",
+      "tabId": "settings",
+      "coldFirstVisibleMs": 399,
+      "coldInteractiveMs": 451,
+      "apiRequestsCount": 7,
+      "duplicateRequests": 2,
+      "slowestApiMs": 0,
+      "slowestApiUrl": "none",
+      "totalNetTimeMs": 0,
+      "status": "PASS",
+      "warmOpenMs": 70
+    }
+  ],
+  "warmSequence": [
+    {
+      "transition": "Dashboard → Products",
+      "durationMs": 125,
+      "shellMounted": true,
+      "noFullSpinner": true
+    },
+    {
+      "transition": "Products → Orders",
+      "durationMs": 146,
+      "shellMounted": true,
+      "noFullSpinner": true
+    },
+    {
+      "transition": "Orders → Customers",
+      "durationMs": 83,
+      "shellMounted": true,
+      "noFullSpinner": true
+    },
+    {
+      "transition": "Customers → Inventory",
+      "durationMs": 115,
+      "shellMounted": true,
+      "noFullSpinner": true
+    },
+    {
+      "transition": "Inventory → GST/Tax",
+      "durationMs": 142,
+      "shellMounted": true,
+      "noFullSpinner": true
+    },
+    {
+      "transition": "GST/Tax → Shipping",
+      "durationMs": 60,
+      "shellMounted": true,
+      "noFullSpinner": true
+    },
+    {
+      "transition": "Shipping → Payments",
+      "durationMs": 115,
+      "shellMounted": true,
+      "noFullSpinner": true
+    },
+    {
+      "transition": "Payments → Support",
+      "durationMs": 71,
+      "shellMounted": true,
+      "noFullSpinner": true
+    },
+    {
+      "transition": "Support → Footer",
+      "durationMs": 42,
+      "shellMounted": true,
+      "noFullSpinner": true
+    },
+    {
+      "transition": "Footer → Settings",
+      "durationMs": 70,
+      "shellMounted": true,
+      "noFullSpinner": true
+    },
+    {
+      "transition": "Settings → Dashboard",
+      "durationMs": 66,
+      "shellMounted": true,
+      "noFullSpinner": true
+    }
+  ],
+  "networkAudit": {},
+  "tabCache": {
+    "cachedReturnRenderMs": 33,
+    "backgroundRevalidationTriggered": true,
+    "zeroUiFreeze": true
+  },
+  "prefetch": {
+    "hoverPrefetchOpenMs": 57,
+    "effective": true
+  },
+  "bundleAudit": {
+    "totalCodeSplitJsChunks": 111,
+    "heavy3DInInitialShell": false,
+    "heavyRichTextInInitialShell": false
+  },
+  "memoryAudit": {
+    "usedHeapMb": "14.50",
+    "domElements": 659
+  },
+  "chatMedia": {
+    "pngUploadUrl": "/uploads/support/att-mu6uhevf-9641e76f.png",
+    "mp4UploadUrl": "/uploads/support/att-mu6uhey3-8317996b.mp4",
+    "customerExchange": "PASS",
+    "adminReplyWithAttachment": "PASS"
+  },
+  "security": {
+    "anonAdminPageBlocked": true,
+    "anonAdminApi401": true,
+    "customerAdminApiBlocked": true,
+    "adminAuthorized": true
+  },
+  "mobile": {
+    "320px": {
+      "viewport": "320x640",
+      "hasHorizontalOverflow": false,
+      "status": "PASS"
+    },
+    "375px": {
+      "viewport": "375x667",
+      "hasHorizontalOverflow": false,
+      "status": "PASS"
+    },
+    "768px": {
+      "viewport": "768x1024",
+      "hasHorizontalOverflow": false,
+      "status": "PASS"
+    },
+    "1440px": {
+      "viewport": "1440x900",
+      "hasHorizontalOverflow": false,
+      "status": "PASS"
+    }
+  }
+}

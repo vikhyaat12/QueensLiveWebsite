@@ -26,7 +26,7 @@ export async function GET(request: Request) {
   const dateStr = new Date().toISOString().slice(0, 10);
 
   let csvContent = "";
-  let filename = `queenscare-${dataset}-${dateStr}.csv`;
+  const filename = `queenscare-${dataset}-${dateStr}.csv`;
 
   switch (dataset) {
     case "b2b": {
@@ -177,8 +177,96 @@ export async function GET(request: Request) {
       break;
     }
 
+    case "tax":
+    case "gst": {
+      const orders = fileDb.findMany("orders", () => true);
+      const settings = fileDb.findMany("settings", (s: Record<string, unknown>) => String(s.key || "").startsWith("invoice_snapshot_"));
+      const snapshotMap = new Map<string, Record<string, unknown>>();
+      for (const s of settings) {
+        const orderId = String(s.key).replace("invoice_snapshot_", "");
+        const val = typeof s.value === "string" ? JSON.parse(s.value) : s.value;
+        if (val) snapshotMap.set(orderId, val as Record<string, unknown>);
+      }
+
+      const rows: Array<Record<string, unknown>> = [];
+      for (const o of orders) {
+        const snap = snapshotMap.get(String(o.id));
+        const shipping = (o.shipping || snap?.shipping || {}) as Record<string, unknown>;
+        const invNo = String(snap?.invoiceNo || o.invoiceNo || `QC-INV-${o.id}`);
+        const date = String(snap?.createdAt || o.createdAt || "").slice(0, 10);
+        const customerName = String(shipping.fullName || o.customerName || "Customer");
+        const state = String(shipping.state || o.state || "Maharashtra");
+        const gstin = String(shipping.gstin || "");
+        const isIntra = snap?.totalCgst ? Number(snap.totalCgst) > 0 : true;
+        const supplyType = isIntra ? "INTRA_STATE" : "INTER_STATE";
+
+        if (snap && Array.isArray(snap.lines) && snap.lines.length > 0) {
+          for (const l of snap.lines as Array<Record<string, unknown>>) {
+            rows.push({
+              invoiceNumber: invNo,
+              orderId: o.id,
+              date,
+              customerName,
+              placeOfSupply: state,
+              customerGstin: gstin,
+              supplyType,
+              hsnCode: l.hsnCode || "3004",
+              itemName: l.name || l.productId,
+              quantity: l.quantity || 1,
+              unitPrice: l.unitPrice || 0,
+              discount: l.discount || 0,
+              taxableValue: l.taxableValue || 0,
+              gstRate: `${l.gstRate || 0}%`,
+              cgst: l.cgst || 0,
+              sgst: l.sgst || 0,
+              igst: l.igst || 0,
+              totalTax: l.gstTotal || 0,
+              lineTotal: l.lineTotal || 0,
+              grandTotal: snap.grandTotal || o.total || 0,
+              paymentMethod: o.paymentMethod || snap.paymentMethod || "cod",
+              status: o.status || "pending",
+            });
+          }
+        } else {
+          rows.push({
+            invoiceNumber: invNo,
+            orderId: o.id,
+            date,
+            customerName,
+            placeOfSupply: state,
+            customerGstin: gstin,
+            supplyType,
+            hsnCode: "3004",
+            itemName: "Products Order",
+            quantity: 1,
+            unitPrice: o.subtotal || o.total || 0,
+            discount: o.discount || 0,
+            taxableValue: o.subtotal || o.total || 0,
+            gstRate: "12%",
+            cgst: isIntra ? Math.round((Number(o.total || 0) * 0.06) * 100) / 100 : 0,
+            sgst: isIntra ? Math.round((Number(o.total || 0) * 0.06) * 100) / 100 : 0,
+            igst: !isIntra ? Math.round((Number(o.total || 0) * 0.12) * 100) / 100 : 0,
+            totalTax: Math.round((Number(o.total || 0) * 0.12) * 100) / 100,
+            lineTotal: o.total || 0,
+            grandTotal: o.total || 0,
+            paymentMethod: o.paymentMethod || "cod",
+            status: o.status || "pending",
+          });
+        }
+      }
+
+      const headers = [
+        "invoiceNumber", "orderId", "date", "customerName", "placeOfSupply", "customerGstin",
+        "supplyType", "hsnCode", "itemName", "quantity", "unitPrice", "discount", "taxableValue",
+        "gstRate", "cgst", "sgst", "igst", "totalTax", "lineTotal", "grandTotal",
+        "paymentMethod", "status",
+      ];
+      csvContent = generateCSV(headers, rows);
+      break;
+    }
+
     default: {
-      return new NextResponse("Unknown dataset. Supported: b2b, careers, customers, subscribers, orders, contacts, reviews", { status: 400 });
+      return new NextResponse("Unknown dataset. Supported: b2b, careers, customers, subscribers, orders, contacts, reviews, gst, tax", { status: 400 });
     }
   }
 

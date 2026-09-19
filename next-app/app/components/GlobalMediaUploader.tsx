@@ -215,6 +215,7 @@ export default function GlobalMediaUploader({
   const [activeTab, setActiveTab] = useState<"upload" | "url" | "library">("upload");
   const [libraryFiles, setLibraryFiles] = useState<Array<{ id: string; url: string; title?: string; type?: string }>>([]);
   const [loadingLibrary, setLoadingLibrary] = useState(false);
+  const [dimensionWarnings, setDimensionWarnings] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sync external changes
@@ -457,6 +458,28 @@ export default function GlobalMediaUploader({
                       src={item.url}
                       alt={item.alt || item.title || "Preview"}
                       style={{ width: "100%", height: "100%", objectFit: "contain", background: "#fff" }}
+                      onLoad={(e) => {
+                        const img = e.currentTarget;
+                        const nw = img.naturalWidth;
+                        const nh = img.naturalHeight;
+                        if (nw > 0 && nh > 0) {
+                          const minDims: Record<string, { w: number; h: number }> = {
+                            product_image: { w: 800, h: 800 },
+                            banner_desktop: { w: 1600, h: 600 },
+                            banner_mobile: { w: 800, h: 800 },
+                            blog_featured: { w: 800, h: 500 },
+                            employee_photo: { w: 600, h: 600 },
+                            general: { w: 600, h: 400 },
+                          };
+                          const threshold = minDims[preset] || { w: 600, h: 400 };
+                          if (nw < threshold.w || nh < threshold.h) {
+                            setDimensionWarnings((prev) => ({
+                              ...prev,
+                              [item.url]: `⚠️ This image may appear blurry at the selected display size (Detected: ${nw}×${nh}px, Recommended: ${threshold.w}×${threshold.h}px or higher).`,
+                            }));
+                          }
+                        }
+                      }}
                     />
                   )}
 
@@ -491,6 +514,23 @@ export default function GlobalMediaUploader({
                     <p style={{ margin: "2px 0 0", fontSize: 9, color: "var(--gold)" }}>
                       🖼️ Custom Poster Set
                     </p>
+                  )}
+                  {dimensionWarnings[item.url] && (
+                    <div
+                      style={{
+                        margin: "5px 0 2px",
+                        padding: "4px 8px",
+                        background: "#FEF2F2",
+                        border: "1px solid #FCA5A5",
+                        borderRadius: 4,
+                        color: "#B91C1C",
+                        fontSize: 10.5,
+                        fontWeight: 600,
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      {dimensionWarnings[item.url]}
+                    </div>
                   )}
                 </div>
 

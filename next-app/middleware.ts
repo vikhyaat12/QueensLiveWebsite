@@ -6,15 +6,21 @@ import type { NextRequest } from "next/server";
 // authentication/authorization internally — they are NOT blocked at the
 // middleware level because they may have public-facing sections
 // (e.g. B2B info page, doctor info page, employee QR profiles).
-const PRIVATE_PREFIXES = ["/admin", "/analytics"];
+const PRIVATE_PREFIXES = ["/admin", "/analytics", "/uploads/resumes", "/uploads/b2b-documents"];
 
 export function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
   const isPrivate = PRIVATE_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
   const isPublicAdmin = pathname === "/admin/login";
 
-  // If unauthenticated access to private admin routes, redirect specifically to /admin/login
+  // If unauthenticated access to private admin routes or sensitive uploads, deny or redirect
   if (isPrivate && !isPublicAdmin && !request.cookies.get("qc_session")?.value) {
+    if (pathname.startsWith("/uploads/")) {
+      return new NextResponse(JSON.stringify({ error: "Access to private document requires authentication" }), {
+        status: 403,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
     const url = request.nextUrl.clone();
     url.pathname = "/admin/login";
     url.search = `?redirect=${encodeURIComponent(pathname)}`;

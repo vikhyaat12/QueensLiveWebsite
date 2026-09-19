@@ -238,6 +238,7 @@ async function runTests() {
       paymentMethod: "cod",
       shippingMethod: "standard",
     },
+    headers: { Cookie: adminCookie },
   });
 
   console.log("   Order Creation Status:", orderRes.status);

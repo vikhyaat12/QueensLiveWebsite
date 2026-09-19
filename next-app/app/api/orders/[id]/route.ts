@@ -1,11 +1,17 @@
 import { json, requireUser } from "@/lib/http";
 import { store } from "@/lib/commerce/store";
+import { orderStoreExtended } from "@/lib/commerce/store-extensions";
 
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser();
-  const order = await store.orders.byId((await params).id);
-  if (!user || !order || (user.role !== "admin" && order.userId !== user.id)) return json({ error: "Not found" }, 404);
-  return json({ order });
+  if (!user) return json({ error: "Unauthorized" }, 401);
+  const { id } = await params;
+  const order = await store.orders.byId(id);
+  if (!order || (user.role !== "admin" && order.userId !== user.id)) {
+    return json({ error: "Order not found" }, 404);
+  }
+  const history = await orderStoreExtended.history(id);
+  return json({ order, history });
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
