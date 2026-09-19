@@ -7,7 +7,6 @@ import { prisma } from "@/lib/prisma";
 import { fileDb } from "@/lib/commerce/file-db";
 import { aplusStore, redirectStore } from "@/lib/commerce/store-extensions";
 import ProductPurchaseZone from "@/app/components/ProductPurchaseZone";
-import DownloadPdfButton from "@/app/components/DownloadPdfButton";
 import ProductGallery from "@/app/components/ProductGallery";
 import ProductTabs from "./ProductTabs";
 import HighlightsList from "./HighlightsList";
@@ -515,7 +514,6 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
             <h2 style={{ font: "24px var(--font-display)", color: "#2A0F3A", margin: 0 }}>
               Pharmaceutical Formulation Profile
             </h2>
-            <DownloadPdfButton slug={product.slug} name={product.name} />
           </div>
           <div style={{ border: "1px solid var(--line)", borderRadius: 6, overflow: "hidden" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
