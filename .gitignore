@@ -29,3 +29,7 @@ dev.log
 # IDE
 .vscode/
 *.code-workspace
+
+# Local untracked projects
+OmniRoute/
+next-app/OmniRoute/
