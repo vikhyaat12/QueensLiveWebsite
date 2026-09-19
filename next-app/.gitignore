@@ -46,3 +46,6 @@ next-env.d.ts
 # local untracked modules
 /OmniRoute
 OmniRoute/
+
+# netlify local build output
+/.netlify/

@@ -1,0 +1,40 @@
+# ─────────────────────────────────────────────────────────────────
+# Netlify deployment configuration — Queens Care Laboratories
+# ─────────────────────────────────────────────────────────────────
+# MONOREPO LAYOUT: this repository's root does NOT contain the Next.js
+# application. The app lives in `next-app/`. Every path in this file is
+# therefore relative to the base directory `next-app`.
+#
+# WHY THIS FIXES THE "Page not found" 404:
+# Netlify's Next.js runtime (@netlify/plugin-nextjs) converts the output of
+# `next build` into Netlify Functions (SSR/API/App Router) + Edge Functions
+# (middleware) + static assets, and it publishes the root `/` route itself.
+# Without it (and with the wrong base directory) Netlify treats the build
+# output as a static site with no `/` page, which is exactly the
+# "Looks like you've followed a broken link" Page-not-found response.
+#
+# PLATFORM SEPARATION:
+# - Vercel:   `next build` only (platform default — no config file needed).
+# - Netlify:  this file → `npm run build` (plain `next build`) + the Next.js
+#             runtime below. It never executes the Cloudflare/OpenNext steps.
+# - Cloudflare: `next-app` package.json scripts `build:cloudflare` /
+#             `build:cloudflare:standalone` + `deploy:cloudflare`; the
+#             Workers Build uses `npm run build:cloudflare` + `npx wrangler deploy`.
+# None of the three platforms runs another platform's build steps.
+
+[build]
+  base = "next-app"
+  command = "npm run build"
+  # Netlify ignores `publish` for the Next.js runtime, but setting it keeps
+  # the dashboard from assuming a static publish directory at the repo root.
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_FLAGS = "--legacy-peer-deps"
+
+# Official Next.js v5 runtime (OpenNext-based): SSR, ISR, App Router,
+# middleware, image optimization and the root route all work out of the box.
+# Pinned for deterministic deployments.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

@@ -5,8 +5,11 @@
   "scripts": {
     "dev": "next dev",
     "test:e2e": "playwright test",
-    "build": "next build && node scripts/build-opennext.mjs && node scripts/fix-opennext-wasm.mjs",
-    "build:cf": "opennextjs-cloudflare build && node scripts/fix-opennext-wasm.mjs",
+    "build": "next build",
+    "build:cloudflare": "opennextjs-cloudflare build && node scripts/fix-opennext-wasm.mjs",
+    "build:cloudflare:standalone": "next build && node scripts/build-opennext.mjs && node scripts/fix-opennext-wasm.mjs",
+    "deploy:cloudflare": "npm run build:cloudflare && wrangler deploy",
+    "build:cf": "npm run build:cloudflare",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate",

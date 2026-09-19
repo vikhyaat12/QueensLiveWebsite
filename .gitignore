@@ -33,3 +33,6 @@ dev.log
 # Local untracked projects
 OmniRoute/
 next-app/OmniRoute/
+
+# netlify local build output
+.netlify/
