@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "test:e2e": "playwright test",
-    "build": "next build",
+    "build": "next build && node scripts/build-opennext.mjs && node scripts/fix-opennext-wasm.mjs",
+    "build:cf": "opennextjs-cloudflare build && node scripts/fix-opennext-wasm.mjs",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate",
@@ -33,6 +34,7 @@
     "three": "^0.185.1"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.20.0",
     "@playwright/test": "^1.62.1",
     "@reticlehq/next": "^2.2.1",
     "@reticlehq/react": "^2.2.1",
@@ -46,6 +48,7 @@
     "eslint-config-next": "16.2.12",
     "prisma": "^6.16.2",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^4.135.0"
   }
 }
