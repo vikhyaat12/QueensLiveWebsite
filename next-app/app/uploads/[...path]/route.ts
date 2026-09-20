@@ -39,8 +39,8 @@ export async function GET(
     const uploadsDir = join(/*turbopackIgnore: true*/ process.cwd(), "public", "uploads");
     const dataUploadsDir = join(/*turbopackIgnore: true*/ process.cwd(), "data", "uploads");
     const candidatePaths = [
-      join(uploadsDir, safeSubPath),
-      join(dataUploadsDir, safeSubPath),
+      join(/*turbopackIgnore: true*/ uploadsDir, safeSubPath),
+      join(/*turbopackIgnore: true*/ dataUploadsDir, safeSubPath),
     ];
 
     let foundPath = "";

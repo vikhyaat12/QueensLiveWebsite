@@ -15,6 +15,12 @@ if (fs.existsSync(openNextDir)) {
     } catch (_) {}
   }
 }
+// Ensure .next/standalone/.next exists even if Next nested it under package subfolder
+const standaloneNext = join(process.cwd(), ".next", "standalone", ".next");
+const nestedStandaloneNext = join(process.cwd(), ".next", "standalone", "next-app", ".next");
+if (!fs.existsSync(standaloneNext) && fs.existsSync(nestedStandaloneNext)) {
+  fs.cpSync(nestedStandaloneNext, standaloneNext, { recursive: true });
+}
 
 const utilsPath = pathToFileURL(join(process.cwd(), "node_modules/@opennextjs/cloudflare/dist/cli/commands/utils/utils.js")).href;
 const buildPath = pathToFileURL(join(process.cwd(), "node_modules/@opennextjs/cloudflare/dist/cli/build/build.js")).href;

@@ -1,9 +1,11 @@
 import type { NextConfig } from "next";
+import path from "node:path";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  outputFileTracingRoot: path.resolve(__dirname),
   turbopack: {
-    root: __dirname,
+    root: path.resolve(__dirname),
   },
   // Keep Prisma external to the server bundle: Turbopack's inlined wasm-engine
   // chunk loader emits mangled Windows absolute paths that break the OpenNext/
