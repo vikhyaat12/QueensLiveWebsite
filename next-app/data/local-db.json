@@ -5,10 +5,12 @@
       "email": "admin@queenscare.in",
       "name": "Queens Care Admin",
       "role": "admin",
-      "passwordHash": "scrypt$0a3ef5ce084b23a2ac7de6bca50a58f2$cf448b43f389ad4910a08849f05f5160dc4f52b86e25ce56362b0acb7f0e8591c76c25b159c107200bafa3701c94c5fc26b57bd416e524a3b4c76dafc4acfcd4",
+      "passwordHash": "scrypt$3715f305aedceb7337cfd027e3f7957b$66bc1580e1b9fc83ef096f1de3ac9b6eb53cdd39a336b9a644fa509e4eec792c81995a584ece840cdd73c8efd91c99ce51c6628eddada2be52c8030030f2bce4",
       "createdAt": "2026-08-29T07:59:01.685Z",
-      "updatedAt": "2026-09-15T19:53:54.053Z",
-      "tokenVersion": 7
+      "updatedAt": "2026-09-20T08:26:23.043Z",
+      "tokenVersion": 8,
+      "status": "active",
+      "isActive": true
     },
     {
       "id": "usr-customer-1",
