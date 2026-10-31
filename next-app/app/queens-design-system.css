@@ -1,0 +1,186 @@
+/* ==========================================================================
+   Queens Care Laboratories — Premium Design System
+   Official palette from the master spec. Gold is an accent only.
+   This file is ADDITIVE. It does not replace globals.css,
+   premium-homepage.css, or any admin-controlled theme variables.
+   Import it in next-app/app/layout.tsx AFTER premium-homepage.css.
+   ========================================================================== */
+
+:root {
+  /* Colour tokens — official */
+  --queens-purple: #2a0f3a;
+  --queens-purple-deep: #1e0a2b;
+  --queens-purple-soft: #4a2a63;
+  --queens-gold: #c19a6b;
+  --queens-gold-champagne: #e6cfa5;
+  --queens-white: #ffffff;
+  --queens-charcoal: #333333;
+  --queens-ivory: #faf7f1;
+  --queens-cream: #f6f1ea;
+  --queens-lavender: #efeaf8;
+  --queens-beige: #e9e2d6;
+  --queens-grey: #f4f2f0;
+  --queens-text: #2b2b2b;
+  --queens-text-muted: #6b6570;
+
+  /* Typography tokens */
+  --queens-font-serif: var(--font-fraunces, Georgia, "Times New Roman", serif);
+  --queens-font-sans: var(--font-inter, "Inter", system-ui, -apple-system, "Segoe UI", sans-serif);
+
+  /* Spacing scale (4px base, luxury breathing room) */
+  --queens-space-1: 4px;
+  --queens-space-2: 8px;
+  --queens-space-3: 12px;
+  --queens-space-4: 16px;
+  --queens-space-6: 24px;
+  --queens-space-8: 32px;
+  --queens-space-12: 48px;
+  --queens-space-16: 64px;
+  --queens-space-24: 96px;
+
+  /* Layout */
+  --queens-container: 1240px;
+  --queens-radius-sm: 10px;
+  --queens-radius-md: 16px;
+  --queens-radius-lg: 24px;
+  --queens-radius-pill: 999px;
+
+  /* Shadows — soft, studio-like, never harsh */
+  --queens-shadow-sm: 0 2px 10px rgba(42, 15, 58, 0.06);
+  --queens-shadow-md: 0 12px 32px rgba(42, 15, 58, 0.12);
+  --queens-shadow-lg: 0 24px 56px rgba(42, 15, 58, 0.18);
+
+  /* Animation timings — restrained, premium */
+  --queens-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --queens-duration-fast: 180ms;
+  --queens-duration-normal: 320ms;
+  --queens-duration-slow: 640ms;
+}
+
+.queens-container {
+  width: 100%;
+  max-width: var(--queens-container);
+  margin-inline: auto;
+  padding-inline: var(--queens-space-4);
+}
+
+@media (min-width: 768px) {
+  .queens-container { padding-inline: var(--queens-space-8); }
+}
+
+.queens-serif {
+  font-family: var(--queens-font-serif);
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.queens-eyebrow {
+  font-family: var(--queens-font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--queens-gold);
+}
+
+/* Buttons — every state is defined, none is decorative-only. */
+.queens-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 24px;
+  border-radius: var(--queens-radius-pill);
+  font-family: var(--queens-font-sans);
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform var(--queens-duration-fast) var(--queens-ease),
+    box-shadow var(--queens-duration-fast) var(--queens-ease),
+    background-color var(--queens-duration-fast) var(--queens-ease),
+    color var(--queens-duration-fast) var(--queens-ease);
+}
+
+.queens-btn:focus-visible {
+  outline: 3px solid rgba(193, 154, 107, 0.55);
+  outline-offset: 3px;
+}
+
+.queens-btn-primary {
+  background: var(--queens-purple);
+  color: var(--queens-white);
+  box-shadow: var(--queens-shadow-sm);
+}
+
+.queens-btn-primary:hover { background: var(--queens-purple-deep); transform: translateY(-1px); box-shadow: var(--queens-shadow-md); }
+.queens-btn-primary:active { transform: translateY(0); box-shadow: var(--queens-shadow-sm); }
+
+.queens-btn-gold {
+  background: var(--queens-gold);
+  color: var(--queens-purple);
+}
+
+.queens-btn-gold:hover { background: var(--queens-gold-champagne); transform: translateY(-1px); }
+
+.queens-btn-outline {
+  background: transparent;
+  color: var(--queens-purple);
+  border-color: rgba(42, 15, 58, 0.22);
+}
+
+.queens-btn-outline:hover { border-color: var(--queens-purple); transform: translateY(-1px); }
+
+.queens-btn:disabled,
+.queens-btn[aria-disabled="true"] {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.queens-btn-loading { position: relative; pointer-events: none; opacity: 0.75; }
+
+/* Cards — premium product presentation, restrained hover only. */
+.queens-card {
+  background: var(--queens-white);
+  border: 1px solid rgba(42, 15, 58, 0.08);
+  border-radius: var(--queens-radius-lg);
+  box-shadow: var(--queens-shadow-sm);
+  overflow: hidden;
+  transition: transform var(--queens-duration-normal) var(--queens-ease),
+    box-shadow var(--queens-duration-normal) var(--queens-ease);
+}
+
+.queens-card:hover { transform: translateY(-3px); box-shadow: var(--queens-shadow-md); }
+
+/* Inputs */
+.queens-input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: var(--queens-radius-sm);
+  border: 1px solid rgba(42, 15, 58, 0.18);
+  background: var(--queens-white);
+  color: var(--queens-text);
+  font-family: var(--queens-font-sans);
+  font-size: 15px;
+}
+
+.queens-input:focus-visible {
+  outline: 3px solid rgba(193, 154, 107, 0.55);
+  outline-offset: 2px;
+  border-color: var(--queens-purple);
+}
+
+/* Section rhythm — consistent across every page. */
+.queens-section { padding-block: var(--queens-space-16); }
+@media (min-width: 1024px) { .queens-section { padding-block: var(--queens-space-24); } }
+
+/* Reduced motion: calm, static, fully usable. */
+@media (prefers-reduced-motion: reduce) {
+  .queens-btn, .queens-card { transition: none; }
+  .queens-card:hover, .queens-btn-primary:hover, .queens-btn-gold:hover, .queens-btn-outline:hover { transform: none; }
+}
