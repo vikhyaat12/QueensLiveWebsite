@@ -171,7 +171,9 @@ export default function QueensCrownQHero({
         .queens-crown-copy h1 { font-size: clamp(2.25rem, 5.5vw, 4rem); line-height: 1.02; margin: 12px 0 16px; }
         .queens-crown-subtitle { font-size: 1.15rem; line-height: 1.7; opacity: .9; max-width: 520px; }
         .queens-crown-visual { position: relative; display: flex; flex-direction: column; align-items: center; transform: translate3d(var(--queens-parallax-x), var(--queens-parallax-y), 0); }
-        .queens-crown-logo { width: 100%; max-width: 460px; height: auto; filter: drop-shadow(0 24px 40px rgba(0,0,0,.35)); animation: queensLogoIn 1s cubic-bezier(.22,1,.36,1) both; }
+        .queens-crown-logo { width: 100%; max-width: 460px; height: auto; filter: drop-shadow(0 24px 40px rgba(0,0,0,.35)); animation: queensLogoIn 1s cubic-bezier(.22,1,.36,1) both, queensDoctorBreath 4.5s 1.2s ease-in-out infinite, queensDoctorGesture 12s 4s ease-in-out infinite; }
+        @keyframes queensDoctorBreath { 0%,100% { translate: 0 0; } 50% { translate: 0 -7px; } }
+        @keyframes queensDoctorGesture { 0%,70%,100% { rotate: 0deg; } 80% { rotate: 0.8deg; } 90% { rotate: -0.4deg; } }
         .queens-crown-bottle-wrap { position: relative; margin-top: -40px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
         .queens-crown-bottle { width: 100%; max-width: 300px; height: auto; filter: drop-shadow(0 28px 48px rgba(0,0,0,.35)) drop-shadow(0 0 32px rgba(255,140,0,.18)); animation: queensFloat 5s ease-in-out infinite; }
         .queens-crown-orbit { position: absolute; inset: -24px -48px auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; pointer-events: none; }
@@ -179,7 +181,7 @@ export default function QueensCrownQHero({
         .queens-crown-shop { position: relative; z-index: 2; }
         @keyframes queensLogoIn { from { opacity: 0; transform: scale(.94) translateY(12px); } to { opacity: 1; transform: scale(1) translateY(0); } }
         @keyframes queensFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        @media (prefers-reduced-motion: reduce) { .queens-crown-logo, .queens-crown-bottle { animation: none; } }
+        @media (prefers-reduced-motion: reduce) { .queens-crown-logo, .queens-crown-bottle { animation: none !important; } }
       `}</style>
     </section>
   );
