@@ -72,7 +72,8 @@ export default function QueensDoctorFirstHero({
         .queens-doctor-first-eyebrow { letter-spacing: .18em; font-size: 11px; color: #e6cfa5; font-weight: 800; }
         h1 { font-family: Georgia, serif; font-size: clamp(38px, 6vw, 68px); line-height: 1; animation: queensSlideUp .7s .4s ease both; opacity: 0; }
         .queens-doctor-first-visual { text-align: center; perspective: 1000px; }
-        .queens-doctor-first-logo { width: 100%; max-width: 420px; height: auto; filter: drop-shadow(0 30px 50px rgba(0,0,0,.45)); animation: queensLogoIn 1s ease both, queensDoctorBreath 4s 1.2s ease-in-out infinite, queensDoctorGesture 12s 4s ease-in-out infinite; }
+        .queens-doctor-first-logo { width: 100%; max-width: 420px; height: auto; filter: drop-shadow(0 30px 50px rgba(0,0,0,.45)); animation: queensLogoIn 1s ease both, queensDoctorWave 2.5s 1s ease both, queensDoctorBreath 4s 3.5s ease-in-out infinite, queensDoctorGesture 12s 6s ease-in-out infinite; }
+        @keyframes queensDoctorWave { 0%,100% { rotate: 0deg; } 20% { rotate: -4deg; } 40% { rotate: 4deg; } 60% { rotate: -3deg; } 80% { rotate: 2deg; } }
         .queens-doctor-first-orb { display: inline-block; background: rgba(255,255,255,.92); color: #2a0f3a; padding: 10px 16px; border-radius: 999px; font-weight: 800; margin: 5px; text-decoration: none; animation: queensFloaty 3.5s ease-in-out infinite; }
         .queens-doctor-first-speech { background: #fff; color: #2a0f3a; padding: 14px 18px; border-radius: 18px; display: inline-block; margin-top: 16px; font-weight: 700; animation: queensPop .5s 1.6s ease both; opacity: 0; }
         @keyframes queensSlideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }

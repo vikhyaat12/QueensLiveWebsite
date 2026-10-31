@@ -50,7 +50,7 @@ export default function QueensLuxuryHome({ hero, categories = [], featuredProduc
           subtitle={hero.subtitle ?? hero.description}
           logoImage={hero.character.image}
           primaryCta={hero.primaryCta ?? { label: "Shop Bestsellers", href: "/shop" }}
-          secondaryCta={hero.secondaryCta ?? { label: "Why Queens?", href: "/science" }}
+          secondaryCta={hero.secondaryCta ?? { label: "Why Queens?", href: "#brand" }}
           categoryOrbs={categories.slice(0, 4).map((c) => ({ label: c.name, href: c.href }))}
         />
       ) : null}
